@@ -1,0 +1,85 @@
+name: Build, publish and deploy
+
+# Same pattern as the other apps on the K3S server: test, build the images, push them to GHCR tagged with
+# the commit, then write that tag into deploy/k3s/app, the folder Argo CD syncs. That tag bump is the only
+# thing this workflow commits (with [skip ci]); paths-ignore on the folder is what prevents a loop.
+# Argo CD runs the migrate Job (PreSync) before rolling out the new functions and front end.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "deploy/k3s/app/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Lint and test
+        run: |
+          npm ci --no-audit --no-fund
+          npm run lint
+          npm test
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # The URL and anon key are public by design (the browser sends them); they live in repository variables.
+      - name: Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/k3s/web.Dockerfile
+          push: true
+          build-args: |
+            VITE_SUPABASE_URL=${{ vars.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_ANON_KEY=${{ vars.VITE_SUPABASE_ANON_KEY }}
+          tags: ghcr.io/${{ github.repository }}-web:${{ github.sha }}
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      - name: Functions image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/k3s/functions.Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}-functions:${{ github.sha }}
+
+      - name: Migrate image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/k3s/migrate.Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}-migrate:${{ github.sha }}
+
+      # Argo CD syncs on git state, not registry state: bumping the tags is the commit that triggers the rollout.
+      - name: Point the manifests at the new images
+        run: |
+          sed -i -E "s#(image: ghcr.io/${{ github.repository }}-(web|functions|migrate)):.*#\1:${{ github.sha }}#" deploy/k3s/app/*.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/k3s/app
+          git diff --cached --quiet || git commit -m "deploy: ${{ github.sha }} [skip ci]"
+          git push

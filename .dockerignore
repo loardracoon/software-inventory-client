@@ -11,3 +11,5 @@ design
 docs
 fixtures
 *.md
+supabase/functions/.env
+**/.env

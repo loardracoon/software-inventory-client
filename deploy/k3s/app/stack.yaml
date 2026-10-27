@@ -1,0 +1,258 @@
+# inventory: self-hosted Supabase (Postgres, Auth, PostgREST, Edge Functions, Mailpit) and the front end.
+# Synced by Argo CD. The image tags are written by .github/workflows/deploy.yml; do not edit them by hand.
+# Secrets are created out of band (deploy/k3s/README.md) and never committed.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: inventory
+---
+apiVersion: v1
+kind: Service
+metadata: { name: db, namespace: inventory }
+spec:
+  selector: { app: db }
+  ports: [{ name: postgres, port: 5432, targetPort: 5432 }]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: db, namespace: inventory }
+spec:
+  serviceName: db
+  replicas: 1
+  selector: { matchLabels: { app: db } }
+  template:
+    metadata: { labels: { app: db } }
+    spec:
+      containers:
+        - name: postgres
+          image: public.ecr.aws/supabase/postgres:17.11.0.006
+          args: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=fatal"]
+          env:
+            - { name: POSTGRES_HOST, value: /var/run/postgresql }
+            - { name: PGPORT, value: "5432" }
+            - { name: POSTGRES_PORT, value: "5432" }
+            - { name: PGDATABASE, value: postgres }
+            - { name: POSTGRES_DB, value: postgres }
+            - { name: JWT_EXP, value: "3600" }
+            - { name: POSTGRES_PASSWORD, valueFrom: { secretKeyRef: { name: supabase, key: POSTGRES_PASSWORD } } }
+            - { name: PGPASSWORD, valueFrom: { secretKeyRef: { name: supabase, key: POSTGRES_PASSWORD } } }
+            - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: supabase, key: JWT_SECRET } } }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "postgres", "-h", "localhost"] }
+            periodSeconds: 5
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { memory: 1Gi }
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ReadWriteOnce]
+        storageClassName: local-path
+        resources: { requests: { storage: 5Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: auth, namespace: inventory }
+spec:
+  selector: { app: auth }
+  ports: [{ port: 9999, targetPort: 9999 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: auth, namespace: inventory }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: auth } }
+  template:
+    metadata: { labels: { app: auth } }
+    spec:
+      containers:
+        - name: gotrue
+          image: public.ecr.aws/supabase/gotrue:v2.197.0
+          env:
+            - { name: GOTRUE_API_HOST, value: 0.0.0.0 }
+            - { name: GOTRUE_API_PORT, value: "9999" }
+            - { name: API_EXTERNAL_URL, value: "https://inventory.clau.sophizo.com.br" }
+            - { name: GOTRUE_DB_DRIVER, value: postgres }
+            - { name: GOTRUE_DB_DATABASE_URL, valueFrom: { secretKeyRef: { name: supabase, key: AUTH_DB_URL } } }
+            - { name: GOTRUE_SITE_URL, value: "https://inventory.clau.sophizo.com.br" }
+            - { name: GOTRUE_URI_ALLOW_LIST, value: "https://inventory.clau.sophizo.com.br/**" }
+            - { name: GOTRUE_DISABLE_SIGNUP, value: "true" }
+            - { name: GOTRUE_JWT_ADMIN_ROLES, value: service_role }
+            - { name: GOTRUE_JWT_AUD, value: authenticated }
+            - { name: GOTRUE_JWT_DEFAULT_GROUP_NAME, value: authenticated }
+            - { name: GOTRUE_JWT_EXP, value: "3600" }
+            - { name: GOTRUE_JWT_SECRET, valueFrom: { secretKeyRef: { name: supabase, key: JWT_SECRET } } }
+            - { name: GOTRUE_EXTERNAL_EMAIL_ENABLED, value: "true" }
+            - { name: GOTRUE_EXTERNAL_PHONE_ENABLED, value: "false" }
+            - { name: GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED, value: "false" }
+            - { name: GOTRUE_MAILER_AUTOCONFIRM, value: "false" }
+            - { name: GOTRUE_SMTP_HOST, value: mailpit }
+            - { name: GOTRUE_SMTP_PORT, value: "1025" }
+            - { name: GOTRUE_SMTP_ADMIN_EMAIL, value: "noreply@inventory.clau.sophizo.com.br" }
+            - { name: GOTRUE_SMTP_SENDER_NAME, value: "noreply@inventory.clau.sophizo.com.br" }
+            - { name: GOTRUE_MAILER_URLPATHS_INVITE, value: /auth/v1/verify }
+            - { name: GOTRUE_MAILER_URLPATHS_CONFIRMATION, value: /auth/v1/verify }
+            - { name: GOTRUE_MAILER_URLPATHS_RECOVERY, value: /auth/v1/verify }
+            - { name: GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE, value: /auth/v1/verify }
+          ports: [{ containerPort: 9999 }]
+          readinessProbe:
+            httpGet: { path: /health, port: 9999 }
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: rest, namespace: inventory }
+spec:
+  selector: { app: rest }
+  ports: [{ port: 3000, targetPort: 3000 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: rest, namespace: inventory }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: rest } }
+  template:
+    metadata: { labels: { app: rest } }
+    spec:
+      containers:
+        - name: postgrest
+          image: public.ecr.aws/supabase/postgrest:v16.5
+          env:
+            - { name: PGRST_DB_URI, valueFrom: { secretKeyRef: { name: supabase, key: REST_DB_URL } } }
+            - { name: PGRST_DB_SCHEMAS, value: "public,graphql_public" }
+            - { name: PGRST_DB_EXTRA_SEARCH_PATH, value: "public,extensions" }
+            - { name: PGRST_DB_MAX_ROWS, value: "1000" }
+            - { name: PGRST_DB_ANON_ROLE, value: anon }
+            - { name: PGRST_DB_USE_LEGACY_GUCS, value: "false" }
+            - { name: PGRST_JWT_SECRET, valueFrom: { secretKeyRef: { name: supabase, key: JWT_SECRET } } }
+            - { name: PGRST_APP_SETTINGS_JWT_SECRET, valueFrom: { secretKeyRef: { name: supabase, key: JWT_SECRET } } }
+            - { name: PGRST_APP_SETTINGS_JWT_EXP, value: "3600" }
+          ports: [{ containerPort: 3000 }]
+          resources:
+            requests: { cpu: 20m, memory: 32Mi }
+            limits: { memory: 256Mi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: functions, namespace: inventory }
+spec:
+  selector: { app: functions }
+  ports: [{ port: 9000, targetPort: 9000 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: functions, namespace: inventory }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: functions } }
+  template:
+    metadata: { labels: { app: functions } }
+    spec:
+      containers:
+        - name: edge-runtime
+          image: ghcr.io/loardracoon/software-inventory-client-functions:bootstrap
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: SUPABASE_URL, value: "http://kong:8000" }
+            - { name: NO_VERIFY_JWT, value: "sync-computers,probe-capabilities,collector,hub-sync,alerts" }
+            - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: supabase, key: JWT_SECRET } } }
+            - { name: SUPABASE_ANON_KEY, valueFrom: { secretKeyRef: { name: supabase, key: ANON_KEY } } }
+            - { name: SUPABASE_SERVICE_ROLE_KEY, valueFrom: { secretKeyRef: { name: supabase, key: SERVICE_ROLE_KEY } } }
+            - { name: SUPABASE_DB_URL, valueFrom: { secretKeyRef: { name: supabase, key: FUNCTIONS_DB_URL } } }
+          envFrom: [{ secretRef: { name: functions-env } }]
+          ports: [{ containerPort: 9000 }]
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 1Gi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mailpit, namespace: inventory }
+spec:
+  selector: { app: mailpit }
+  ports:
+    - { name: smtp, port: 1025, targetPort: 1025 }
+    - { name: http, port: 8025, targetPort: 8025 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: mailpit, namespace: inventory }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: mailpit } }
+  template:
+    metadata: { labels: { app: mailpit } }
+    spec:
+      containers:
+        - name: mailpit
+          image: public.ecr.aws/supabase/mailpit:v1.31.3
+          env:
+            - { name: MP_WEBROOT, value: /mail/ }
+            - { name: MP_MAX_MESSAGES, value: "500" }
+          ports: [{ containerPort: 1025 }, { containerPort: 8025 }]
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: kong, namespace: inventory }
+spec:
+  selector: { app: gateway }
+  ports: [{ port: 8000, targetPort: 8000 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: gateway, namespace: inventory }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: gateway } }
+  template:
+    metadata: { labels: { app: gateway } }
+    spec:
+      containers:
+        - name: nginx
+          image: ghcr.io/loardracoon/software-inventory-client-web:bootstrap
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8000 }]
+          readinessProbe:
+            httpGet: { path: /, port: 8000 }
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 10m, memory: 16Mi }
+            limits: { memory: 128Mi }
+          volumeMounts: [{ name: htpasswd, mountPath: /etc/nginx/auth, readOnly: true }]
+      volumes:
+        - name: htpasswd
+          secret: { secretName: mail-htpasswd }
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata: { name: https-redirect, namespace: inventory }
+spec:
+  redirectScheme: { scheme: https, permanent: true }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web
+  namespace: inventory
+  annotations:
+    traefik.ingress.kubernetes.io/router.middlewares: inventory-https-redirect@kubernetescrd
+spec:
+  ingressClassName: traefik
+  tls: [{ hosts: [inventory.clau.sophizo.com.br], secretName: tls }]
+  rules:
+    - host: inventory.clau.sophizo.com.br
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: kong, port: { number: 8000 } } }
