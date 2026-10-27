@@ -157,7 +157,7 @@ spec:
     spec:
       containers:
         - name: edge-runtime
-          image: ghcr.io/loardracoon/software-inventory-client-functions:bootstrap
+          image: ghcr.io/loardracoon/software-inventory-client-functions:4bafd9ddf1324c62988d1f8bfc3e550ce824c980
           imagePullPolicy: IfNotPresent
           env:
             - { name: SUPABASE_URL, value: "http://kong:8000" }
@@ -219,7 +219,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: ghcr.io/loardracoon/software-inventory-client-web:bootstrap
+          image: ghcr.io/loardracoon/software-inventory-client-web:4bafd9ddf1324c62988d1f8bfc3e550ce824c980
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8000 }]
           readinessProbe:
