@@ -30,6 +30,11 @@ jobs:
           node-version: 24
           cache: npm
 
+      # The Hub's taxonomy test compares docs/taxonomy.json with the client's copy in ../client.
+      - name: Sibling client repository (Hub only)
+        if: github.repository == 'loardracoon/software-inventory-hub'
+        run: git clone --depth 1 https://github.com/loardracoon/software-inventory-client.git ../client
+
       - name: Lint and test
         run: |
           npm ci --no-audit --no-fund
