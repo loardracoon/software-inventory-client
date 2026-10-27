@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Software · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+table.inv{width:100%;border-collapse:collapse;font-size:14px}
+table.inv th{text-align:left;padding:0 16px;height:44px;background:var(--surface-subtle);border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.inv td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-body)}
+table.inv tbody tr:hover td{background:var(--surface-subtle)}
+table.inv td.num,table.inv th.num{text-align:right}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+button.chip{min-height:36px;cursor:pointer}
+button.req{min-height:36px;padding:0 4px;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--text-brand);cursor:pointer;white-space:nowrap}
+button.req:hover{text-decoration:underline}
+.fld-label{display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--text-strong)}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a on" href="Software.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a on" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="brand" tick="{{yes}}">{{eyebrow}}</x-import>
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">Software</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Programs, browser and IDE extensions and packages in one search, grouped by normalized title.</p>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted);">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-brand);"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+<span>Taxonomy from Dictionary Hub · 29 categories, 71 subcategories · seq 10,482 · synced 12 min ago · read-only</span>
+</div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Save search</x-import>
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Export CSV</x-import>
+</div>
+</div>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SophosDS.Toast" tone="success" title="{{toastTitle}}" message="The dictionary admin was notified. You will see the decision here after the next dictionary sync." on-close="{{closeToast}}"></x-import>
+</sc-if>
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+<div style="flex: 3 1 300px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" label="Search titles" placeholder="Name, vendor, package or extension ID" hint="Paste an extension ID to jump straight to it." value="{{q}}" on-change="{{onSearch}}"></x-import></div>
+<div style="flex: 1 1 170px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Attention" value="{{att}}" on-change="{{onAtt}}">
+<option value="all">Any attention level</option>
+<option value="review">Review</option>
+<option value="not_allowed">Not allowed</option>
+<option value="info">Info</option>
+</x-import>
+</div>
+<div style="flex: 1 1 150px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Platform">
+<option>All platforms</option>
+<option>Windows</option>
+<option>macOS</option>
+<option>Linux</option>
+</x-import>
+</div>
+<div style="flex: 1 1 180px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Installed on">
+<option>Now · week 43</option>
+<option>Mon, Oct 12 · week 42</option>
+<option>Mon, Oct 5 · week 41</option>
+</x-import>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<span id="cat-label" style="font-size: 13px; font-weight: 600; color: var(--text-strong);">Categories (level 1)</span>
+<div role="group" aria-labelledby="cat-label" style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="9">
+<button type="button" class="{{c.cls}}" aria-pressed="{{c.pressed}}" onClick="{{c.toggle}}">{{c.label}}</button>
+</sc-for>
+<button type="button" onClick="{{clearCats}}" style="min-height: 36px; padding: 0 8px; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; color: var(--text-brand); cursor: pointer;">Clear</button>
+</div>
+<span style="font-size: 12px; color: var(--text-muted);">Showing the level-1 categories present in this tenant. Level-1 names match Sophos Firewall application categories.</span>
+</div>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="SophosDS.Card" padded="{{no}}">
+<div style="display: flex; flex-direction: column;">
+<div style="padding: 20px 24px 0; display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px;">
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">{{resultTitle}}</h2>
+<span style="font-size: 14px; color: var(--text-muted);">{{resultMeta}}</span>
+</div>
+<x-import component-from-global-scope="SophosDS.Tabs" items="{{tabs}}" value="{{kind}}" on-change="{{onKind}}"></x-import>
+</div>
+<div style="overflow-x: auto;">
+<table class="inv" style="min-width: 1140px;">
+<thead><tr><th scope="col">Title</th><th scope="col">Kind · source</th><th scope="col">Category</th><th scope="col" class="num">Computers</th><th scope="col" class="num">Versions</th><th scope="col">Newest</th><th scope="col">Dictionary</th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="11">
+<tr>
+<td><div style="display: flex; flex-direction: column; gap: 2px; max-width: 260px;"><a href="Computers.dc.html" style="font-weight: 600; text-decoration: none;">{{r.name}}</a><sc-if value="{{r.hasId}}" hint-placeholder-val="{{ false }}"><span class="mono" style="color: var(--text-muted);">{{r.extId}}</span></sc-if></div></td>
+<td><div style="display: flex; flex-direction: column; gap: 2px;"><span style="white-space: nowrap;">{{r.kindLabel}}</span><span style="font-size: 12px; color: var(--text-muted);">{{r.source}}</span></div></td>
+<td><div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; max-width: 300px;"><span style="font-size: 12px; color: var(--text-muted);">{{r.l1}}</span><div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">{{r.l2}}</span><sc-if value="{{r.flag}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SophosDS.Badge" color="{{r.color}}" soft="{{yes}}">{{r.attLabel}}</x-import></sc-if></div><span style="font-size: 12px; color: var(--text-muted);">{{r.origin}}</span></div></td>
+<td class="num" style="font-weight: 600; color: var(--text-strong);">{{r.computers}}</td>
+<td class="num">{{r.versions}}</td>
+<td class="mono" style="font-size: 13px;">{{r.latest}}</td>
+<td><sc-if value="{{r.hasReq}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SophosDS.Badge" color="medium" soft="{{yes}}">{{r.reqLabel}}</x-import></sc-if><sc-if value="{{r.canReq}}" hint-placeholder-val="{{ true }}"><button type="button" class="req" onClick="{{r.request}}" aria-label="{{r.reqAria}}">Request reclassification</button></sc-if></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+<p style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; color: var(--text-strong);">No titles match</p>
+<p style="margin: 0; font-size: 14px; color: var(--text-muted);">Try another category or clear the search.</p>
+</div>
+</sc-if>
+</div>
+<p style="margin: 0; padding: 16px 24px; font-size: 13px; line-height: 1.5; color: var(--text-muted);">Titles the hub has not classified yet sit under Unclassified, so a search by category cannot find them. Check that chip before trusting an empty result.</p>
+</div>
+</x-import>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Sample data. Extension IDs shown are the ones seen in the LAB-PC01 export; other titles and counts are illustrative.</p>
+</main>
+</div>
+
+<sc-if value="{{dlgOpen}}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SophosDS.Dialog" open="{{yes}}" title="Request reclassification" on-close="{{closeDlg}}" primary-label="Send to dictionary admin" on-primary="{{sendReq}}" secondary-label="Cancel" width="{{dlgW}}">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="font-size: 15px; font-weight: 600; color: var(--text-strong);">{{dlg.name}}</span>
+<span style="font-size: 13px; color: var(--text-muted);">{{dlg.kindLabel}} · {{dlg.source}}</span>
+<span style="font-size: 13px; color: var(--text-muted);">Now: {{dlg.cat}} ({{dlg.origin}})</span>
+</div>
+<x-import component-from-global-scope="SophosDS.Select" label="Suggested category" value="{{suggest}}" on-change="{{onSuggest}}">
+<optgroup label="Remote access">
+<option value="Remote access / Remote desktop and support">Remote desktop and support</option>
+<option value="Remote access / Remote management agents (RMM)">Remote management agents (RMM)</option>
+<option value="Remote access / VNC and RDP servers">VNC and RDP servers</option>
+<option value="Remote access / SSH and terminal clients">SSH and terminal clients</option>
+</optgroup>
+<optgroup label="Proxy and tunnel">
+<option value="Proxy and tunnel / Corporate VPN clients">Corporate VPN clients</option>
+<option value="Proxy and tunnel / Consumer VPN and proxy services">Consumer VPN and proxy services</option>
+<option value="Proxy and tunnel / Tunnels and mesh networks">Tunnels and mesh networks</option>
+<option value="Proxy and tunnel / Anonymizers">Anonymizers</option>
+</optgroup>
+<optgroup label="General business">
+<option value="General business / Office and documents">Office and documents</option>
+<option value="General business / Notes and knowledge">Notes and knowledge</option>
+<option value="General business / Screen capture and recording">Screen capture and recording</option>
+<option value="General business / Compression and file utilities">Compression and file utilities</option>
+</optgroup>
+<optgroup label="Streaming media">
+<option value="Streaming media / Video streaming">Video streaming</option>
+<option value="Streaming media / Music and podcasts">Music and podcasts</option>
+<option value="Streaming media / Media players and casting">Media players and casting</option>
+</optgroup>
+<optgroup label="Security and identity">
+<option value="Security and identity / Password managers">Password managers</option>
+<option value="Security and identity / Encryption tools">Encryption tools</option>
+<option value="Security and identity / Security testing tools">Security testing tools</option>
+</optgroup>
+<optgroup label="Generative AI">
+<option value="Generative AI / AI assistants">AI assistants</option>
+<option value="Generative AI / AI coding assistants">AI coding assistants</option>
+<option value="Generative AI / Local AI runtimes">Local AI runtimes</option>
+</optgroup>
+<optgroup label="General internet">
+<option value="General internet / Web browsers">Web browsers</option>
+<option value="General internet / Browser utilities">Browser utilities</option>
+<option value="General internet / Legacy Chrome apps">Legacy Chrome apps</option>
+</optgroup>
+<optgroup label="System applications">
+<option value="System applications / Browser components">Browser components</option>
+<option value="System applications / OS components and runtimes">OS components and runtimes</option>
+</optgroup>
+<optgroup label="Unwanted software">
+<option value="Unwanted software / Adware and browser hijackers">Adware and browser hijackers</option>
+</optgroup>
+<optgroup label="Other">
+<option value="Other / Other">Other</option>
+</optgroup>
+</x-import>
+<div>
+<label class="fld-label" for="req-reason">Reason</label>
+<textarea id="req-reason" rows="3" maxlength="500" placeholder="What is wrong with the current category, and how do you know?" value="{{reason}}" onChange="{{onReason}}" style="width: 100%; box-sizing: border-box; padding: 10px 14px; border: 1.5px solid {{reasonBorder}}; border-radius: 8px; background: var(--surface-raised); color: var(--text-body); font-family: var(--font-sans); font-size: 15px; line-height: 1.5; resize: vertical;"></textarea>
+<sc-if value="{{reasonError}}" hint-placeholder-val="{{ false }}"><span style="display: block; margin-top: 6px; font-size: 12px; color: var(--text-critical);">Add a reason so the admin can decide.</span></sc-if>
+</div>
+<x-import component-from-global-scope="SophosDS.Input" label="Evidence URL (optional)" placeholder="Vendor page, store listing or advisory"></x-import>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Only the title, your suggestion and your reason are sent to the hub. Computers and users stay in this app.</p>
+</div>
+</x-import>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+var SW_TITLES = [
+  { name: 'AnyDesk', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 21, versions: 4, latest: '9.0.5' },
+  { name: 'TeamViewer', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 9, versions: 3, latest: '15.58.4' },
+  { name: 'RustDesk', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 2, versions: 1, latest: '1.3.2' },
+  { name: 'Chrome Remote Desktop', kind: 'extension', source: 'Chrome', extId: 'inomeogfingihgjfjlpeplalcfajhgai', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 11, versions: 1, latest: '2.1' },
+  { name: 'Chrome Remote Desktop', kind: 'extension', source: 'Chrome', extId: 'gbchcmhmhahfdphkhkmpfmihenigjmpp', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 3, versions: 1, latest: '77.0.3836.0' },
+  { name: 'anydesk', kind: 'package', source: 'Chocolatey', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · rule', computers: 2, versions: 1, latest: '9.0.5' },
+  { name: 'PuTTY', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'SSH and terminal clients', att: 'info', origin: 'Hub · Jev auto 0.97', computers: 17, versions: 2, latest: '0.81' },
+  { name: 'FortiClient VPN', kind: 'program', source: 'Windows programs', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', att: 'info', origin: 'Hub · reviewed', computers: 44, versions: 2, latest: '7.4.1' },
+  { name: 'OpenVPN Connect', kind: 'program', source: 'macOS apps', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', att: 'info', origin: 'Hub · reviewed', computers: 4, versions: 2, latest: '3.5.1' },
+  { name: 'Urban VPN Proxy', kind: 'extension', source: 'Chrome', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', att: 'review', origin: 'Hub · reviewed', computers: 5, versions: 2, latest: '5.11.2', req: 'REQ-0041 · open' },
+  { name: 'wireguard-tools', kind: 'package', source: 'Homebrew', l1: 'Proxy and tunnel', l2: 'Tunnels and mesh networks', att: 'review', origin: 'Hub · Jev 0.89, reviewed', computers: 3, versions: 1, latest: '1.0.20210914' },
+  { name: 'Tor Browser', kind: 'program', source: 'Windows programs', l1: 'Proxy and tunnel', l2: 'Anonymizers', att: 'not_allowed', origin: 'Hub · rule', computers: 1, versions: 1, latest: '14.0' },
+  { name: 'Awesome Screen Recorder & Screenshot', kind: 'extension', source: 'Chrome', extId: 'nlipoenfbbikpbjkfpfillcgkoblgpmj', l1: 'General business', l2: 'Screen capture and recording', att: 'review', origin: 'Hub · reviewed', computers: 9, versions: 4, latest: '4.4.41' },
+  { name: 'OBS Studio', kind: 'program', source: 'Windows programs', l1: 'General business', l2: 'Screen capture and recording', att: 'review', origin: 'Hub · reviewed', computers: 7, versions: 2, latest: '30.2.3' },
+  { name: 'ShareX', kind: 'program', source: 'Windows programs', l1: 'General business', l2: 'Screen capture and recording', att: 'not_allowed', origin: 'Local override · Not allowed', computers: 5, versions: 1, latest: '16.1.0' },
+  { name: 'Adobe Acrobat: PDF edit, convert, sign tools', kind: 'extension', source: 'Chrome', extId: 'efaidnbmnnnibpcajpcglclefindmkaj', l1: 'General business', l2: 'Office and documents', att: 'info', origin: 'Hub · Jev auto 0.98', computers: 52, versions: 4, latest: '26.10.1.0' },
+  { name: 'Keeper® Password Manager & Digital Vault', kind: 'extension', source: 'Chrome', extId: 'bfogiafebfohielmmehodmfbbebbbpei', l1: 'Security and identity', l2: 'Password managers', att: 'info', origin: 'Hub · reviewed', computers: 31, versions: 3, latest: '17.9.0' },
+  { name: 'Bitwarden Password Manager', kind: 'extension', source: 'Chrome, Edge', l1: 'Security and identity', l2: 'Password managers', att: 'info', origin: 'Hub · reviewed', computers: 48, versions: 2, latest: '2024.10.1' },
+  { name: 'Advanced IP Scanner', kind: 'program', source: 'Windows programs', l1: 'Security and identity', l2: 'Security testing tools', att: 'review', origin: 'Hub · reviewed', computers: 6, versions: 1, latest: '2.5.4594' },
+  { name: 'GitHub Copilot', kind: 'ide_extension', source: 'VS Code', l1: 'Generative AI', l2: 'AI coding assistants', att: 'review', origin: 'Hub · reviewed', computers: 22, versions: 3, latest: '1.245.0' },
+  { name: 'Ollama', kind: 'program', source: 'Windows programs', l1: 'Generative AI', l2: 'Local AI runtimes', att: 'review', origin: 'Hub · reviewed', computers: 2, versions: 1, latest: '0.4.1' },
+  { name: 'Visual Studio Code', kind: 'program', source: 'Windows programs, macOS apps', l1: 'Developer tools', l2: 'IDEs and editors', att: 'info', origin: 'Hub · reviewed', computers: 66, versions: 5, latest: '1.95.1' },
+  { name: 'typescript', kind: 'package', source: 'npm', l1: 'Developer tools', l2: 'Libraries and packages', att: 'info', origin: 'Hub · rule', computers: 38, versions: 6, latest: '5.9.2' },
+  { name: 'Gmail', kind: 'extension', source: 'Chrome', extId: 'pjkljhegncpnkpknbcohdijeoejaedia', l1: 'General internet', l2: 'Legacy Chrome apps', att: 'review', origin: 'Hub · rule', computers: 14, versions: 1, latest: '8.2' },
+  { name: 'YouTube', kind: 'extension', source: 'Chrome', extId: 'blpcfgokakmgnkcojhhkbfbldkacnbeo', l1: 'General internet', l2: 'Legacy Chrome apps', att: 'review', origin: 'Hub · rule', computers: 9, versions: 1, latest: '4.2.8' },
+  { name: 'Momentum', kind: 'extension', source: 'Chrome', extId: 'laookkfknpbbblfpciffpaejjkokdgca', l1: 'General internet', l2: 'Browser utilities', att: 'info', origin: 'Hub · Jev auto 0.96', computers: 8, versions: 3, latest: '2.26.6' },
+  { name: 'Add to Amazon Wish List', kind: 'extension', source: 'Chrome', extId: 'ciagpekplgpbepdgggflgmahnjgiaced', l1: 'E-commerce', l2: 'Shopping assistants', att: 'review', origin: 'Hub · reviewed', computers: 7, versions: 1, latest: '1.0.0.11' },
+  { name: 'Player do NOW NET Claro', kind: 'extension', source: 'Chrome', extId: 'npflpmeannakjekldamofnldpiefjmmi', l1: 'Other', l2: 'Other', att: 'info', origin: 'Hub · reviewed', computers: 6, versions: 1, latest: '1.9.3.43', req: 'REQ-0042 · open' },
+  { name: 'Parsec', kind: 'program', source: 'Windows programs', l1: 'Unclassified', l2: 'Not in the dictionary yet', att: 'none', origin: 'Sent to hub · Oct 20', computers: 3, versions: 1, latest: '150-97' }
+];
+var SW_CATS = ['Remote access', 'Proxy and tunnel', 'General business', 'Security and identity', 'Generative AI', 'Developer tools', 'General internet', 'E-commerce', 'Other', 'Unclassified'];
+var SW_ATT = { info: ['blue', 'Info', false], review: ['high', 'Review', true], not_allowed: ['critical', 'Not allowed', true], none: ['medium', 'Unclassified', true] };
+var SW_KIND = { program: 'Program', extension: 'Browser extension', ide_extension: 'IDE extension', package: 'Package' };
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { q: '', kind: 'all', att: 'all', cats: ['Remote access', 'Proxy and tunnel'], requests: {}, nextReq: 43, dlg: null, suggest: 'Remote access / Remote desktop and support', reason: '', reasonError: false, toast: null };
+  }
+  toggleCat(c) {
+    this.setState(function (st) {
+      var has = st.cats.indexOf(c) !== -1;
+      return { cats: has ? st.cats.filter(function (x) { return x !== c; }) : st.cats.concat([c]) };
+    });
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var q = s.q.trim().toLowerCase();
+    var indexed = SW_TITLES.map(function (t, i) { return Object.assign({ idx: i }, t); });
+    var base = indexed.filter(function (t) {
+      if (s.cats.length && s.cats.indexOf(t.l1) === -1) return false;
+      if (s.att !== 'all' && t.att !== s.att) return false;
+      if (q && (t.name + ' ' + (t.extId || '') + ' ' + t.source + ' ' + t.l2).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+    function countKind(k) { return base.filter(function (t) { return t.kind === k; }).length; }
+    var rows = base.filter(function (t) { return s.kind === 'all' || t.kind === s.kind; })
+      .slice().sort(function (a, b) { return b.computers - a.computers; })
+      .map(function (t) {
+        var a = SW_ATT[t.att];
+        var req = s.requests[t.idx] || t.req || '';
+        return Object.assign({}, t, {
+          kindLabel: SW_KIND[t.kind], color: a[0], attLabel: a[1], flag: a[2], hasId: !!t.extId, extId: t.extId || '',
+          hasReq: !!req, reqLabel: req, canReq: !req,
+          reqAria: 'Request reclassification of ' + t.name,
+          request: function () { self.setState({ dlg: t.idx, suggest: t.l1 === 'Unclassified' ? 'Remote access / Remote desktop and support' : t.l1 + ' / ' + t.l2, reason: '', reasonError: false }); }
+        });
+      });
+    var installs = rows.reduce(function (n, t) { return n + t.computers; }, 0);
+    var saved = s.cats.length === 2 && s.cats.indexOf('Remote access') !== -1 && s.cats.indexOf('Proxy and tunnel') !== -1;
+    var chips = SW_CATS.map(function (c) {
+      var on = s.cats.indexOf(c) !== -1;
+      return { label: c, pressed: on ? 'true' : 'false', cls: 'chip sds-tag' + (on ? ' sds-tag--active' : ''), toggle: function () { self.toggleCat(c); } };
+    });
+    var d = s.dlg === null ? null : SW_TITLES[s.dlg];
+    return {
+      yes: true, no: false, logoH: 22, dlgW: 540,
+      eyebrow: saved ? 'SAVED SEARCH · REMOTE ACCESS & TUNNELS' : 'INVENTORY',
+      q: s.q,
+      onSearch: function (e) { self.setState({ q: e.target.value }); },
+      att: s.att,
+      onAtt: function (e) { self.setState({ att: e.target.value }); },
+      chips: chips,
+      clearCats: function () { self.setState({ cats: [], q: '', att: 'all' }); },
+      tabs: [
+        { id: 'all', label: 'All', badge: base.length },
+        { id: 'program', label: 'Programs', badge: countKind('program') },
+        { id: 'extension', label: 'Browser extensions', badge: countKind('extension') },
+        { id: 'ide_extension', label: 'IDE extensions', badge: countKind('ide_extension') },
+        { id: 'package', label: 'Packages', badge: countKind('package') }
+      ],
+      kind: s.kind,
+      onKind: function (id) { self.setState({ kind: id }); },
+      rows: rows,
+      empty: rows.length === 0,
+      resultTitle: s.cats.length ? s.cats.join(' + ') : 'All categories',
+      resultMeta: rows.length + (rows.length === 1 ? ' title · ' : ' titles · ') + installs + ' installs across titles',
+      dlgOpen: !!d,
+      dlg: d ? { name: d.name, kindLabel: SW_KIND[d.kind], source: d.source, cat: d.l1 === 'Unclassified' ? 'Unclassified' : d.l1 + ' / ' + d.l2, origin: d.origin } : { name: '', kindLabel: '', source: '', cat: '', origin: '' },
+      suggest: s.suggest,
+      onSuggest: function (e) { self.setState({ suggest: e.target.value }); },
+      reason: s.reason,
+      onReason: function (e) { self.setState({ reason: e.target.value, reasonError: false }); },
+      reasonError: s.reasonError,
+      reasonBorder: s.reasonError ? 'var(--text-critical)' : 'var(--border-control)',
+      closeDlg: function () { self.setState({ dlg: null }); },
+      sendReq: function () {
+        if (!s.reason.trim()) { self.setState({ reasonError: true }); return; }
+        var id = 'REQ-' + String(s.nextReq).padStart(4, '0');
+        var next = Object.assign({}, s.requests);
+        next[s.dlg] = id + ' · open';
+        self.setState({ requests: next, nextReq: s.nextReq + 1, dlg: null, toast: id + ' sent: ' + SW_TITLES[s.dlg].name + ' → ' + s.suggest });
+      },
+      hasToast: !!s.toast,
+      toastTitle: s.toast || '',
+      closeToast: function () { self.setState({ toast: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

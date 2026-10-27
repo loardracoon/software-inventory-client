@@ -1,0 +1,641 @@
+[
+ {
+  "level1": "Remote access",
+  "level2": "Remote desktop and support",
+  "slug": "remote-access/remote-desktop-and-support",
+  "attention_default": "review",
+  "sophos_firewall_category": "Remote access",
+  "description": "Tools that let someone see and control this computer or another one over the network, attended or unattended.",
+  "examples": "AnyDesk, TeamViewer, RustDesk, Chrome Remote Desktop, Splashtop, Parsec"
+ },
+ {
+  "level1": "Remote access",
+  "level2": "Remote management agents (RMM)",
+  "slug": "remote-access/remote-management-agents-rmm",
+  "attention_default": "review",
+  "sophos_firewall_category": "Remote access",
+  "description": "Agents of IT management platforms that run scripts, install software and open remote sessions.",
+  "examples": "NinjaOne, Datto RMM, Atera, ConnectWise Automate"
+ },
+ {
+  "level1": "Remote access",
+  "level2": "VNC and RDP servers",
+  "slug": "remote-access/vnc-and-rdp-servers",
+  "attention_default": "review",
+  "sophos_firewall_category": "Remote access",
+  "description": "Software that accepts incoming remote desktop connections on this computer.",
+  "examples": "RealVNC Server, TightVNC, UltraVNC, RDP Wrapper"
+ },
+ {
+  "level1": "Remote access",
+  "level2": "SSH and terminal clients",
+  "slug": "remote-access/ssh-and-terminal-clients",
+  "attention_default": "info",
+  "sophos_firewall_category": "Remote access",
+  "description": "Clients used to open shells on other systems.",
+  "examples": "PuTTY, MobaXterm, Termius, Windows Terminal"
+ },
+ {
+  "level1": "Proxy and tunnel",
+  "level2": "Corporate VPN clients",
+  "slug": "proxy-and-tunnel/corporate-vpn-clients",
+  "attention_default": "info",
+  "sophos_firewall_category": "Proxy and tunnel",
+  "description": "VPN clients usually deployed by the organization to reach internal networks.",
+  "examples": "FortiClient VPN, Cisco Secure Client, GlobalProtect, OpenVPN Connect"
+ },
+ {
+  "level1": "Proxy and tunnel",
+  "level2": "Consumer VPN and proxy services",
+  "slug": "proxy-and-tunnel/consumer-vpn-and-proxy-services",
+  "attention_default": "review",
+  "sophos_firewall_category": "Proxy and tunnel",
+  "description": "Personal VPN or proxy apps and browser extensions that route traffic through a third-party service.",
+  "examples": "Urban VPN Proxy, Hola VPN, Hotspot Shield, NordVPN, Proton VPN"
+ },
+ {
+  "level1": "Proxy and tunnel",
+  "level2": "Tunnels and mesh networks",
+  "slug": "proxy-and-tunnel/tunnels-and-mesh-networks",
+  "attention_default": "review",
+  "sophos_firewall_category": "Proxy and tunnel",
+  "description": "Tools that expose local services to the internet or join the computer to an overlay network.",
+  "examples": "ngrok, cloudflared, Tailscale, ZeroTier, frp"
+ },
+ {
+  "level1": "Proxy and tunnel",
+  "level2": "Anonymizers",
+  "slug": "proxy-and-tunnel/anonymizers",
+  "attention_default": "not_allowed",
+  "sophos_firewall_category": "Proxy and tunnel",
+  "description": "Software built to hide the user's identity or bypass network controls.",
+  "examples": "Tor Browser, Psiphon, Ultrasurf"
+ },
+ {
+  "level1": "File transfer",
+  "level2": "FTP and SFTP clients",
+  "slug": "file-transfer/ftp-and-sftp-clients",
+  "attention_default": "info",
+  "sophos_firewall_category": "File transfer",
+  "description": "Clients for moving files to and from servers.",
+  "examples": "FileZilla, WinSCP, Cyberduck"
+ },
+ {
+  "level1": "File transfer",
+  "level2": "Direct file sharing",
+  "slug": "file-transfer/direct-file-sharing",
+  "attention_default": "review",
+  "sophos_firewall_category": "File transfer",
+  "description": "Apps that send files between devices or people outside managed storage.",
+  "examples": "LocalSend, Send Anywhere, WeTransfer"
+ },
+ {
+  "level1": "Storage and backup",
+  "level2": "Cloud storage sync",
+  "slug": "storage-and-backup/cloud-storage-sync",
+  "attention_default": "info",
+  "sophos_firewall_category": "Storage and backup",
+  "description": "Desktop clients and extensions that sync files with a cloud drive.",
+  "examples": "OneDrive, Google Drive, Dropbox, Box, Application Launcher For Drive"
+ },
+ {
+  "level1": "Storage and backup",
+  "level2": "Backup software",
+  "slug": "storage-and-backup/backup-software",
+  "attention_default": "info",
+  "sophos_firewall_category": "Storage and backup",
+  "description": "Software that copies data to local or remote backup targets.",
+  "examples": "Veeam Agent, Acronis Cyber Protect, Backblaze, Macrium Reflect"
+ },
+ {
+  "level1": "P2P",
+  "level2": "Torrent clients",
+  "slug": "p2p/torrent-clients",
+  "attention_default": "not_allowed",
+  "sophos_firewall_category": "P2P",
+  "description": "BitTorrent clients and torrent search tools.",
+  "examples": "qBittorrent, µTorrent, BitTorrent, Transmission"
+ },
+ {
+  "level1": "P2P",
+  "level2": "Other P2P networks",
+  "slug": "p2p/other-p2p-networks",
+  "attention_default": "not_allowed",
+  "sophos_firewall_category": "P2P",
+  "description": "File sharing over other peer-to-peer networks.",
+  "examples": "eMule, Soulseek, Shareaza"
+ },
+ {
+  "level1": "Download applications",
+  "level2": "Download managers",
+  "slug": "download-applications/download-managers",
+  "attention_default": "review",
+  "sophos_firewall_category": "Download applications",
+  "description": "Tools that accelerate or schedule downloads outside the browser.",
+  "examples": "Internet Download Manager, JDownloader, Free Download Manager"
+ },
+ {
+  "level1": "Download applications",
+  "level2": "Media downloaders",
+  "slug": "download-applications/media-downloaders",
+  "attention_default": "review",
+  "sophos_firewall_category": "Download applications",
+  "description": "Tools that save video or audio from streaming sites.",
+  "examples": "yt-dlp, 4K Video Downloader, Video DownloadHelper"
+ },
+ {
+  "level1": "Conferencing",
+  "level2": "Video meetings",
+  "slug": "conferencing/video-meetings",
+  "attention_default": "info",
+  "sophos_firewall_category": "Conferencing",
+  "description": "Meeting and webinar clients and their browser extensions.",
+  "examples": "Zoom Workplace, Microsoft Teams, Cisco Webex, Cisco Webex Extension"
+ },
+ {
+  "level1": "Instant messenger",
+  "level2": "Team chat",
+  "slug": "instant-messenger/team-chat",
+  "attention_default": "info",
+  "sophos_firewall_category": "Instant messenger",
+  "description": "Workplace messaging platforms.",
+  "examples": "Slack, Mattermost, Rocket.Chat"
+ },
+ {
+  "level1": "Instant messenger",
+  "level2": "Consumer messaging",
+  "slug": "instant-messenger/consumer-messaging",
+  "attention_default": "review",
+  "sophos_firewall_category": "Instant messenger",
+  "description": "Personal messaging apps on a work computer.",
+  "examples": "WhatsApp, Telegram, Signal, Discord"
+ },
+ {
+  "level1": "VoIP",
+  "level2": "Softphones",
+  "slug": "voip/softphones",
+  "attention_default": "info",
+  "sophos_firewall_category": "VoIP",
+  "description": "Telephony clients that place or receive calls over IP.",
+  "examples": "3CX, Zoiper, MicroSIP"
+ },
+ {
+  "level1": "Desktop mail",
+  "level2": "Mail clients",
+  "slug": "desktop-mail/mail-clients",
+  "attention_default": "info",
+  "sophos_firewall_category": "Desktop mail",
+  "description": "Desktop email clients and their add-ins.",
+  "examples": "Outlook, Thunderbird, eM Client, Mailbird"
+ },
+ {
+  "level1": "Web mail",
+  "level2": "Web mail helpers",
+  "slug": "web-mail/web-mail-helpers",
+  "attention_default": "info",
+  "sophos_firewall_category": "Web mail",
+  "description": "Browser extensions that add features to web mail.",
+  "examples": "Boomerang for Gmail, Mailtrack"
+ },
+ {
+  "level1": "Streaming media",
+  "level2": "Video streaming",
+  "slug": "streaming-media/video-streaming",
+  "attention_default": "info",
+  "sophos_firewall_category": "Streaming media",
+  "description": "Players and extensions for video streaming services, including DRM components.",
+  "examples": "Netflix, Player do NOW NET Claro, Disney+"
+ },
+ {
+  "level1": "Streaming media",
+  "level2": "Music and podcasts",
+  "slug": "streaming-media/music-and-podcasts",
+  "attention_default": "info",
+  "sophos_firewall_category": "Streaming media",
+  "description": "Music and podcast streaming clients.",
+  "examples": "Spotify, Deezer, Apple Music"
+ },
+ {
+  "level1": "Streaming media",
+  "level2": "Media players and casting",
+  "slug": "streaming-media/media-players-and-casting",
+  "attention_default": "info",
+  "sophos_firewall_category": "Streaming media",
+  "description": "Local media players and casting receivers.",
+  "examples": "VLC, PotPlayer, AllCast Receiver"
+ },
+ {
+  "level1": "Social networking",
+  "level2": "Social network apps and extensions",
+  "slug": "social-networking/social-network-apps-and-extensions",
+  "attention_default": "info",
+  "sophos_firewall_category": "Social networking",
+  "description": "Apps and extensions for social networks.",
+  "examples": "Facebook, Instagram, LinkedIn, X"
+ },
+ {
+  "level1": "Gaming",
+  "level2": "Game launchers and stores",
+  "slug": "gaming/game-launchers-and-stores",
+  "attention_default": "review",
+  "sophos_firewall_category": "Gaming",
+  "description": "Platforms that install and run games.",
+  "examples": "Steam, Epic Games Launcher, Battle.net, EA app"
+ },
+ {
+  "level1": "Gaming",
+  "level2": "Games",
+  "slug": "gaming/games",
+  "attention_default": "review",
+  "sophos_firewall_category": "Gaming",
+  "description": "Installed games and browser games.",
+  "examples": "Minecraft, Roblox, League of Legends"
+ },
+ {
+  "level1": "E-commerce",
+  "level2": "Shopping assistants",
+  "slug": "e-commerce/shopping-assistants",
+  "attention_default": "review",
+  "sophos_firewall_category": "E-commerce",
+  "description": "Coupon, cashback, price tracking and wish list extensions; many read every page the user visits.",
+  "examples": "Add to Amazon Wish List, Honey, Keepa"
+ },
+ {
+  "level1": "Generative AI",
+  "level2": "AI assistants",
+  "slug": "generative-ai/ai-assistants",
+  "attention_default": "review",
+  "sophos_firewall_category": "Generative AI",
+  "description": "Chat assistants as desktop apps or browser extensions.",
+  "examples": "ChatGPT, Claude, Microsoft Copilot, Gemini"
+ },
+ {
+  "level1": "Generative AI",
+  "level2": "AI browser extensions",
+  "slug": "generative-ai/ai-browser-extensions",
+  "attention_default": "review",
+  "sophos_firewall_category": "Generative AI",
+  "description": "Sidebars, writers and summarizers that read the content of the pages the user visits.",
+  "examples": "Monica, Merlin, Sider"
+ },
+ {
+  "level1": "Generative AI",
+  "level2": "AI coding assistants",
+  "slug": "generative-ai/ai-coding-assistants",
+  "attention_default": "review",
+  "sophos_firewall_category": "Generative AI",
+  "description": "Code completion and coding agents inside IDEs and terminals.",
+  "examples": "GitHub Copilot, Cursor, Codeium"
+ },
+ {
+  "level1": "Generative AI",
+  "level2": "Local AI runtimes",
+  "slug": "generative-ai/local-ai-runtimes",
+  "attention_default": "review",
+  "sophos_firewall_category": "Generative AI",
+  "description": "Tools that download and run models on the computer.",
+  "examples": "Ollama, LM Studio, GPT4All"
+ },
+ {
+  "level1": "General business",
+  "level2": "Office and documents",
+  "slug": "general-business/office-and-documents",
+  "attention_default": "info",
+  "sophos_firewall_category": "General business",
+  "description": "Office suites, PDF tools and document viewers.",
+  "examples": "Microsoft 365 Apps, Adobe Acrobat, LibreOffice, Google Docs Offline"
+ },
+ {
+  "level1": "General business",
+  "level2": "Notes and knowledge",
+  "slug": "general-business/notes-and-knowledge",
+  "attention_default": "info",
+  "sophos_firewall_category": "General business",
+  "description": "Note taking, wikis and knowledge tools.",
+  "examples": "Notion, Evernote Web Clipper, OneNote, Obsidian"
+ },
+ {
+  "level1": "General business",
+  "level2": "Design and creative",
+  "slug": "general-business/design-and-creative",
+  "attention_default": "info",
+  "sophos_firewall_category": "General business",
+  "description": "Graphics, video editing and design tools.",
+  "examples": "Adobe Creative Cloud, Figma, Canva, DaVinci Resolve"
+ },
+ {
+  "level1": "General business",
+  "level2": "Screen capture and recording",
+  "slug": "general-business/screen-capture-and-recording",
+  "attention_default": "review",
+  "sophos_firewall_category": "General business",
+  "description": "Tools that record or capture the screen.",
+  "examples": "Awesome Screen Recorder & Screenshot, OBS Studio, ShareX, Loom, Snagit"
+ },
+ {
+  "level1": "General business",
+  "level2": "Business applications",
+  "slug": "general-business/business-applications",
+  "attention_default": "info",
+  "sophos_firewall_category": "General business",
+  "description": "ERP, CRM, accounting and other line-of-business clients.",
+  "examples": "SAP GUI, TOTVS, Salesforce, Power BI Desktop"
+ },
+ {
+  "level1": "General business",
+  "level2": "Compression and file utilities",
+  "slug": "general-business/compression-and-file-utilities",
+  "attention_default": "info",
+  "sophos_firewall_category": "General business",
+  "description": "Archive and file management utilities.",
+  "examples": "7-Zip, WinRAR, Everything"
+ },
+ {
+  "level1": "General internet",
+  "level2": "Web browsers",
+  "slug": "general-internet/web-browsers",
+  "attention_default": "info",
+  "sophos_firewall_category": "General internet",
+  "description": "Web browsers and their release channels.",
+  "examples": "Google Chrome, Microsoft Edge, Firefox, Brave, Opera"
+ },
+ {
+  "level1": "General internet",
+  "level2": "Browser utilities",
+  "slug": "general-internet/browser-utilities",
+  "attention_default": "info",
+  "sophos_firewall_category": "General internet",
+  "description": "New tab pages, translators, ad blockers and other extensions that change pages.",
+  "examples": "Momentum, uBlock Origin, Google Translate, Dark Reader"
+ },
+ {
+  "level1": "General internet",
+  "level2": "Learning",
+  "slug": "general-internet/learning",
+  "attention_default": "info",
+  "sophos_firewall_category": "General internet",
+  "description": "Education and language learning apps.",
+  "examples": "Duolingo on the Web, Coursera, Khan Academy"
+ },
+ {
+  "level1": "General internet",
+  "level2": "Legacy Chrome apps",
+  "slug": "general-internet/legacy-chrome-apps",
+  "attention_default": "review",
+  "sophos_firewall_category": "General internet",
+  "description": "Deprecated Chrome apps kept from old browser profiles.",
+  "examples": "Docs, Sheets, Slides, Gmail, YouTube, Google Drive (legacy apps)"
+ },
+ {
+  "level1": "Software update",
+  "level2": "Updaters",
+  "slug": "software-update/updaters",
+  "attention_default": "info",
+  "sophos_firewall_category": "Software update",
+  "description": "Background services that update other software.",
+  "examples": "Google Update, Microsoft Edge Update, Adobe Updater, Java Update Scheduler"
+ },
+ {
+  "level1": "Infrastructure",
+  "level2": "Virtualization and containers",
+  "slug": "infrastructure/virtualization-and-containers",
+  "attention_default": "review",
+  "sophos_firewall_category": "Infrastructure",
+  "description": "Hypervisors, containers and Linux subsystems that run isolated environments.",
+  "examples": "VirtualBox, VMware Workstation, Docker Desktop, WSL"
+ },
+ {
+  "level1": "Infrastructure",
+  "level2": "Admin tools",
+  "slug": "infrastructure/admin-tools",
+  "attention_default": "info",
+  "sophos_firewall_category": "Infrastructure",
+  "description": "Tools used to administer systems and inspect networks.",
+  "examples": "Wireshark, RSAT, Sysinternals, mRemoteNG"
+ },
+ {
+  "level1": "Network services",
+  "level2": "Web and app servers",
+  "slug": "network-services/web-and-app-servers",
+  "attention_default": "review",
+  "sophos_firewall_category": "Network services",
+  "description": "Web servers and application runtimes that accept connections.",
+  "examples": "IIS, Apache httpd, nginx, Tomcat, php-fpm"
+ },
+ {
+  "level1": "Network services",
+  "level2": "Mail servers",
+  "slug": "network-services/mail-servers",
+  "attention_default": "review",
+  "sophos_firewall_category": "Network services",
+  "description": "Software that sends or receives mail for other users or systems.",
+  "examples": "Exchange Server, hMailServer, Postfix, Exim, Dovecot"
+ },
+ {
+  "level1": "Network services",
+  "level2": "Database servers",
+  "slug": "network-services/database-servers",
+  "attention_default": "review",
+  "sophos_firewall_category": "Network services",
+  "description": "Database engines running on the computer.",
+  "examples": "SQL Server, MySQL, PostgreSQL, MongoDB, Redis"
+ },
+ {
+  "level1": "Network services",
+  "level2": "Local development stacks",
+  "slug": "network-services/local-development-stacks",
+  "attention_default": "review",
+  "sophos_firewall_category": "Network services",
+  "description": "Bundled web stacks for local development.",
+  "examples": "XAMPP, WampServer, Laragon, MAMP"
+ },
+ {
+  "level1": "Industrial control system",
+  "level2": "ICS engineering and HMI software",
+  "slug": "industrial-control-system/ics-engineering-and-hmi-software",
+  "attention_default": "review",
+  "sophos_firewall_category": "Industrial control system",
+  "description": "Software that programs or monitors PLCs and industrial equipment.",
+  "examples": "Siemens TIA Portal, Rockwell Studio 5000, Schneider EcoStruxure"
+ },
+ {
+  "level1": "Mobile applications",
+  "level2": "Phone companions",
+  "slug": "mobile-applications/phone-companions",
+  "attention_default": "info",
+  "sophos_firewall_category": "Mobile applications",
+  "description": "Apps that connect phones to the computer.",
+  "examples": "Phone Link, iTunes, Android File Transfer, Samsung Smart Switch"
+ },
+ {
+  "level1": "System applications",
+  "level2": "OS components and runtimes",
+  "slug": "system-applications/os-components-and-runtimes",
+  "attention_default": "info",
+  "sophos_firewall_category": "System applications",
+  "description": "Operating system features, redistributables and runtimes installed as dependencies.",
+  "examples": "Microsoft Visual C++ Redistributable, .NET Runtime, Java Runtime, WebView2"
+ },
+ {
+  "level1": "System applications",
+  "level2": "Drivers and hardware utilities",
+  "slug": "system-applications/drivers-and-hardware-utilities",
+  "attention_default": "info",
+  "sophos_firewall_category": "System applications",
+  "description": "Drivers and vendor utilities for devices.",
+  "examples": "Realtek Audio, Intel Graphics, Logi Options+, NVIDIA App"
+ },
+ {
+  "level1": "System applications",
+  "level2": "OEM utilities",
+  "slug": "system-applications/oem-utilities",
+  "attention_default": "info",
+  "sophos_firewall_category": "System applications",
+  "description": "Manufacturer tools preinstalled on the computer.",
+  "examples": "Dell Command Update, HP Support Assistant, Lenovo Vantage"
+ },
+ {
+  "level1": "System applications",
+  "level2": "Browser components",
+  "slug": "system-applications/browser-components",
+  "attention_default": "info",
+  "sophos_firewall_category": "System applications",
+  "description": "Components that ship with the browser or its store.",
+  "examples": "Chrome Web Store Payments, Chrome Media Router, Edge relevant text changes"
+ },
+ {
+  "level1": "Sophos applications",
+  "level2": "Sophos agents and tools",
+  "slug": "sophos-applications/sophos-agents-and-tools",
+  "attention_default": "info",
+  "sophos_firewall_category": "Sophos applications",
+  "description": "Sophos endpoint, ZTNA, VPN and management software.",
+  "examples": "Sophos Endpoint Agent, Sophos Connect, Sophos ZTNA client"
+ },
+ {
+  "level1": "Security and identity",
+  "level2": "Antivirus and EDR (third party)",
+  "slug": "security-and-identity/antivirus-and-edr-third-party",
+  "attention_default": "review",
+  "sophos_firewall_category": "",
+  "description": "Security agents from other vendors; they may conflict with the Sophos agent.",
+  "examples": "Malwarebytes, ESET, Kaspersky, CrowdStrike Falcon"
+ },
+ {
+  "level1": "Security and identity",
+  "level2": "Password managers",
+  "slug": "security-and-identity/password-managers",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Vaults that store credentials, as apps or browser extensions.",
+  "examples": "Keeper, Bitwarden, 1Password, LastPass"
+ },
+ {
+  "level1": "Security and identity",
+  "level2": "Authenticators and MFA",
+  "slug": "security-and-identity/authenticators-and-mfa",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "One-time password and passkey tools.",
+  "examples": "Microsoft Authenticator, Authy, YubiKey Manager"
+ },
+ {
+  "level1": "Security and identity",
+  "level2": "Encryption tools",
+  "slug": "security-and-identity/encryption-tools",
+  "attention_default": "review",
+  "sophos_firewall_category": "",
+  "description": "Disk, file or container encryption outside managed policy.",
+  "examples": "VeraCrypt, AxCrypt, Cryptomator"
+ },
+ {
+  "level1": "Security and identity",
+  "level2": "Security testing tools",
+  "slug": "security-and-identity/security-testing-tools",
+  "attention_default": "review",
+  "sophos_firewall_category": "",
+  "description": "Scanners, sniffers and offensive tools; legitimate for security teams and common in attacks.",
+  "examples": "Nmap, Advanced IP Scanner, Burp Suite, Metasploit"
+ },
+ {
+  "level1": "Developer tools",
+  "level2": "IDEs and editors",
+  "slug": "developer-tools/ides-and-editors",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Code editors and integrated development environments.",
+  "examples": "Visual Studio Code, Visual Studio, IntelliJ IDEA, Notepad++"
+ },
+ {
+  "level1": "Developer tools",
+  "level2": "Language runtimes and SDKs",
+  "slug": "developer-tools/language-runtimes-and-sdks",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Compilers, interpreters and SDKs.",
+  "examples": "Node.js, Python, JDK, PHP, Go"
+ },
+ {
+  "level1": "Developer tools",
+  "level2": "CLIs and version control",
+  "slug": "developer-tools/clis-and-version-control",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Command-line tools, source control and cloud CLIs.",
+  "examples": "Git, GitHub CLI, AWS CLI, Azure CLI"
+ },
+ {
+  "level1": "Developer tools",
+  "level2": "Libraries and packages",
+  "slug": "developer-tools/libraries-and-packages",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Packages installed by npm, pip, Homebrew or Chocolatey that are libraries rather than apps.",
+  "examples": "typescript, requests, lodash"
+ },
+ {
+  "level1": "Developer tools",
+  "level2": "IDE extensions",
+  "slug": "developer-tools/ide-extensions",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Extensions for code editors that are not AI assistants.",
+  "examples": "ESLint, Prettier, Python for VS Code"
+ },
+ {
+  "level1": "Unwanted software",
+  "level2": "Adware and browser hijackers",
+  "slug": "unwanted-software/adware-and-browser-hijackers",
+  "attention_default": "not_allowed",
+  "sophos_firewall_category": "",
+  "description": "Software that injects ads, changes the search engine or tracks browsing without clear consent.",
+  "examples": "Search hijacker extensions, bundled toolbars"
+ },
+ {
+  "level1": "Unwanted software",
+  "level2": "Cracks and license bypass",
+  "slug": "unwanted-software/cracks-and-license-bypass",
+  "attention_default": "not_allowed",
+  "sophos_firewall_category": "",
+  "description": "Keygens, activators and patched installers.",
+  "examples": "KMS activators, keygens"
+ },
+ {
+  "level1": "Unwanted software",
+  "level2": "Crypto miners",
+  "slug": "unwanted-software/crypto-miners",
+  "attention_default": "not_allowed",
+  "sophos_firewall_category": "",
+  "description": "Software that mines cryptocurrency on the computer.",
+  "examples": "XMRig, NiceHash Miner"
+ },
+ {
+  "level1": "Other",
+  "level2": "Other",
+  "slug": "other/other",
+  "attention_default": "info",
+  "sophos_firewall_category": "",
+  "description": "Software that fits no other category; use only when nothing else applies.",
+  "examples": ""
+ }
+]

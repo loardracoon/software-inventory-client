@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Computers · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+table.inv{width:100%;border-collapse:collapse;font-size:14px}
+table.inv th{text-align:left;padding:0 16px;height:44px;background:var(--surface-subtle);border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.inv td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-body)}
+table.inv tbody tr:hover td{background:var(--surface-subtle)}
+table.inv td.num,table.inv th.num{text-align:right}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a on" href="Computers.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="brand" tick="{{yes}}">INVENTORY</x-import>
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">Computers</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">412 computers in Demo tenant · status for the week 43 cycle · counts from each computer's last successful scan</p>
+</div>
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Export CSV</x-import>
+</div>
+
+<x-import component-from-global-scope="SophosDS.Card" padded="{{no}}">
+<div style="display: flex; flex-direction: column;">
+<div style="padding: 20px 24px 0;">
+<x-import component-from-global-scope="SophosDS.Tabs" items="{{tabs}}" value="{{tab}}" on-change="{{onTab}}"></x-import>
+</div>
+<div style="padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+<div style="flex: 2 1 260px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" label="Search" placeholder="Hostname or user" value="{{q}}" on-change="{{onSearch}}"></x-import></div>
+<div style="flex: 1 1 160px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Platform" value="{{platform}}" on-change="{{onPlatform}}">
+<option value="all">All platforms</option>
+<option value="Windows">Windows</option>
+<option value="macOS">macOS</option>
+<option value="Linux">Linux</option>
+</x-import>
+</div>
+<div style="flex: 1 1 180px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Has subcategory" value="{{cat}}" on-change="{{onCat}}">
+<option value="all">Any subcategory</option>
+<optgroup label="Remote access">
+<option value="Remote desktop and support">Remote desktop and support</option>
+</optgroup>
+<optgroup label="Proxy and tunnel">
+<option value="Consumer VPN and proxy services">Consumer VPN and proxy services</option>
+<option value="Tunnels and mesh networks">Tunnels and mesh networks</option>
+<option value="Anonymizers">Anonymizers</option>
+</optgroup>
+<optgroup label="General business">
+<option value="Screen capture and recording">Screen capture and recording</option>
+</optgroup>
+<optgroup label="General internet">
+<option value="Legacy Chrome apps">Legacy Chrome apps</option>
+</optgroup>
+</x-import>
+</div>
+</div>
+
+<div style="overflow-x: auto; border-top: 1px solid var(--border-subtle);">
+<table class="inv" style="min-width: 1040px;">
+<thead>
+<tr><th scope="col">Computer</th><th scope="col">User</th><th scope="col">Last collected</th><th scope="col">Cycle status</th><th scope="col" class="num">Programs</th><th scope="col" class="num">Extensions</th><th scope="col" class="num">Packages</th><th scope="col">Attention</th></tr>
+</thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+<tr>
+<td><div style="display: flex; flex-direction: column; gap: 2px;"><a href="Computer.dc.html" style="font-weight: 600; text-decoration: none;">{{r.host}}</a><span style="font-size: 12px; color: var(--text-muted);">{{r.os}}</span></div></td>
+<td>{{r.user}}</td>
+<td style="white-space: nowrap;">{{r.last}}</td>
+<td><div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;"><x-import component-from-global-scope="SophosDS.AlertLevel" level="{{r.level}}" label="{{r.status}}" size="sm"></x-import><span style="font-size: 12px; color: var(--text-muted);">{{r.note}}</span></div></td>
+<td class="num">{{r.programs}}</td>
+<td class="num">{{r.extensions}}</td>
+<td class="num">{{r.packages}}</td>
+<td><div style="display: flex; flex-wrap: wrap; gap: 6px;"><sc-for list="{{r.attention}}" as="a" hint-placeholder-count="1"><x-import component-from-global-scope="SophosDS.Badge" color="{{a.color}}" soft="{{yes}}">{{a.label}}</x-import></sc-for><sc-if value="{{r.none}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: var(--text-muted);">None</span></sc-if></div></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; padding: 40px 24px; text-align: center; font-size: 14px; color: var(--text-muted);">No sample computers match these filters.</p>
+</sc-if>
+</div>
+<div style="padding: 16px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+<span style="font-size: 14px; color: var(--text-muted);">Showing {{shown}} sample rows · 412 computers in the tenant</span>
+<div style="display: flex; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm" disabled="{{yes}}">Previous</x-import>
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Next</x-import>
+</div>
+</div>
+</div>
+</x-import>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">A computer on retry keeps the inventory of its last successful scan; nothing is marked as removed while it is offline. The Attention column lists the subcategories on each computer whose attention level is Review or Not allowed.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+var CP_ROWS = [
+  { host: 'LAB-PC01', os: 'Windows 11 Pro 23H2', platform: 'Windows', user: 'user01 +3 profiles', last: 'Mon, Oct 19 10:14', state: 'collected', note: 'All 6 domains', programs: 64, extensions: 48, packages: 0, attention: ['Remote desktop and support', 'Screen capture and recording', 'Legacy Chrome apps'] },
+  { host: 'SP-FIN-LT014', os: 'Windows 11 Pro 24H2', platform: 'Windows', user: 'm.souza', last: 'Today 11:04', state: 'collected', note: 'On attempt 6', programs: 112, extensions: 23, packages: 4, attention: ['Remote desktop and support'] },
+  { host: 'SP-DEV-MB007', os: 'macOS 15.1', platform: 'macOS', user: 'r.lima', last: 'Mon, Oct 19 10:22', state: 'collected', note: 'All 6 domains', programs: 148, extensions: 31, packages: 212, attention: ['Tunnels and mesh networks'] },
+  { host: 'RJ-OPS-DT031', os: 'Windows 10 22H2', platform: 'Windows', user: 'a.costa', last: 'Today 11:06', state: 'collected', note: 'On attempt 6', programs: 87, extensions: 12, packages: 0, attention: [] },
+  { host: 'BH-SAL-LT009', os: 'Windows 11 Pro 23H2', platform: 'Windows', user: 'j.pereira', last: 'Thu, Oct 22 11:05', state: 'collected', note: 'On attempt 4', programs: 95, extensions: 19, packages: 0, attention: ['Consumer VPN and proxy services'] },
+  { host: 'SP-HR-LT003', os: 'Windows 11 Pro 23H2', platform: 'Windows', user: 'c.alves', last: 'Mon, Oct 12 (week 42)', state: 'retry', note: 'Attempt 6 · next Sun 11:00', programs: 79, extensions: 14, packages: 0, attention: [] },
+  { host: 'POA-LOG-LT017', os: 'Windows 11 Pro 23H2', platform: 'Windows', user: 'f.rocha', last: 'Tue, Oct 13 (week 42)', state: 'retry', note: 'Attempt 6 · next Sun 11:00', programs: 102, extensions: 22, packages: 3, attention: ['Remote desktop and support'] },
+  { host: 'SP-DEV-LX002', os: 'Ubuntu 24.04 LTS', platform: 'Linux', user: 'build-bot', last: 'Mon, Oct 19 10:31', state: 'error', note: 'ide_extensions: table not available', programs: 1742, extensions: 0, packages: 37, attention: [] },
+  { host: 'CWB-ENG-MB012', os: 'macOS 14.7', platform: 'macOS', user: 'l.martins', last: 'Tue, Oct 20 11:02', state: 'collected', note: 'On attempt 2', programs: 133, extensions: 27, packages: 88, attention: ['Screen capture and recording'] },
+  { host: 'SP-EXE-LT001', os: 'Windows 11 Pro 24H2', platform: 'Windows', user: 'p.oliveira', last: 'Wed, Oct 21 11:08', state: 'collected', note: 'On attempt 3', programs: 71, extensions: 9, packages: 0, attention: [] },
+  { host: 'REC-SUP-DT044', os: 'Windows 10 22H2', platform: 'Windows', user: 's.barros', last: 'Mon, Oct 12 (week 42)', state: 'retry', note: 'Attempt 6 · next Sun 11:00', programs: 66, extensions: 7, packages: 0, attention: ['Anonymizers', 'Remote desktop and support'] },
+  { host: 'SP-SRV-FS01', os: 'Windows Server 2022', platform: 'Windows', user: 'No user', last: 'Mon, Oct 19 10:20', state: 'collected', note: 'All 6 domains', programs: 41, extensions: 0, packages: 6, attention: [] }
+];
+var CP_STATE = {
+  collected: { level: 'safe', status: 'Collected' },
+  retry: { level: 'high', status: 'Retry scheduled' },
+  error: { level: 'critical', status: 'Query error' }
+};
+// Attention level comes from the hub taxonomy (subcategory default or local override).
+var CP_CAT_ATT = { 'Remote desktop and support': 'review', 'Consumer VPN and proxy services': 'review', 'Tunnels and mesh networks': 'review', 'Anonymizers': 'not_allowed', 'Screen capture and recording': 'review', 'Legacy Chrome apps': 'review' };
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'all', q: '', platform: 'all', cat: 'all' };
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var q = s.q.trim().toLowerCase();
+    var rows = CP_ROWS.filter(function (r) {
+      if (s.tab !== 'all' && r.state !== s.tab) return false;
+      if (s.platform !== 'all' && r.platform !== s.platform) return false;
+      if (s.cat !== 'all' && r.attention.indexOf(s.cat) === -1) return false;
+      if (q && (r.host + ' ' + r.user).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).map(function (r) {
+      var st = CP_STATE[r.state];
+      return Object.assign({}, r, {
+        level: st.level, status: st.status,
+        programs: r.programs.toLocaleString('en-US'),
+        attention: r.attention.map(function (a) { var na = CP_CAT_ATT[a] === 'not_allowed'; return { label: na ? a + ' · Not allowed' : a, color: na ? 'critical' : 'high' }; }),
+        none: r.attention.length === 0
+      });
+    });
+    return {
+      yes: true, no: false, logoH: 22,
+      tabs: [
+        { id: 'all', label: 'All', badge: 412 },
+        { id: 'collected', label: 'Collected', badge: 389 },
+        { id: 'retry', label: 'Retry scheduled', badge: 19 },
+        { id: 'error', label: 'Query errors', badge: 4 }
+      ],
+      tab: s.tab,
+      onTab: function (id) { self.setState({ tab: id }); },
+      q: s.q,
+      onSearch: function (e) { self.setState({ q: e.target.value }); },
+      platform: s.platform,
+      onPlatform: function (e) { self.setState({ platform: e.target.value }); },
+      cat: s.cat,
+      onCat: function (e) { self.setState({ cat: e.target.value }); },
+      rows: rows,
+      shown: rows.length,
+      empty: rows.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

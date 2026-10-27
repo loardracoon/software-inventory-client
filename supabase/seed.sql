@@ -1,0 +1,2 @@
+-- Local seed data, applied by `supabase db reset` after the migrations.
+-- Phase 1 and later phases add rows here (never secrets, never real customer data).

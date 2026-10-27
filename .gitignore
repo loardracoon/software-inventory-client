@@ -1,0 +1,29 @@
+node_modules
+dist
+dist-ssr
+*.local
+*.tsbuildinfo
+
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/functions/.env
+
+# Supabase CLI local state
+supabase/.branches
+supabase/.temp
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.log
+
+# Playwright
+/e2e/.auth/
+/test-results/
+/playwright-report/

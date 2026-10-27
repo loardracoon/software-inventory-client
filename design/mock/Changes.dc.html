@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Changes · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+table.inv{width:100%;border-collapse:collapse;font-size:14px}
+table.inv th{text-align:left;padding:0 16px;height:44px;background:var(--surface-subtle);border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.inv td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-body)}
+table.inv tbody tr:hover td{background:var(--surface-subtle)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a on" href="Changes.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="brand" tick="{{yes}}">HISTORY</x-import>
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">Changes</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Every item added, removed or updated between two successful scans of the same computer.</p>
+</div>
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Export CSV</x-import>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+<div style="flex: 3 1 640px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card" padded="{{no}}">
+<div style="display: flex; flex-direction: column;">
+<div style="padding: 20px 24px 0;"><x-import component-from-global-scope="SophosDS.Tabs" items="{{tabs}}" value="{{change}}" on-change="{{onChange}}"></x-import></div>
+<div style="padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+<div style="flex: 2 1 220px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" label="Search" placeholder="Computer or title" value="{{q}}" on-change="{{onSearch}}"></x-import></div>
+<div style="flex: 1 1 150px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Period">
+<option>Last 7 days</option><option>Last 30 days</option><option>Week 43</option><option>Custom range</option>
+</x-import>
+</div>
+<div style="flex: 1 1 170px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Kind" value="{{kind}}" on-change="{{onKind}}">
+<option value="all">All kinds</option>
+<option value="Program">Programs</option>
+<option value="Extension">Browser extensions</option>
+<option value="Package">Packages</option>
+</x-import>
+</div>
+</div>
+<div style="overflow-x: auto; border-top: 1px solid var(--border-subtle);">
+<table class="inv" style="min-width: 900px;">
+<thead><tr><th scope="col">Detected</th><th scope="col">Computer</th><th scope="col">Change</th><th scope="col">Title</th><th scope="col">Version</th><th scope="col">Category</th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+<tr>
+<td style="white-space: nowrap;">{{r.when}}</td>
+<td><a href="Computer.dc.html" style="font-weight: 600; text-decoration: none;">{{r.host}}</a></td>
+<td><x-import component-from-global-scope="SophosDS.Badge" color="{{r.color}}" soft="{{yes}}">{{r.change}}</x-import></td>
+<td><div style="display: flex; flex-direction: column; gap: 2px;"><span style="font-weight: 600; color: var(--text-strong);">{{r.title}}</span><span style="font-size: 12px; color: var(--text-muted);">{{r.kindLabel}}</span></div></td>
+<td class="mono" style="font-size: 13px; white-space: nowrap;">{{r.version}}</td>
+<td><div style="display: flex; flex-direction: column; gap: 2px; max-width: 240px;"><span style="font-size: 12px; color: var(--text-muted);">{{r.l1}}</span><div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;"><span style="color: var(--text-strong);">{{r.l2}}</span><sc-if value="{{r.review}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SophosDS.Badge" color="high" soft="{{yes}}">Review</x-import></sc-if></div></div></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; padding: 40px 24px; text-align: center; font-size: 14px; color: var(--text-muted);">No sample changes match these filters.</p>
+</sc-if>
+</div>
+<p style="margin: 0; padding: 16px 24px; font-size: 14px; color: var(--text-muted);">Showing {{shown}} sample changes · 236 in the last 7 days</p>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 1 1 280px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card" tone="subtle">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">HOW CHANGES ARE MADE</x-import>
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Only successful scans count</span><span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">An offline computer keeps its last inventory. Nothing is marked removed while it waits for a retry.</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Same hash, no diff</span><span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">When a snapshot matches the previous one, only its last-seen date moves.</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">New query version, new baseline</span><span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">Changing a query's shape resets the baseline without false removals.</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Any date can be replayed</span><span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">Each install keeps valid_from and valid_to, so a computer can be viewed as of any past week.</span></div>
+</div>
+</x-import>
+</div>
+</div>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Sample data. The LAB-PC01 change matches the versions in its Live Discover export; other rows are illustrative.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1440}}'>
+var CH_EVENTS = [
+  { when: 'Sat 11:06', host: 'RJ-OPS-DT031', change: 'Removed', title: 'TeamViewer', kind: 'Program', kindLabel: 'Windows program', version: '15.58.4 → —', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review' },
+  { when: 'Sat 11:04', host: 'SP-FIN-LT014', change: 'Added', title: 'AnyDesk', kind: 'Program', kindLabel: 'Windows program', version: '— → 9.0.5', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review' },
+  { when: 'Sat 11:04', host: 'SP-FIN-LT014', change: 'Updated', title: 'Google Chrome', kind: 'Program', kindLabel: 'Windows program', version: '129.0.6668.101 → 130.0.6723.92', l1: 'General internet', l2: 'Web browsers', att: 'info' },
+  { when: 'Fri 11:03', host: 'SP-LEG-LT008', change: 'Added', title: 'Bitwarden Password Manager', kind: 'Extension', kindLabel: 'Edge extension · user t.nunes', version: '— → 2024.10.1', l1: 'Security and identity', l2: 'Password managers', att: 'info' },
+  { when: 'Thu 11:05', host: 'BH-SAL-LT009', change: 'Added', title: 'Urban VPN Proxy', kind: 'Extension', kindLabel: 'Chrome extension · user j.pereira', version: '— → 5.11.2', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', att: 'review' },
+  { when: 'Wed 11:08', host: 'SP-EXE-LT001', change: 'Updated', title: 'Microsoft Teams', kind: 'Program', kindLabel: 'Windows program', version: '24243.1309 → 24277.3507', l1: 'Conferencing', l2: 'Video meetings', att: 'info' },
+  { when: 'Tue 11:02', host: 'CWB-ENG-MB012', change: 'Updated', title: 'typescript', kind: 'Package', kindLabel: 'npm package (global)', version: '5.6.3 → 5.9.2', l1: 'Developer tools', l2: 'Libraries and packages', att: 'info' },
+  { when: 'Tue 11:02', host: 'CWB-ENG-MB012', change: 'Added', title: 'Loom', kind: 'Program', kindLabel: 'macOS app', version: '— → 0.258.1', l1: 'General business', l2: 'Screen capture and recording', att: 'review' },
+  { when: 'Mon 10:31', host: 'SP-DEV-LX002', change: 'Updated', title: 'openssl', kind: 'Program', kindLabel: 'deb package', version: '3.0.13-0ubuntu3.4 → 3.0.13-0ubuntu3.5', l1: 'System applications', l2: 'OS components and runtimes', att: 'info' },
+  { when: 'Mon 10:22', host: 'SP-DEV-MB007', change: 'Added', title: 'wireguard-tools', kind: 'Package', kindLabel: 'Homebrew package', version: '— → 1.0.20210914', l1: 'Proxy and tunnel', l2: 'Tunnels and mesh networks', att: 'review' },
+  { when: 'Mon 10:20', host: 'SP-SRV-FS01', change: 'Removed', title: 'requests', kind: 'Package', kindLabel: 'pip package', version: '2.31.0 → —', l1: 'Developer tools', l2: 'Libraries and packages', att: 'info' },
+  { when: 'Mon 10:14', host: 'LAB-PC01', change: 'Updated', title: 'Adobe Acrobat: PDF edit, convert, sign tools', kind: 'Extension', kindLabel: 'Chrome extension · user user03', version: '26.5.1.0 → 26.10.1.0', l1: 'General business', l2: 'Office and documents', att: 'info' },
+  { when: 'Mon 10:12', host: 'SP-FIN-LT020', change: 'Removed', title: 'Urban VPN Proxy', kind: 'Extension', kindLabel: 'Chrome extension · user l.prado', version: '5.11.1 → —', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', att: 'review' }
+];
+var CH_COLOR = { Added: 'safe', Updated: 'info', Removed: 'slate' };
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { change: 'all', kind: 'all', q: '' };
+  }
+  renderVals() {
+    var self = this, s = this.state, q = s.q.trim().toLowerCase();
+    var rows = CH_EVENTS.filter(function (e) {
+      if (s.change !== 'all' && e.change !== s.change) return false;
+      if (s.kind !== 'all' && e.kind !== s.kind) return false;
+      if (q && (e.host + ' ' + e.title).toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    }).map(function (e) { return Object.assign({}, e, { color: CH_COLOR[e.change], review: e.att === 'review' }); });
+    return {
+      yes: true, logoH: 22,
+      tabs: [
+        { id: 'all', label: 'All', badge: 236 },
+        { id: 'Added', label: 'Added', badge: 148 },
+        { id: 'Updated', label: 'Updated', badge: 61 },
+        { id: 'Removed', label: 'Removed', badge: 27 }
+      ],
+      change: s.change,
+      onChange: function (id) { self.setState({ change: id }); },
+      kind: s.kind,
+      onKind: function (e) { self.setState({ kind: e.target.value }); },
+      q: s.q,
+      onSearch: function (e) { self.setState({ q: e.target.value }); },
+      rows: rows,
+      shown: rows.length,
+      empty: rows.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

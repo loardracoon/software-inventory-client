@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scans · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+table.inv{width:100%;border-collapse:collapse;font-size:14px}
+table.inv th{text-align:left;padding:0 16px;height:44px;background:var(--surface-subtle);border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.inv td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-body)}
+table.inv tbody tr:hover td{background:var(--surface-subtle)}
+table.inv td.num,table.inv th.num{text-align:right}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a on" href="Scans.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="brand" tick="{{yes}}">COLLECTION</x-import>
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">Scans</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Weekly cycle every Monday at 10:00 · daily retry at 11:00 · America/Sao_Paulo · provider: Live Endpoint Search</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Probe capabilities</x-import>
+<a class="sds-btn sds-btn--primary sds-btn--sm" href="#schedule" style="color: var(--on-action);">Edit schedule</a>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px;">
+<div style="flex: 3 1 560px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">WEEK 43 CYCLE</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">19 computers still due; each one gets a retry per day until Monday</h2>
+</div>
+<x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">2,472 tasks · 412 × 6 domains</x-import>
+</div>
+<x-import component-from-global-scope="SophosDS.ProgressBar" value="{{collected}}" max="{{total}}" label="389 of 412 computers collected"></x-import>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="8">
+<div style="flex: 1 1 112px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: {{d.bg}}; border: 1px {{d.border}} var(--border-control);">
+<span style="font-size: 12px; font-weight: 600; color: var(--text-strong);">{{d.day}}</span>
+<span style="font-size: 12px; color: var(--text-muted);">{{d.event}}</span>
+<span style="font-family: var(--font-display); font-size: 20px; color: var(--text-strong);">{{d.value}}</span>
+<span style="font-size: 12px; color: var(--text-muted);">{{d.note}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">Computers still due when the cycle closes become missed: they keep their last inventory, marked stale, and enter the week 44 cycle as usual.</p>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 2 1 320px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">SOPHOS API BUDGET</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">Retries use 1% of today's limit</h2>
+</div>
+<x-import component-from-global-scope="SophosDS.ProgressBar" value="{{runsToday}}" max="800" label="Runs today · 8 of 800"></x-import>
+<x-import component-from-global-scope="SophosDS.ProgressBar" value="0" max="10" label="Runs this minute · 0 of 10"></x-import>
+<x-import component-from-global-scope="SophosDS.ProgressBar" value="0" max="4" label="Active runs · 0 of 4"></x-import>
+<p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">Daily limit of 1,000 runs minus a 20% reserve for retries and Scan now. Monday's opening used 60 runs.</p>
+</div>
+</x-import>
+</div>
+</div>
+
+<x-import component-from-global-scope="SophosDS.Toast" tone="critical" title="inv.ide_extensions.v1 failed on 4 Linux computers" message="osquery returned: no such table: vscode_extensions. A retry will not fix it, so these tasks are not rescheduled. Disable the domain for Linux or ship version 2 of the Linux pack."></x-import>
+
+<x-import component-from-global-scope="SophosDS.Card" padded="{{no}}">
+<div style="display: flex; flex-direction: column;">
+<div style="padding: 20px 24px 0;"><x-import component-from-global-scope="SophosDS.Tabs" items="{{tabs}}" value="{{tab}}" on-change="{{onTab}}"></x-import></div>
+
+<sc-if value="{{isQueue}}" hint-placeholder-val="{{ true }}">
+<div style="overflow-x: auto; margin-top: 16px; border-top: 1px solid var(--border-subtle);">
+<table class="inv" style="min-width: 980px;">
+<thead><tr><th scope="col">Computer</th><th scope="col">Platform</th><th scope="col">Pending domains</th><th scope="col" class="num">Attempts</th><th scope="col">Last result</th><th scope="col">Last seen in Central</th><th scope="col">Next attempt</th></tr></thead>
+<tbody>
+<sc-for list="{{queue}}" as="r" hint-placeholder-count="8">
+<tr>
+<td><a href="Computer.dc.html" style="font-weight: 600; text-decoration: none;">{{r.host}}</a></td>
+<td>{{r.platform}}</td>
+<td>{{r.domains}}</td>
+<td class="num">{{r.attempts}}</td>
+<td><div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px;"><x-import component-from-global-scope="SophosDS.AlertLevel" level="high" label="{{r.result}}" size="sm"></x-import><sc-if value="{{r.hasNote}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; color: var(--text-muted);">{{r.note}}</span></sc-if></div></td>
+<td style="white-space: nowrap;">{{r.seen}}</td>
+<td style="white-space: nowrap; font-weight: 600; color: var(--text-strong);">Sun, Oct 25 11:00</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; padding: 16px 24px; font-size: 14px; color: var(--text-muted);">Showing 8 of 19 computers on retry</p>
+</sc-if>
+
+<sc-if value="{{isRuns}}" hint-placeholder-val="{{ false }}">
+<div style="overflow-x: auto; margin-top: 16px; border-top: 1px solid var(--border-subtle);">
+<table class="inv" style="min-width: 980px;">
+<thead><tr><th scope="col">Started</th><th scope="col">Query</th><th scope="col">Platform</th><th scope="col" class="num">Computers</th><th scope="col" class="num">Collected</th><th scope="col" class="num">No response</th><th scope="col">Duration</th><th scope="col">Outcome</th></tr></thead>
+<tbody>
+<sc-for list="{{runs}}" as="r" hint-placeholder-count="8">
+<tr>
+<td style="white-space: nowrap;">{{r.started}}</td>
+<td class="mono" style="font-size: 13px;">{{r.query}}</td>
+<td>{{r.platform}}</td>
+<td class="num">{{r.computers}}</td>
+<td class="num">{{r.collected}}</td>
+<td class="num">{{r.noResponse}}</td>
+<td>{{r.duration}}</td>
+<td><x-import component-from-global-scope="SophosDS.Badge" color="{{r.color}}" soft="{{yes}}">{{r.outcome}}</x-import></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; padding: 16px 24px; font-size: 14px; color: var(--text-muted);">Each run is cancelled after 10 minutes and its silent computers go to the retry queue. Runs with offline computers have been seen staying open for 30 to 50 minutes.</p>
+</sc-if>
+</div>
+</x-import>
+
+<div id="schedule">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">SCHEDULE · ADMINS ONLY</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">Scan settings for Demo tenant</h2>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+<x-import component-from-global-scope="SophosDS.Select" label="Weekly scan day" hint="Business hours reach more laptops.">
+<option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+</x-import>
+<x-import component-from-global-scope="SophosDS.Input" label="Weekly scan time" default-value="10:00"></x-import>
+<x-import component-from-global-scope="SophosDS.Input" label="Daily retry time" default-value="11:00" hint="One retry per day until the cycle closes."></x-import>
+<x-import component-from-global-scope="SophosDS.Select" label="Time zone">
+<option>America/Sao_Paulo</option><option>America/Bogota</option><option>America/Santiago</option><option>UTC</option>
+</x-import>
+<x-import component-from-global-scope="SophosDS.Input" label="Computers per run" default-value="50"></x-import>
+<x-import component-from-global-scope="SophosDS.Input" label="Cancel run after (minutes)" default-value="10"></x-import>
+<x-import component-from-global-scope="SophosDS.Input" label="Daily reserve (%)" default-value="20" hint="Kept for retries and Scan now."></x-import>
+<x-import component-from-global-scope="SophosDS.Select" label="Query provider">
+<option>Live Endpoint Search (GraphQL)</option><option>Live Discover REST (legacy)</option>
+</x-import>
+</div>
+<x-import component-from-global-scope="SophosDS.Switch" label="Extra retry the same day when a computer's lastSeenAt moves forward"></x-import>
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Cancel</x-import>
+<x-import component-from-global-scope="SophosDS.Button" variant="primary" size="sm">Save schedule</x-import>
+</div>
+</div>
+</x-import>
+</div>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Sample data. Limits shown follow the Sophos documentation: 10 runs per minute and 1,000 per day for Live Endpoint Search.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'queue' };
+  }
+  renderVals() {
+    var self = this;
+    function day(d, event, value, note, kind) {
+      return {
+        day: d, event: event, value: value, note: note,
+        bg: kind === 'today' ? 'rgba(32, 6, 247, 0.08)' : (kind === 'future' ? 'transparent' : 'var(--surface-subtle)'),
+        border: kind === 'future' ? 'dashed' : 'solid'
+      };
+    }
+    return {
+      yes: true, no: false, logoH: 22,
+      collected: 389, total: 412, runsToday: 8,
+      days: [
+        day('Mon 19 · 10:00', 'Cycle opened', '+341', '412 due', 'past'),
+        day('Tue 20 · 11:00', 'Retry', '+27', '67 due', 'past'),
+        day('Wed 21 · 11:00', 'Retry', '+9', '40 due', 'past'),
+        day('Thu 22 · 11:00', 'Retry', '+7', '31 due', 'past'),
+        day('Fri 23 · 11:00', 'Retry', '+3', '24 due', 'past'),
+        day('Sat 24 · 11:00', 'Retry · today', '+2', '21 due', 'today'),
+        day('Sun 25 · 11:00', 'Next retry', '19', 'scheduled', 'future'),
+        day('Mon 26 · 10:00', 'Cycle closes', 'Week 44', 'opens', 'future')
+      ],
+      tabs: [
+        { id: 'queue', label: 'Retry queue', badge: 19 },
+        { id: 'runs', label: 'Today’s runs', badge: 8 }
+      ],
+      tab: this.state.tab,
+      onTab: function (id) { self.setState({ tab: id }); },
+      isQueue: this.state.tab === 'queue',
+      isRuns: this.state.tab === 'runs',
+      queue: [
+        { host: 'SP-HR-LT003', platform: 'Windows', domains: 'All 6', attempts: 6, result: 'Offline', seen: 'Mon, Oct 12 18:40', hasNote: false, note: '' },
+        { host: 'POA-LOG-LT017', platform: 'Windows', domains: 'All 6', attempts: 6, result: 'Offline', seen: 'Tue, Oct 13 17:02', hasNote: false, note: '' },
+        { host: 'REC-SUP-DT044', platform: 'Windows', domains: 'All 6', attempts: 6, result: 'Offline', seen: 'Mon, Oct 12 19:15', hasNote: false, note: '' },
+        { host: 'SP-VND-LT021', platform: 'Windows', domains: 'All 6', attempts: 6, result: 'Offline', seen: 'Fri, Oct 9 16:30', hasNote: false, note: '' },
+        { host: 'BH-SAL-LT012', platform: 'Windows', domains: 'Programs, Packages', attempts: 3, result: 'Timed out', seen: 'Today 11:07', hasNote: true, note: '4 domains already collected' },
+        { host: 'CWB-ENG-MB019', platform: 'macOS', domains: 'All 6', attempts: 4, result: 'Offline', seen: 'Tue, Oct 20 09:12', hasNote: true, note: 'Joined the cycle on Tue' },
+        { host: 'SP-MKT-LT030', platform: 'Windows', domains: 'All 6', attempts: 6, result: 'Offline', seen: 'Wed, Sep 30 15:44', hasNote: true, note: 'Not seen for 24 days' },
+        { host: 'SP-DEV-LT022', platform: 'Windows', domains: 'Extensions', attempts: 2, result: 'Timed out', seen: 'Today 11:09', hasNote: true, note: '5 domains already collected' }
+      ],
+      runs: [
+        { started: 'Sat 11:00', query: 'inv.hardware.v1', platform: 'Windows', computers: 18, collected: 2, noResponse: 16, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:00', query: 'inv.disks.v1', platform: 'Windows', computers: 18, collected: 2, noResponse: 16, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:00', query: 'inv.programs.v1', platform: 'Windows', computers: 19, collected: 2, noResponse: 17, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:01', query: 'inv.extensions.v1', platform: 'Windows', computers: 19, collected: 2, noResponse: 17, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:01', query: 'inv.ide_extensions.v1', platform: 'Windows', computers: 18, collected: 2, noResponse: 16, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:01', query: 'inv.packages.v1', platform: 'Windows', computers: 19, collected: 2, noResponse: 17, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:02', query: 'inv.hardware.v1', platform: 'macOS', computers: 1, collected: 0, noResponse: 1, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' },
+        { started: 'Sat 11:02', query: 'inv.programs.v1', platform: 'macOS', computers: 1, collected: 0, noResponse: 1, duration: '10 min', outcome: 'Cancelled at grace', color: 'slate' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

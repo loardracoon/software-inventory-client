@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Endpoint Inventory</title>
+    <link rel="preload" href="/fonts/ZalandoSans-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/ZalandoSansExpanded-latin-wght.woff2" as="font" type="font/woff2" crossorigin />
+    <script>
+      // Apply the saved or system theme before first paint (same key as ThemeProvider).
+      (function () {
+        var theme;
+        try {
+          theme = localStorage.getItem("endpoint-inventory.theme");
+        } catch (e) {}
+        if (theme !== "light" && theme !== "dark") {
+          theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        }
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

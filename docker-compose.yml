@@ -1,0 +1,30 @@
+# Front-end containers. The Supabase stack is managed by the Supabase CLI
+# (`npm run db:start`), which runs its own containers on ports 54321-54324.
+# The browser on the host talks to Supabase at http://127.0.0.1:54321.
+name: endpoint-inventory
+
+services:
+  web:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      # Linux node_modules from the image; refresh after dependency changes
+      # with `npm run web:up` (rebuilds and renews this volume).
+      - /app/node_modules
+    restart: unless-stopped
+
+  # Production-like build: docker compose --env-file .env.local --profile prod up -d --build web-prod
+  web-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      target: prod
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:-http://127.0.0.1:54321}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:-}
+    ports:
+      - "8080:8080"

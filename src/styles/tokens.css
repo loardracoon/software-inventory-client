@@ -1,0 +1,70 @@
+/* Sophos Design System 2026 — CSS custom properties from tokens.json (v2), copied from design/tokens/tokens.css (font URLs point at public/fonts).
+   Light theme on :root; dark theme under [data-theme="dark"]. Fonts ship in ./fonts (SIL OFL). */
+
+@font-face { font-family: "Zalando Sans"; src: url("/fonts/ZalandoSans-latin-wght.woff2") format("woff2"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Zalando Sans Expanded"; src: url("/fonts/ZalandoSansExpanded-latin-wght.woff2") format("woff2"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Zalando Sans SemiExpanded"; src: url("/fonts/ZalandoSansSemiExpanded-latin-wght.woff2") format("woff2"); font-weight: 200 900; font-style: normal; font-display: swap; }
+
+:root {
+  /* Families */
+  --font-sans: "Zalando Sans", "Aptos", "Noto Sans JP", system-ui, sans-serif;
+  --font-display: "Zalando Sans Expanded", "Zalando Sans", "Aptos", "Noto Sans JP", system-ui, sans-serif;
+  --font-subtitle: "Zalando Sans SemiExpanded", "Zalando Sans", "Aptos", "Noto Sans JP", system-ui, sans-serif;
+
+  /* Spacing */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+  --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px; --space-20: 80px; --space-24: 96px; --space-32: 128px;
+  --pad-card: 24px; --container-max: 1200px; --slide-w: 1280px; --slide-h: 720px;
+
+  /* Radius */
+  --radius-none: 0px; --radius-xs: 4px; --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px;
+
+  /* Strokes, leading, tracking, weights */
+  --stroke-hairline: 1px; --stroke-control: 1.5px; --stroke-cta: 2px; --stroke-icon: 1.5px;
+  --leading-headline: 1.2; --leading-body: 1.5;
+  --tracking-headline: -0.01em; --tracking-eyebrow: 0.1em;
+  --weight-regular: 400; --weight-semibold: 600;
+
+  /* Fusion gradients (Fusion lockups only) */
+  --gradient-fusion-purple: linear-gradient(90deg, #34A4FF 0%, #4350FE 50%, #E545CA 100%);
+  --gradient-fusion-green: linear-gradient(90deg, #1238F9 0%, #1AC5FF 50%, #00F2B3 100%);
+}
+
+:root, [data-theme="light"] {
+  /* Primary */
+  --dark-blue: #001a47; --sophos-blue: #2006f7; --cyber-blue: #00edff; --cyber-green: #00f2b3; --light-neutral: #edf2f9;
+  /* Secondary and neutral */
+  --indigo: #10037c; --violet: #5a00ff; --fusion-purple: #b529f7; --sky-blue: #009cfb; --slate: #6a889b;
+  --white: #ffffff; --neutral-300: #bbcfde; --neutral-800: #223e4c;
+  /* Alert */
+  --alert-red: #ea0022; --alert-orange: #f29400; --alert-yellow: #f8e300; --alert-lime: #aaff00; --alert-green: #00ef0b;
+  /* CTA states */
+  --sophos-blue-hover: #170cb7; --cyber-blue-hover: #0bd3e2; --cyber-green-hover: #0ed5a2;
+
+  /* Semantic — light */
+  --surface-page: #ffffff; --surface-subtle: #edf2f9; --surface-raised: #ffffff; --surface-inverse: #001a47; --surface-brand: #2006f7;
+  --text-strong: #001a47; --text-body: #001a47; --text-muted: #223e4c; --text-on-inverse: #ffffff; --text-brand: #2006f7; --text-critical: #ea0022;
+  --border-subtle: #bbcfde; --border-control: #6a889b; --border-strong: #001a47;
+  --action: #2006f7; --action-hover: #170cb7; --on-action: #ffffff;
+  --accent: #00f2b3; --accent-hover: #0ed5a2; --on-accent: #001a47;
+  --focus-ring: #5a00ff;
+  --status-critical: #ea0022; --on-status-critical: #ffffff;
+  --status-high: #f29400; --status-medium: #f8e300; --status-low: #aaff00; --status-safe: #00ef0b; --status-info: #009cfb;
+  --on-status: #001a47;
+  --scrim: rgba(0,26,71,0.6);
+  --shadow-sm: 0 2px 6px rgba(0,26,71,0.08);
+  --shadow-md: 0 6px 18px rgba(0,26,71,0.10);
+  --shadow-lg: 0 16px 40px rgba(0,26,71,0.14);
+}
+
+[data-theme="dark"] {
+  --surface-page: #001a47; --surface-subtle: #0f2852; --surface-raised: #1a3159; --surface-inverse: #edf2f9;
+  --text-strong: #ffffff; --text-body: #edf2f9; --text-muted: #bbcfde; --text-on-inverse: #001a47; --text-brand: #00edff; --text-critical: #f37385;
+  --border-subtle: #293f64; --border-strong: #edf2f9;
+  --action: #00edff; --action-hover: #0bd3e2; --on-action: #001a47;
+  --focus-ring: #00edff;
+  --scrim: rgba(0,10,30,0.7);
+  --shadow-sm: 0 2px 6px rgba(0,0,0,0.35);
+  --shadow-md: 0 6px 18px rgba(0,0,0,0.40);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.50);
+}

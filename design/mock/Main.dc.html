@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Overview · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a on" href="Main.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="brand" tick="{{yes}}">INVENTORY · WEEK 43</x-import>
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">Overview</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Cycle opened Mon, Oct 19, 2026 at 10:00 · 389 of 412 computers collected · next retry window Sun, Oct 25 at 11:00</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Export report</x-import>
+<a class="sds-btn sds-btn--primary sds-btn--sm" href="Scans.dc.html" style="color: var(--on-action);">View scan status</a>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px;">
+<div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">COMPUTERS</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">412</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">356 Windows · 41 macOS · 15 Linux</p></div></x-import></div>
+<div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CYCLE COVERAGE</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">94<span style="font-size: 22px;">%</span></div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">389 collected · 19 retrying · 4 errors</p></div></x-import></div>
+<div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">SOFTWARE TITLES</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">1,284</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">Programs, extensions and packages</p></div></x-import></div>
+<div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">EXTENSIONS</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">3,906</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">Installs of 312 distinct extensions</p></div></x-import></div>
+<div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">PACKAGES</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">2,177</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">npm, Chocolatey, pip, Homebrew</p></div></x-import></div>
+<div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CHANGES · 7 DAYS</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">236</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">148 added · 61 updated · 27 removed</p></div></x-import></div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px;">
+<div style="flex: 3 1 520px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">WEEK 43 CYCLE</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">Daily retries brought coverage from 83% to 94%</h2>
+</div>
+<x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Open · closes Mon, Oct 26 10:00</x-import>
+</div>
+<div role="img" aria-label="389 collected, 19 retry scheduled, 4 errors out of 412 computers" style="display: flex; gap: 2px; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-subtle);">
+<div style="width: 94.4%; background: var(--action);"></div>
+<div style="width: 4.6%; background: var(--alert-orange);"></div>
+<div style="width: 1%; background: var(--alert-red);"></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; color: var(--text-muted);">
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--action);"></span>Collected · 389</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--alert-orange);"></span>Retry scheduled · 19</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--alert-red);"></span>Query error · 4</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Mon 19 · open</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+341</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Tue 20 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+27</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Wed 21 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+9</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Thu 22 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+7</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Fri 23 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+3</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Sat 24 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+2</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; border: 1px dashed var(--border-control); box-sizing: border-box;"><span style="font-size: 12px; color: var(--text-muted);">Sun 25 · 11:00</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">19 due</span></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--text-muted);">
+<span>4 Linux computers failed on inv.ide_extensions.v1: the table is not available.</span>
+<a href="Scans.dc.html" style="font-weight: 600;">Open retry queue</a>
+</div>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 2 1 360px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card" tone="inverse">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="inverse">NEEDS ATTENTION</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-on-inverse);">Remote desktop tools run on 37 computers, and one runs an anonymizer</h2>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Proxy and tunnel</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Anonymizers</span></div><x-import component-from-global-scope="SophosDS.Badge" color="critical">Not allowed</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">1 computer · 1 title</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Remote access</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Remote desktop and support</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">37 computers · 6 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">General business</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Screen capture and recording</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">26 computers · 4 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">General internet</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Legacy Chrome apps</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">14 computers · 3 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Proxy and tunnel</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Consumer VPN and proxy services</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">9 computers · 3 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Proxy and tunnel</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Tunnels and mesh networks</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">5 computers · 2 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="height: 1px; background: var(--slate);"></div>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-on-inverse);">Subcategories whose attention level is Review or Not allowed. Corporate VPN clients are Info and stay out of this list. Categories come from the Dictionary Hub, so a reclassification there updates the whole history.</p>
+</div>
+</x-import>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px;">
+<div style="flex: 3 1 520px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CHANGES PER WEEK</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">Browser updates drive the spikes in updated items</h2>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--text-muted);">
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--action);"></span>Added</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--sky-blue);"></span>Updated</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--slate);"></span>Removed</span>
+</div>
+<div role="img" aria-label="{{chartLabel}}" style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; align-items: end; height: 230px;">
+<sc-for list="{{weeks}}" as="w" hint-placeholder-count="12">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+<span style="font-size: 11px; text-align: center; color: var(--text-muted);">{{w.total}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<div style="height: {{w.removedH}}px; border-radius: 3px 3px 0 0; background: var(--slate);"></div>
+<div style="height: {{w.updatedH}}px; background: var(--sky-blue);"></div>
+<div style="height: {{w.addedH}}px; background: var(--action);"></div>
+</div>
+<span style="font-size: 11px; text-align: center; color: var(--text-muted);">{{w.label}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 12px; color: var(--text-muted);">Week 43 is still open. Weeks 36 and 40 match Chrome and Edge release weeks.</p>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 2 1 360px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">LATEST CHANGES</x-import>
+<a href="Changes.dc.html" style="font-size: 14px; font-weight: 600;">All changes</a>
+</div>
+<div style="display: flex; flex-direction: column;">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="slate" soft="{{yes}}">Removed</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">TeamViewer 15.58.4</span></div><span style="font-size: 12px; color: var(--text-muted);">Today 11:06 · RJ-OPS-DT031 · program · Remote desktop and support</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="safe" soft="{{yes}}">Added</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">AnyDesk 9.0.5</span></div><span style="font-size: 12px; color: var(--text-muted);">Today 11:04 · SP-FIN-LT014 · program · Remote desktop and support</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="safe" soft="{{yes}}">Added</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Urban VPN Proxy</span></div><span style="font-size: 12px; color: var(--text-muted);">Thu 11:05 · BH-SAL-LT009 · Chrome extension · Consumer VPN and proxy services</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Updated</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">typescript 5.6.3 → 5.9.2</span></div><span style="font-size: 12px; color: var(--text-muted);">Tue 11:02 · CWB-ENG-MB012 · npm package</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0;"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Updated</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Adobe Acrobat 26.5.1.0 → 26.10.1.0</span></div><span style="font-size: 12px; color: var(--text-muted);">Mon 10:14 · <a href="Computer.dc.html">LAB-PC01</a> · Chrome extension · user03</span></div>
+</div>
+</div>
+</x-import>
+</div>
+</div>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Mock with sample data. LAB-PC01 extensions come from the Live Discover export of Oct 20, 2026; every other computer and number is illustrative.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+var OV_WEEKS = [
+  ['W32', 120, 80, 30], ['W33', 95, 140, 22], ['W34', 110, 60, 35], ['W35', 130, 75, 28],
+  ['W36', 88, 210, 19], ['W37', 102, 66, 31], ['W38', 160, 72, 40], ['W39', 91, 58, 24],
+  ['W40', 115, 190, 33], ['W41', 97, 64, 21], ['W42', 124, 70, 30], ['W43', 148, 61, 27]
+];
+
+class Component extends DCLogic {
+  renderVals() {
+    var max = 0;
+    OV_WEEKS.forEach(function (w) { max = Math.max(max, w[1] + w[2] + w[3]); });
+    var scale = 180 / max;
+    var weeks = OV_WEEKS.map(function (w) {
+      return {
+        label: w[0],
+        total: w[1] + w[2] + w[3],
+        addedH: Math.round(w[1] * scale),
+        updatedH: Math.round(w[2] * scale),
+        removedH: Math.max(2, Math.round(w[3] * scale))
+      };
+    });
+    var chartLabel = 'Changes per week, weeks 32 to 43: ' + OV_WEEKS.map(function (w) {
+      return w[0] + ' ' + w[1] + ' added, ' + w[2] + ' updated, ' + w[3] + ' removed';
+    }).join('; ');
+    return { yes: true, logoH: 22, weeks: weeks, chartLabel: chartLabel };
+  }
+}
+</script>
+</body>
+</html>

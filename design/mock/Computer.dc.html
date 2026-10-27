@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LAB-PC01 · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+table.inv{width:100%;border-collapse:collapse;font-size:14px}
+table.inv th{text-align:left;padding:0 16px;height:44px;background:var(--surface-subtle);border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.inv td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-body)}
+table.inv tbody tr:hover td{background:var(--surface-subtle)}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+dl.hw{margin:0;display:grid;grid-template-columns:minmax(96px,auto) minmax(0,1fr);gap:10px 16px;font-size:14px;line-height:1.4}
+dl.hw dt{color:var(--text-muted)}
+dl.hw dd{margin:0;color:var(--text-strong)}
+.cat{display:flex;flex-direction:column;gap:2px;max-width:260px}
+.cat .l1{font-size:12px;color:var(--text-muted)}
+.cat .l2{display:flex;flex-wrap:wrap;align-items:center;gap:6px;color:var(--text-strong)}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a on" href="Computers.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 24px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<a href="Computers.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 600; text-decoration: none; align-self: flex-start;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg>Computers</a>
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">LAB-PC01</h1>
+<x-import component-from-global-scope="SophosDS.AlertLevel" level="safe" label="Collected this cycle" size="sm"></x-import>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted); overflow-wrap: anywhere;">Windows 11 Pro 23H2 · endpoint ID 0c1a2b3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d · 4 user profiles · last seen today 09:51 · last collected Mon, Oct 19 at 10:14</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px;">
+<div style="width: 210px;">
+<x-import component-from-global-scope="SophosDS.Select" label="Inventory as of" value="{{asOf}}" on-change="{{onAsOf}}">
+<option value="43">Now · week 43</option>
+<option value="42">Mon, Oct 12 · week 42</option>
+<option value="41">Mon, Oct 5 · week 41</option>
+</x-import>
+</div>
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Open in Sophos Central</x-import>
+<x-import component-from-global-scope="SophosDS.Button" variant="primary" size="sm">Scan now</x-import>
+</div>
+</div>
+
+<sc-if value="{{past}}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SophosDS.Toast" tone="info" title="{{pastTitle}}" message="Rows come from installation intervals (valid_from and valid_to), so removed items reappear and updated items show their old version."></x-import>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+<div style="flex: 1 1 300px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">HARDWARE</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Version 2 · since Sep 21</x-import>
+</div>
+<dl class="hw">
+<dt>Manufacturer</dt><dd>Dell Inc.</dd>
+<dt>Model</dt><dd>Latitude 5440</dd>
+<dt>Serial</dt><dd class="mono">SAMPLE-7HX2Q</dd>
+<dt>CPU</dt><dd>Intel Core i5-1345U · 10 cores, 12 threads</dd>
+<dt>Memory</dt><dd>16 GB <span style="color: var(--text-muted);">(8 GB until Sep 21)</span></dd>
+<dt>Disk C:</dt><dd>476 GB · 41% free · NTFS</dd>
+<dt>BIOS</dt><dd>Dell 1.18.0 · Mar 4, 2025</dd>
+<dt>OS build</dt><dd>22631 · x64</dd>
+</dl>
+</div>
+</x-import>
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">WEEK 43 COLLECTION</x-import>
+<sc-for list="{{domains}}" as="d" hint-placeholder-count="6">
+<div style="display: flex; align-items: center; gap: 10px; font-size: 14px;">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--text-brand); flex: none;"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+<span style="flex: 1 1 auto; color: var(--text-strong);">{{d.name}}</span>
+<span style="font-size: 12px; color: var(--text-muted);">{{d.rows}} rows · Mon 10:14</span>
+</div>
+</sc-for>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Collected on the first attempt of the cycle. Raw results are kept for 90 days.</p>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 3 1 560px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card" padded="{{no}}">
+<div style="display: flex; flex-direction: column;">
+<div style="padding: 20px 24px 0;"><x-import component-from-global-scope="SophosDS.Tabs" items="{{tabs}}" value="{{tab}}" on-change="{{onTab}}"></x-import></div>
+
+<sc-if value="{{isExt}}" hint-placeholder-val="{{ true }}">
+<div style="padding: 20px 24px; display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="width: 220px;">
+<x-import component-from-global-scope="SophosDS.Select" label="User profile" value="{{user}}" on-change="{{onUser}}">
+<option value="all">All profiles</option>
+<option value="administrator">administrator</option>
+<option value="user01">user01</option>
+<option value="user02">user02</option>
+<option value="user03">user03</option>
+</x-import>
+</div>
+<span style="font-size: 13px; color: var(--text-muted);">{{extSummary}}</span>
+</div>
+<div style="overflow-x: auto; border-top: 1px solid var(--border-subtle);">
+<table class="inv" style="min-width: 980px;">
+<thead><tr><th scope="col">Extension</th><th scope="col">Browser · profile</th><th scope="col">User</th><th scope="col">Version</th><th scope="col">Category</th><th scope="col">Signals</th></tr></thead>
+<tbody>
+<sc-for list="{{extRows}}" as="e" hint-placeholder-count="12">
+<tr>
+<td><div style="display: flex; flex-direction: column; gap: 2px; max-width: 280px;"><span style="font-weight: 600; color: var(--text-strong);">{{e.name}}</span><span class="mono" style="color: var(--text-muted);">{{e.id}}</span></div></td>
+<td>{{e.browser}} · {{e.profile}}</td>
+<td>{{e.owner}}</td>
+<td><div style="display: flex; flex-direction: column; gap: 2px;"><span class="mono" style="font-size: 13px; color: var(--text-strong);">{{e.version}}</span><sc-if value="{{e.hasStale}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; color: var(--text-muted);">{{e.staleText}}</span></sc-if></div></td>
+<td><div class="cat"><span class="l1">{{e.l1}}</span><span class="l2">{{e.l2}}</span></div></td>
+<td><div style="display: flex; flex-wrap: wrap; gap: 6px;"><sc-for list="{{e.signals}}" as="s" hint-placeholder-count="1"><x-import component-from-global-scope="SophosDS.Badge" color="{{s.color}}" soft="{{s.soft}}">{{s.label}}</x-import></sc-for><sc-if value="{{e.noSignals}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: var(--text-muted);">None</span></sc-if></div></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<div style="padding: 16px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+<span style="font-size: 14px; color: var(--text-muted);">Showing {{rangeText}}</span>
+<div style="display: flex; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm" disabled="{{prevDisabled}}" on-click="{{prevPage}}">Previous</x-import>
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm" disabled="{{nextDisabled}}" on-click="{{nextPage}}">Next</x-import>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isPrograms}}" hint-placeholder-val="{{ false }}">
+<div style="overflow-x: auto; margin-top: 20px; border-top: 1px solid var(--border-subtle);">
+<table class="inv" style="min-width: 860px;">
+<thead><tr><th scope="col">Program</th><th scope="col">Publisher</th><th scope="col">Version</th><th scope="col">Installed</th><th scope="col">Category</th></tr></thead>
+<tbody>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Google Chrome</td><td>Google LLC</td><td class="mono">130.0.6723.92</td><td>Mar 2, 2025</td><td><div class="cat"><span class="l1">General internet</span><span class="l2">Web browsers</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Microsoft Edge</td><td>Microsoft Corporation</td><td class="mono">130.0.2849.56</td><td>Jan 14, 2025</td><td><div class="cat"><span class="l1">General internet</span><span class="l2">Web browsers</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Chrome Remote Desktop Host</td><td>Google LLC</td><td class="mono">130.0.6723.20</td><td>Apr 9, 2025</td><td><div class="cat"><span class="l1">Remote access</span><span class="l2">Remote desktop and support <x-import component-from-global-scope="SophosDS.Badge" color="high" soft="{{yes}}">Review</x-import></span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Microsoft 365 Apps for business</td><td>Microsoft Corporation</td><td class="mono">16.0.18129.20158</td><td>Jan 14, 2025</td><td><div class="cat"><span class="l1">General business</span><span class="l2">Office and documents</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Zoom Workplace</td><td>Zoom Video Communications</td><td class="mono">6.2.6</td><td>Aug 30, 2026</td><td><div class="cat"><span class="l1">Conferencing</span><span class="l2">Video meetings</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Cisco Webex Meetings</td><td>Cisco Systems</td><td class="mono">44.10.0</td><td>Feb 3, 2025</td><td><div class="cat"><span class="l1">Conferencing</span><span class="l2">Video meetings</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">7-Zip 24.08 (x64)</td><td>Igor Pavlov</td><td class="mono">24.08</td><td>Sep 11, 2025</td><td><div class="cat"><span class="l1">General business</span><span class="l2">Compression and file utilities</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Notepad++ (64-bit x64)</td><td>Notepad++ Team</td><td class="mono">8.7</td><td>Oct 2, 2025</td><td><div class="cat"><span class="l1">Developer tools</span><span class="l2">IDEs and editors</span></div></td></tr>
+<tr><td style="font-weight: 600; color: var(--text-strong);">Sophos Endpoint Agent</td><td>Sophos Limited</td><td class="mono">2024.3.1</td><td>Jan 14, 2025</td><td><div class="cat"><span class="l1">Sophos applications</span><span class="l2">Sophos agents and tools</span></div></td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; padding: 16px 24px; font-size: 14px; color: var(--text-muted);">Showing 9 of 64 programs · sample rows</p>
+</sc-if>
+
+<sc-if value="{{isPackages}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 48px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center;">
+<p style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; line-height: 1.2; color: var(--text-strong);">No packages on this computer</p>
+<p style="margin: 0; max-width: 440px; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Chocolatey, npm and pip returned no rows in the scan of Mon, Oct 19 at 10:14.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{isHistory}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 8px 24px 20px; display: flex; flex-direction: column;">
+<sc-for list="{{history}}" as="h" hint-placeholder-count="6">
+<div style="display: grid; grid-template-columns: 150px 96px minmax(0, 1fr); gap: 16px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--border-subtle);">
+<span style="font-size: 13px; color: var(--text-muted);">{{h.when}}</span>
+<span><x-import component-from-global-scope="SophosDS.Badge" color="{{h.color}}" soft="{{yes}}">{{h.change}}</x-import></span>
+<div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">{{h.title}}</span><span style="font-size: 12px; color: var(--text-muted);">{{h.detail}}</span></div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</x-import>
+</div>
+</div>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Extensions come from the Live Discover export of Oct 20, 2026 (72 rows, deduplicated to 48 installs). Hardware, programs, the week 41–42 versions and the history are sample data.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1640}}'>
+/* owner, browser, profile, id, name, version, folder suffix, http update URL */
+var CD_RAW = [
+  ['administrator','Chrome','Default','nlipoenfbbikpbjkfpfillcgkoblgpmj','Awesome Screen Recorder & Screenshot','4.4.23','_0',0],
+  ['administrator','Chrome','Default','bfogiafebfohielmmehodmfbbebbbpei','Keeper® Password Manager & Digital Vault','16.11.2','_0',0],
+  ['administrator','Chrome','Default','aiahmijlpehemcpleichkcokhegllfjl','Duolingo on the Web','1.0.13','_0',0],
+  ['administrator','Chrome','Default','ciagpekplgpbepdgggflgmahnjgiaced','Add to Amazon Wish List','1.0.0.11','_0',0],
+  ['administrator','Chrome','Default','efaidnbmnnnibpcajpcglclefindmkaj','Adobe Acrobat: PDF edit, convert, sign tools','25.1.1.1','_0',0],
+  ['administrator','Chrome','Default','laookkfknpbbblfpciffpaejjkokdgca','Momentum','2.16.16','_0',0],
+  ['administrator','Chrome','Default','inomeogfingihgjfjlpeplalcfajhgai','Chrome Remote Desktop','2.1','_0',0],
+  ['administrator','Chrome','Default','hjbljnpdahefgnopeohlaeohgkiidnoe','AllCast Receiver','1.0.0.8','_0',0],
+  ['administrator','Chrome','Default','jlhmfgmfgeifomenelglieieghnjghma','Cisco Webex Extension','2.0.4','_0',0],
+  ['administrator','Chrome','Default','lmjegmlicamnimmfhcmpkclmigmmcbeh','Application Launcher For Drive (by Google)','3.10','_0',0],
+  ['administrator','Chrome','Default','nlipoenfbbikpbjkfpfillcgkoblgpmj','Awesome Screen Recorder & Screenshot','4.4.25','_1',0],
+  ['administrator','Chrome','Default','pioclpoplcdbaefihamjohnefbikjilc','Evernote Web Clipper','7.35.0','_0',0],
+  ['administrator','Chrome','Default','nmmhkkegccagdldgiimedpiccmgmieda','Chrome Web Store Payments','1.0.0.6','_0',0],
+  ['administrator','Edge','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.75.4','_0',0],
+  ['administrator','Edge','Default','jmjflgjpcpepeafmmgdpfkogkghcpiha','Edge relevant text changes','1.2.1','_0',0],
+  ['user01','Chrome','Default','efaidnbmnnnibpcajpcglclefindmkaj','Adobe Acrobat: PDF edit, convert, sign tools','26.5.1.0','_0',0],
+  ['user01','Chrome','Default','bfogiafebfohielmmehodmfbbebbbpei','Keeper® Password Manager & Digital Vault','17.9.0','_1',0],
+  ['user01','Chrome','Default','bfogiafebfohielmmehodmfbbebbbpei','Keeper® Password Manager & Digital Vault','17.9.0','_0',0],
+  ['user01','Chrome','Default','efaidnbmnnnibpcajpcglclefindmkaj','Adobe Acrobat: PDF edit, convert, sign tools','26.5.1.0','_1',0],
+  ['user01','Chrome','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.99.1','_0',0],
+  ['user01','Chrome','Default','nlipoenfbbikpbjkfpfillcgkoblgpmj','Awesome Screen Recorder & Screenshot','4.4.35','_0',0],
+  ['user01','Chrome','Default','laookkfknpbbblfpciffpaejjkokdgca','Momentum','2.25.6','_0',0],
+  ['user01','Chrome','Default','nlipoenfbbikpbjkfpfillcgkoblgpmj','Awesome Screen Recorder & Screenshot','4.4.41','_0',0],
+  ['user01','Chrome','Default','aiahmijlpehemcpleichkcokhegllfjl','Duolingo on the Web','1.0.13','_0',0],
+  ['user01','Chrome','Default','hjbljnpdahefgnopeohlaeohgkiidnoe','AllCast Receiver','1.0.0.8','_0',0],
+  ['user01','Chrome','Default','inomeogfingihgjfjlpeplalcfajhgai','Chrome Remote Desktop','2.1','_0',0],
+  ['user01','Chrome','Default','bfogiafebfohielmmehodmfbbebbbpei','Keeper® Password Manager & Digital Vault','17.4.0','_0',0],
+  ['user01','Chrome','Default','efaidnbmnnnibpcajpcglclefindmkaj','Adobe Acrobat: PDF edit, convert, sign tools','25.12.1.2','_0',0],
+  ['user01','Chrome','Default','ciagpekplgpbepdgggflgmahnjgiaced','Add to Amazon Wish List','1.0.0.11','_0',0],
+  ['user01','Chrome','Default','npflpmeannakjekldamofnldpiefjmmi','Player do NOW NET Claro','1.9.3.43','_0',0],
+  ['user01','Chrome','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.106.1','_0',0],
+  ['user01','Chrome','Default','gbchcmhmhahfdphkhkmpfmihenigjmpp','Chrome Remote Desktop','77.0.3836.0','_0',0],
+  ['user01','Chrome','Default','jlhmfgmfgeifomenelglieieghnjghma','Cisco Webex Extension','2.0.4','_0',0],
+  ['user01','Chrome','Default','laookkfknpbbblfpciffpaejjkokdgca','Momentum','2.26.6','_0',0],
+  ['user01','Chrome','Default','lmjegmlicamnimmfhcmpkclmigmmcbeh','Application Launcher For Drive (by Google)','3.10','_0',0],
+  ['user01','Chrome','Default','nlipoenfbbikpbjkfpfillcgkoblgpmj','Awesome Screen Recorder & Screenshot','4.4.41','_1',0],
+  ['user01','Chrome','Default','nmmhkkegccagdldgiimedpiccmgmieda','Chrome Web Store Payments','1.0.0.6','_0',0],
+  ['user01','Chrome','Default','pioclpoplcdbaefihamjohnefbikjilc','Evernote Web Clipper','7.40.0','_0',0],
+  ['user01','Chrome','Profile 1','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.47.0','_0',0],
+  ['user01','Chrome','Profile 1','nmmhkkegccagdldgiimedpiccmgmieda','Chrome Web Store Payments','1.0.0.6','_0',0],
+  ['user01','Chrome','Profile 1','lmjegmlicamnimmfhcmpkclmigmmcbeh','Application Launcher For Drive (by Google)','3.4','_0',0],
+  ['user01','Edge','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.99.1','_0',0],
+  ['user01','Edge','Default','jmjflgjpcpepeafmmgdpfkogkghcpiha','Edge relevant text changes','1.2.1','_0',0],
+  ['user02','Chrome','Default','aapocclcgogkmnckokdopfmhonfmgoek','Slides','0.10','_0',0],
+  ['user02','Chrome','Default','aohghmighlieiainnegkcijnfilokake','Docs','0.10','_0',0],
+  ['user02','Chrome','Default','nmmhkkegccagdldgiimedpiccmgmieda','Chrome Web Store Payments','1.0.0.4','_0',0],
+  ['user02','Chrome','Default','blpcfgokakmgnkcojhhkbfbldkacnbeo','YouTube','4.2.8','_0',1],
+  ['user02','Chrome','Default','apdfllckaahabafndbhieahigkjlhalf','Google Drive','14.2','_0',0],
+  ['user02','Chrome','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.7','_1',0],
+  ['user02','Chrome','Default','felcaaldnbdncclmgdcncolpebgiejap','Sheets','1.2','_0',0],
+  ['user02','Chrome','Default','pjkljhegncpnkpknbcohdijeoejaedia','Gmail','8.2','_0',0],
+  ['user02','Chrome','Default','pkedcjkdefgpdelpbcmbmeomcjbeemfm','Chrome Media Router','7419.311.0.0','_0',0],
+  ['user03','Chrome','Default','efaidnbmnnnibpcajpcglclefindmkaj','Adobe Acrobat: PDF edit, convert, sign tools','26.10.1.0','_0',0],
+  ['user03','Chrome','Default','nmmhkkegccagdldgiimedpiccmgmieda','Chrome Web Store Payments','1.0.0.6','_0',0],
+  ['user03','Chrome','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.111.1','_0',0],
+  ['user03','Edge','Default','ghbmnnjooekpmoecnnnilnnbdlolhkhi','Google Docs Offline','1.110.1','_0',0],
+  ['user03','Edge','Default','jmjflgjpcpepeafmmgdpfkogkghcpiha','Edge relevant text changes','1.2.1','_0',0]
+];
+/* Hub dictionary: extension ID -> [level 1, level 2, attention] */
+var CD_CATEGORY = {
+  inomeogfingihgjfjlpeplalcfajhgai: ['Remote access', 'Remote desktop and support', 'review'],
+  gbchcmhmhahfdphkhkmpfmihenigjmpp: ['Remote access', 'Remote desktop and support', 'review'],
+  nlipoenfbbikpbjkfpfillcgkoblgpmj: ['General business', 'Screen capture and recording', 'review'],
+  ciagpekplgpbepdgggflgmahnjgiaced: ['E-commerce', 'Shopping assistants', 'review'],
+  aapocclcgogkmnckokdopfmhonfmgoek: ['General internet', 'Legacy Chrome apps', 'review'],
+  aohghmighlieiainnegkcijnfilokake: ['General internet', 'Legacy Chrome apps', 'review'],
+  blpcfgokakmgnkcojhhkbfbldkacnbeo: ['General internet', 'Legacy Chrome apps', 'review'],
+  apdfllckaahabafndbhieahigkjlhalf: ['General internet', 'Legacy Chrome apps', 'review'],
+  felcaaldnbdncclmgdcncolpebgiejap: ['General internet', 'Legacy Chrome apps', 'review'],
+  pjkljhegncpnkpknbcohdijeoejaedia: ['General internet', 'Legacy Chrome apps', 'review'],
+  bfogiafebfohielmmehodmfbbebbbpei: ['Security and identity', 'Password managers', 'info'],
+  efaidnbmnnnibpcajpcglclefindmkaj: ['General business', 'Office and documents', 'info'],
+  ghbmnnjooekpmoecnnnilnnbdlolhkhi: ['General business', 'Office and documents', 'info'],
+  pioclpoplcdbaefihamjohnefbikjilc: ['General business', 'Notes and knowledge', 'info'],
+  aiahmijlpehemcpleichkcokhegllfjl: ['General internet', 'Learning', 'info'],
+  laookkfknpbbblfpciffpaejjkokdgca: ['General internet', 'Browser utilities', 'info'],
+  hjbljnpdahefgnopeohlaeohgkiidnoe: ['Streaming media', 'Media players and casting', 'info'],
+  jlhmfgmfgeifomenelglieieghnjghma: ['Conferencing', 'Video meetings', 'info'],
+  lmjegmlicamnimmfhcmpkclmigmmcbeh: ['Storage and backup', 'Cloud storage sync', 'info'],
+  nmmhkkegccagdldgiimedpiccmgmieda: ['System applications', 'Browser components', 'info'],
+  jmjflgjpcpepeafmmgdpfkogkghcpiha: ['System applications', 'Browser components', 'info'],
+  pkedcjkdefgpdelpbcmbmeomcjbeemfm: ['System applications', 'Browser components', 'info'],
+  npflpmeannakjekldamofnldpiefjmmi: ['Other', 'Other', 'info']
+};
+/* open reclassification requests sent from this tenant */
+var CD_REQUESTS = { npflpmeannakjekldamofnldpiefjmmi: 'REQ-0042 open' };
+/* sample history used by the "as of" selector */
+var CD_PAST_VERSION = { 'user03|Chrome|Default|efaidnbmnnnibpcajpcglclefindmkaj': { before: 43, version: '26.5.1.0' } };
+var CD_FIRST_WEEK = { 'user01|Chrome|Default|npflpmeannakjekldamofnldpiefjmmi': 42 };
+
+function cdParts(v) { return String(v).split('.').map(Number); }
+function cdCmp(a, b) { var x = cdParts(a), y = cdParts(b); for (var i = 0; i < Math.max(x.length, y.length); i++) { var d = (x[i] || 0) - (y[i] || 0); if (d) return d; } return 0; }
+
+var CD_INSTALLS = (function () {
+  var groups = {}, order = [];
+  CD_RAW.forEach(function (r) {
+    var key = r[0] + '|' + r[1] + '|' + r[2] + '|' + r[3];
+    if (!groups[key]) { groups[key] = { key: key, owner: r[0], browser: r[1], profile: r[2], id: r[3], name: r[4], folders: [], http: false }; order.push(key); }
+    var g = groups[key];
+    var folder = r[5] + r[6];
+    if (g.folders.indexOf(folder) === -1) g.folders.push(folder);
+    if (!g.version || cdCmp(r[5], g.version) > 0) g.version = r[5];
+    if (r[7]) g.http = true;
+  });
+  return order.map(function (k) { return groups[k]; });
+})();
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'extensions', user: 'all', page: 0, asOf: '43' };
+  }
+  renderVals() {
+    var self = this, s = this.state, week = Number(s.asOf), pageSize = 12;
+    var list = CD_INSTALLS.filter(function (g) {
+      var first = CD_FIRST_WEEK[g.key];
+      return !(first && week < first);
+    }).map(function (g) {
+      var past = CD_PAST_VERSION[g.key];
+      var version = past && week < past.before ? past.version : g.version;
+      var cat = CD_CATEGORY[g.id] || ['Unclassified', 'Not in the dictionary yet', 'none'];
+      var signals = [];
+      if (cat[2] === 'not_allowed') signals.push({ label: 'Not allowed', color: 'critical', soft: false });
+      if (cat[2] === 'review') signals.push({ label: 'Review', color: 'high', soft: false });
+      if (g.http) signals.push({ label: 'Update over HTTP', color: 'critical', soft: false });
+      if (CD_REQUESTS[g.id]) signals.push({ label: CD_REQUESTS[g.id], color: 'medium', soft: true });
+      var stale = g.folders.length - 1;
+      return {
+        name: g.name, id: g.id, owner: g.owner, browser: g.browser, profile: g.profile, version: version,
+        hasStale: stale > 0, staleText: stale + (stale === 1 ? ' older folder kept' : ' older folders kept'),
+        l1: cat[0], l2: cat[1], signals: signals, noSignals: signals.length === 0
+      };
+    });
+    var folders = 0;
+    CD_INSTALLS.forEach(function (g) { folders += g.folders.length; });
+    var filtered = list.filter(function (e) { return s.user === 'all' || e.owner === s.user; });
+    var pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+    var page = Math.min(s.page, pages - 1);
+    var weekLabel = { 43: 'now', 42: 'Mon, Oct 12, 2026 (week 42)', 41: 'Mon, Oct 5, 2026 (week 41)' };
+    return {
+      yes: true, no: false, logoH: 22,
+      asOf: s.asOf,
+      onAsOf: function (e) { self.setState({ asOf: e.target.value, page: 0 }); },
+      past: week < 43,
+      pastTitle: 'Showing the inventory as of ' + weekLabel[week],
+      tabs: [
+        { id: 'extensions', label: 'Extensions', badge: list.length },
+        { id: 'programs', label: 'Programs', badge: 64 },
+        { id: 'packages', label: 'Packages', badge: 0 },
+        { id: 'history', label: 'History' }
+      ],
+      tab: s.tab,
+      onTab: function (id) { self.setState({ tab: id }); },
+      isExt: s.tab === 'extensions', isPrograms: s.tab === 'programs', isPackages: s.tab === 'packages', isHistory: s.tab === 'history',
+      user: s.user,
+      onUser: function (e) { self.setState({ user: e.target.value, page: 0 }); },
+      extSummary: list.length + ' installs from ' + folders + ' version folders · 4 profiles · Chrome and Edge',
+      extRows: filtered.slice(page * pageSize, (page + 1) * pageSize),
+      rangeText: filtered.length ? (page * pageSize + 1) + '–' + Math.min(filtered.length, (page + 1) * pageSize) + ' of ' + filtered.length : '0 of 0',
+      prevDisabled: page === 0,
+      nextDisabled: page >= pages - 1,
+      prevPage: function () { self.setState({ page: Math.max(0, page - 1) }); },
+      nextPage: function () { self.setState({ page: Math.min(pages - 1, page + 1) }); },
+      domains: [
+        { name: 'Hardware', rows: 1 }, { name: 'Disks', rows: 2 }, { name: 'Programs', rows: 64 },
+        { name: 'Extensions', rows: 57 }, { name: 'IDE extensions', rows: 0 }, { name: 'Packages', rows: 0 }
+      ],
+      history: [
+        { when: 'Mon, Oct 19 · 10:14', change: 'Updated', color: 'info', title: 'Adobe Acrobat: PDF edit, convert, sign tools', detail: 'Chrome extension · user03 · 26.5.1.0 → 26.10.1.0' },
+        { when: 'Mon, Oct 12 · 10:09', change: 'Added', color: 'safe', title: 'Player do NOW NET Claro', detail: 'Chrome extension · user01 · 1.9.3.43' },
+        { when: 'Mon, Oct 5 · 10:11', change: 'Removed', color: 'slate', title: 'TeamViewer', detail: 'Program · 15.55.3 · Remote access / Remote desktop and support' },
+        { when: 'Mon, Sep 28 · 10:12', change: 'Updated', color: 'info', title: 'Google Docs Offline', detail: 'Chrome extension · user03 · 1.110.1 → 1.111.1' },
+        { when: 'Mon, Sep 21 · 10:15', change: 'Hardware', color: 'blue', title: 'Memory 8 GB → 16 GB', detail: 'Hardware version 2 opened, version 1 closed' },
+        { when: 'Mon, Sep 14 · 10:10', change: 'Baseline', color: 'dark', title: 'First scan with inv.extensions.v1', detail: 'New baseline: no change events recorded' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

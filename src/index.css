@@ -1,0 +1,124 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/tokens.css";
+
+/* Tokens use [data-theme="dark"] on <html>, so Tailwind's dark: variant follows it. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Sophos DS 2026 tokens mapped into Tailwind and the shadcn theme. Every colour comes from
+   src/styles/tokens.css; never hard-code colours in components. tokens.css also overrides
+   Tailwind's --radius-* and --shadow-* with the DS values (sm 8px, md 12px, lg 16px). */
+@theme inline {
+  /* shadcn semantic names */
+  --color-background: var(--surface-page);
+  --color-foreground: var(--text-body);
+  --color-card: var(--surface-raised);
+  --color-card-foreground: var(--text-body);
+  --color-popover: var(--surface-raised);
+  --color-popover-foreground: var(--text-body);
+  --color-primary: var(--action);
+  --color-primary-foreground: var(--on-action);
+  --color-secondary: var(--surface-subtle);
+  --color-secondary-foreground: var(--text-strong);
+  --color-muted: var(--surface-subtle);
+  --color-muted-foreground: var(--text-muted);
+  /* shadcn "accent" is the hover surface; the DS --accent (cyber green) is ds-accent below. */
+  --color-accent: var(--surface-subtle);
+  --color-accent-foreground: var(--text-strong);
+  --color-destructive: var(--status-critical);
+  --color-border: var(--border-subtle);
+  --color-input: var(--border-control);
+  --color-ring: var(--focus-ring);
+
+  /* DS semantic */
+  --color-surface-page: var(--surface-page);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-surface-brand: var(--surface-brand);
+  --color-text-strong: var(--text-strong);
+  --color-text-body: var(--text-body);
+  --color-text-muted: var(--text-muted);
+  --color-text-brand: var(--text-brand);
+  --color-text-critical: var(--text-critical);
+  --color-text-on-inverse: var(--text-on-inverse);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-control: var(--border-control);
+  --color-border-strong: var(--border-strong);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-on-action: var(--on-action);
+  --color-ds-accent: var(--accent);
+  --color-ds-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+  --color-focus-ring: var(--focus-ring);
+  --color-status-critical: var(--status-critical);
+  --color-on-status-critical: var(--on-status-critical);
+  --color-status-high: var(--status-high);
+  --color-status-medium: var(--status-medium);
+  --color-status-low: var(--status-low);
+  --color-status-safe: var(--status-safe);
+  --color-status-info: var(--status-info);
+  --color-on-status: var(--on-status);
+  --color-scrim: var(--scrim);
+
+  /* DS palette */
+  --color-dark-blue: var(--dark-blue);
+  --color-sophos-blue: var(--sophos-blue);
+  --color-cyber-blue: var(--cyber-blue);
+  --color-cyber-green: var(--cyber-green);
+  --color-light-neutral: var(--light-neutral);
+  --color-slate: var(--slate);
+  --color-sky-blue: var(--sky-blue);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-800: var(--neutral-800);
+  --color-alert-red: var(--alert-red);
+  --color-alert-orange: var(--alert-orange);
+  --color-alert-yellow: var(--alert-yellow);
+  --color-alert-lime: var(--alert-lime);
+  --color-alert-green: var(--alert-green);
+
+  --radius-pill: var(--radius-pill);
+}
+
+@theme {
+  --font-sans: "Zalando Sans", "Aptos", "Noto Sans JP", system-ui, sans-serif;
+  --font-display: "Zalando Sans Expanded", "Zalando Sans", "Aptos", "Noto Sans JP", system-ui, sans-serif;
+  --font-subtitle: "Zalando Sans SemiExpanded", "Zalando Sans", "Aptos", "Noto Sans JP", system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-surface-subtle text-text-body font-sans antialiased;
+    line-height: var(--leading-body);
+  }
+  /* Headlines: Zalando Sans Expanded Regular, never bold. */
+  h1,
+  h2,
+  h3 {
+    font-weight: 400;
+    color: var(--text-strong);
+    line-height: var(--leading-headline);
+    letter-spacing: var(--tracking-headline);
+  }
+  h1 {
+    font-family: var(--font-display);
+  }
+  h2,
+  h3 {
+    font-family: var(--font-subtitle);
+  }
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
