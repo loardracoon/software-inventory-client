@@ -59,7 +59,7 @@ export async function authorize(req: Request, admin: SupabaseClient, options: { 
   return { kind: "user", userId: data.user.id };
 }
 
-// Admins and analysts (public.can_contribute(), checked with the caller's own JWT).
+// Admins and operators (public.can_contribute(), checked with the caller's own JWT).
 export async function authorizeContributor(req: Request, admin: SupabaseClient): Promise<{ userId: string }> {
   const token = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
   if (!token) throw new HttpError(401, "Sign in to continue");
@@ -73,7 +73,7 @@ export async function authorizeContributor(req: Request, admin: SupabaseClient):
     global: { headers: { Authorization: `Bearer ${token}` } },
   });
   const { data: allowed } = await asUser.rpc("can_contribute");
-  if (allowed !== true) throw new HttpError(403, "Only admins and analysts can do this");
+  if (allowed !== true) throw new HttpError(403, "Only admins and operators can do this");
   return { userId: data.user.id };
 }
 

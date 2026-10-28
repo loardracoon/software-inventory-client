@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { AuthContext, type AuthContextValue, type Profile } from "./auth-context";
+import { signInErrorMessage } from "./sign-in-error";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
@@ -45,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email,
       options: { emailRedirectTo: new URL(redirectPath, window.location.origin).toString() },
     });
-    return { error: error?.message ?? null };
+    return { error: error ? signInErrorMessage(error.message) : null };
   }, []);
 
   const signOut = useCallback(async () => {

@@ -15,7 +15,7 @@ select plan(31);
 -- The first auth user becomes admin (Phase 0 bootstrap); the others start as viewer.
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@example.com'),
-  ('00000000-0000-0000-0000-00000000000b', 'analyst@example.com'),
+  ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
   ('00000000-0000-0000-0000-00000000000c', 'viewer@example.com'),
   ('00000000-0000-0000-0000-00000000000d', 'outsider@example.com');
 
@@ -24,9 +24,9 @@ insert into public.tenants (id, sophos_tenant_id, name, id_type) values
   ('10000000-0000-0000-0000-00000000000b', 'sophos-b', 'Tenant B', 'tenant');
 
 insert into public.tenant_members (user_id, tenant_id, role) values
-  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'analyst'),
+  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'operator'),
   ('00000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a', 'viewer'),
-  ('00000000-0000-0000-0000-00000000000d', '10000000-0000-0000-0000-00000000000b', 'analyst');
+  ('00000000-0000-0000-0000-00000000000d', '10000000-0000-0000-0000-00000000000b', 'operator');
 
 insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platform, associated_user) values
   ('20000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000a', 'ep-a', 'host-a', 'windows', 'alice'),
@@ -94,10 +94,10 @@ reset role;
 
 -- Analyst of tenant A ----------------------------------------------------------------------------
 select pg_temp.login('00000000-0000-0000-0000-00000000000b');
-select is((select associated_user from public.computers), 'alice', 'analyst reads usernames directly');
-select is((select username from public.v_installations), 'alice', 'analyst reads usernames in v_installations');
-select is((select count(*) from public.raw_results), 0::bigint, 'analyst cannot read raw_results');
-select is((select count(*) from public.tenants), 1::bigint, 'analyst sees only its tenant');
+select is((select associated_user from public.computers), 'alice', 'operator reads usernames directly');
+select is((select username from public.v_installations), 'alice', 'operator reads usernames in v_installations');
+select is((select count(*) from public.raw_results), 0::bigint, 'operator cannot read raw_results');
+select is((select count(*) from public.tenants), 1::bigint, 'operator sees only its tenant');
 reset role;
 
 -- Analyst of tenant B only -----------------------------------------------------------------------
@@ -117,7 +117,7 @@ select lives_ok(
   $$insert into public.local_overrides (title_id, category_slug) values ('30000000-0000-0000-0000-000000000001', 'remote-access/remote-desktop-and-support')$$,
   'admin creates a local override');
 select lives_ok(
-  $$update public.profiles set role = 'analyst' where email = 'viewer@example.com'$$,
+  $$update public.profiles set role = 'operator' where email = 'viewer@example.com'$$,
   'admin changes a role');
 select bag_eq(
   $$select action from public.audit_log where user_id = '00000000-0000-0000-0000-00000000000a'$$,

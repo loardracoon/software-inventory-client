@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth, type AppRole } from "@/features/auth/auth-context";
 
-const ROLE_LABEL: Record<AppRole, string> = { admin: "Admin", analyst: "Analyst", viewer: "Viewer" };
+const ROLE_LABEL: Record<AppRole, string> = { admin: "Admin", operator: "Operator", viewer: "Viewer" };
 
 function initials(text: string): string {
   const name = text.split("@")[0];

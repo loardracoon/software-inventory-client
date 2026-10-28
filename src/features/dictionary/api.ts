@@ -43,7 +43,7 @@ export function syncHub(): Promise<HubSyncResult> {
   return invokeFunction<HubSyncResult>("hub-sync");
 }
 
-// Admins and analysts export and request reclassification (public.can_contribute()).
+// Admins and operators export and request reclassification (public.can_contribute()).
 export function useCanContribute(): boolean {
   const { data } = useLoad("can_contribute", async () => orThrow(await db().rpc("can_contribute")) === true);
   return data === true;

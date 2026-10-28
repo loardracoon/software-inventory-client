@@ -23,7 +23,21 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "alert_settings": {
+            "access_rules": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"kind": string,"role": Database["public"]['Enums']["app_role"],"value": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"kind": string,"role": Database["public"]['Enums']["app_role"],"value": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"kind"?: string,"role"?: Database["public"]['Enums']["app_role"],"value"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"alert_settings": {
                   Row: {
                     "coverage_threshold": number,"email_from": string | null,"email_to": (string)[],"enabled": boolean,"id": number,"resend_secret_id": string | null,"stale_minutes": number,"updated_at": string | null,"updated_by": string | null,"webhook_hint": string | null,"webhook_secret_id": string | null
                   }
@@ -1463,8 +1477,14 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "acquire_collector_lease":
+            "access_role_for":
+{ Args: { "p_email": string }; Returns: Database["public"]['Enums']["app_role"]
+                           },
+"acquire_collector_lease":
 { Args: { "p_holder": string,"p_ttl_seconds": number }; Returns: boolean
+                           },
+"add_access_rule":
+{ Args: { "p_kind": string,"p_role": Database["public"]['Enums']["app_role"],"p_value": string }; Returns: string
                            },
 "add_new_computer_tasks":
 { Args: { "p_cycle_id": string }; Returns: number
@@ -1495,6 +1515,9 @@ isOneToOne: false
             }[]
                            },
 "can_contribute":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"can_scan":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "claim_dispatch_batch":
@@ -1553,6 +1576,12 @@ isOneToOne: false
 { Args: { "p_tenant_id"?: string }; Returns: {
               "closes_at": string,"collected": number,"computers": number,"computers_collected": number,"coverage_pct": number,"cycle_id": string,"dispatched": number,"errors": number,"missed": number,"next_retry_at": string,"opened_at": string,"pending": number,"retrying": number,"skipped": number,"tasks": number,"tenant_id": string,"tenant_name": string
             }[]
+                           },
+"defer_offline_tasks":
+{ Args: { "p_next_at": string,"p_reason": string,"p_task_ids": (string)[] }; Returns: number
+                           },
+"delete_access_rule":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "detect_alerts":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -1619,6 +1648,11 @@ isOneToOne: false
 "like_contains":
 { Args: { "p_text": string }; Returns: string
                            },
+"list_users":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "access": string,"created_at": string,"display_name": string,"email": string,"id": string,"last_sign_in_at": string,"role": Database["public"]['Enums']["app_role"]
+            }[]
+                           },
 "mark_ingest_error":
 { Args: { "p_error": string,"p_raw_result_id": string }; Returns: undefined
                            },
@@ -1670,11 +1704,14 @@ isOneToOne: false
 "release_tasks":
 { Args: { "p_error": string,"p_task_ids": (string)[] }; Returns: undefined
                            },
+"remove_user":
+{ Args: { "p_user_id": string }; Returns: undefined
+                           },
 "scan_now":
 { Args: { "p_computer_id": string }; Returns: number
                            },
 "schedule_retries":
-{ Args: { "p_next_at": string,"p_tenant_id": string }; Returns: number
+{ Args: { "p_later_at"?: string,"p_next_at": string,"p_tenant_id": string }; Returns: number
                            },
 "search_titles":
 { Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string }; Returns: {
@@ -1696,6 +1733,9 @@ isOneToOne: false
 "set_task_outcome":
 { Args: { "p_error": string,"p_run_id": string,"p_sophos_endpoint_id": string,"p_status": Database["public"]['Enums']["task_status"] }; Returns: undefined
                            },
+"set_user_role":
+{ Args: { "p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined
+                           },
 "store_endpoint_result":
 { Args: { "p_rows": Json,"p_run_id": string,"p_sophos_endpoint_id": string }; Returns: boolean
                            },
@@ -1714,7 +1754,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"analyst"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","query_provider": "live_endpoint_search"|"live_discover_rest","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
+            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","query_provider": "live_endpoint_search"|"live_discover_rest","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1834,7 +1874,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "app_role": ["admin", "analyst", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"query_provider": ["live_endpoint_search", "live_discover_rest"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
+            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"query_provider": ["live_endpoint_search", "live_discover_rest"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
           }
         }
 } as const

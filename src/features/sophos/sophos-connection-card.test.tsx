@@ -126,7 +126,7 @@ describe("SophosConnectionCard", () => {
 
   it("is read-only for other roles", async () => {
     vi.mocked(api.fetchSophosConnectionStatus).mockResolvedValue({ ...NOT_CONFIGURED, configured: true });
-    renderCard("analyst");
+    renderCard("operator");
 
     expect(await screen.findByText("Configured")).toBeInTheDocument();
     expect(screen.getByText("Only admins can change the connection.")).toBeInTheDocument();

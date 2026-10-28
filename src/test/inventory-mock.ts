@@ -46,7 +46,7 @@ export function inventoryApiMock() {
   };
 }
 
-// Default fakes for "@/features/dictionary/api": an analyst-or-admin with no requests and a healthy hub.
+// Default fakes for "@/features/dictionary/api": an operator-or-admin with no requests and a healthy hub.
 // Usage: vi.mock("@/features/dictionary/api", async () => (await import("@/test/inventory-mock")).dictionaryApiMock());
 export function dictionaryApiMock() {
   return {

@@ -1,4 +1,4 @@
-// "Request reclassification": admins and analysts suggest another category for a title. The request
+// "Request reclassification": admins and operators suggest another category for a title. The request
 // goes to the Dictionary Hub (POST reclassification-requests) and the returned REQ id is stored;
 // hub-sync then follows its status. Only the title key, the category, the reason and the evidence URL
 // leave this app.

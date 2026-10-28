@@ -232,7 +232,7 @@ export function ComputerDetailPage() {
           ) : null
         }
         actions={
-          profile?.role === "admin" && c ? (
+          (profile?.role === "admin" || profile?.role === "operator") && c ? (
             <Button size="sm" onClick={() => void onScanNow()} disabled={scanning}>
               {scanning ? <Loader2 className="animate-spin" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}
               Scan now

@@ -6,6 +6,7 @@ import { QueriesCard } from "@/features/queries/queries-card";
 import { SophosConnectionCard } from "@/features/sophos/sophos-connection-card";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { TenantsCard } from "@/features/tenants/tenants-card";
+import { UsersCard } from "@/features/users/users-card";
 
 export function SettingsPage() {
   const { refreshTenants } = useTenant();
@@ -13,7 +14,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Administration" title="Settings" description="Sophos connection, queries, dictionary and alerts." />
+      <PageHeader eyebrow="Administration" title="Settings" description="Sophos connection, users, queries, dictionary and alerts." />
       <SophosConnectionCard
         onSynced={() => {
           setSyncCount((n) => n + 1);
@@ -21,6 +22,7 @@ export function SettingsPage() {
         }}
       />
       <TenantsCard refreshKey={syncCount} />
+      <UsersCard />
       <QueriesCard />
       <HubCard />
       <AlertsCard />

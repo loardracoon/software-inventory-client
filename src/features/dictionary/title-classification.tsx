@@ -30,7 +30,7 @@ const STATUS_LABEL: Record<string, { label: string; color: "info" | "safe" | "cr
   superseded: { label: "Superseded", color: "slate" },
 };
 
-// Title page: "Request reclassification" (admins, analysts), local override (admins) and the
+// Title page: "Request reclassification" (admins, operators), local override (admins) and the
 // title's requests with the hub admin's answer.
 export function TitleClassificationActions({ titleId, name, currentCategory, onChanged }: { titleId: string; name: string; currentCategory: string | null; onChanged: () => void }) {
   const { profile } = useAuth();

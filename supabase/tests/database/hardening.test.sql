@@ -17,13 +17,13 @@ select plan(33);
 -- Fixtures ----------------------------------------------------------------------------------------
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@example.com'),
-  ('00000000-0000-0000-0000-00000000000b', 'analyst@example.com'),
+  ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
   ('00000000-0000-0000-0000-00000000000c', 'viewer@example.com');
 insert into public.tenants (id, sophos_tenant_id, name, id_type) values
   ('10000000-0000-0000-0000-00000000000a', 'sophos-a', 'Tenant A', 'partner'),
   ('10000000-0000-0000-0000-00000000000b', 'sophos-b', 'Tenant B', 'partner');
 insert into public.tenant_members (user_id, tenant_id, role) values
-  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'analyst'),
+  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'operator'),
   ('00000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a', 'viewer');
 insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platform) values
   ('20000000-0000-0000-0000-0000000000a1', '10000000-0000-0000-0000-00000000000a', 'ep-a1', 'A1', 'windows'),
@@ -44,7 +44,7 @@ end $$;
 
 -- Alert settings ----------------------------------------------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-select throws_ok($$select public.set_alert_settings(p_webhook_url => 'https://hooks.example.com/x')$$, '42501', null, 'analyst cannot change alerts');
+select throws_ok($$select public.set_alert_settings(p_webhook_url => 'https://hooks.example.com/x')$$, '42501', null, 'operator cannot change alerts');
 reset role;
 
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');

@@ -14,13 +14,13 @@ select plan(27);
 -- Fixtures ----------------------------------------------------------------------------------------
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@example.com'),
-  ('00000000-0000-0000-0000-00000000000b', 'analyst@example.com'),
+  ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
   ('00000000-0000-0000-0000-00000000000c', 'viewer@example.com');
 insert into public.tenants (id, sophos_tenant_id, name, id_type) values
   ('10000000-0000-0000-0000-00000000000a', 'sophos-a', 'Tenant A', 'partner'),
   ('10000000-0000-0000-0000-00000000000b', 'sophos-b', 'Tenant B', 'partner');
 insert into public.tenant_members (user_id, tenant_id, role) values
-  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'analyst'),
+  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'operator'),
   ('00000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a', 'viewer');
 insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platform, associated_user) values
   ('20000000-0000-0000-0000-0000000000a1', '10000000-0000-0000-0000-00000000000a', 'ep-w1', 'W1', 'windows', 'CORP\alice'),
@@ -87,9 +87,9 @@ reset role;
 
 -- Analyst of tenant A -----------------------------------------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-select is((select associated_user from public.v_computer_list where hostname = 'W1'), 'CORP\alice', 'analyst sees users');
+select is((select associated_user from public.v_computer_list where hostname = 'W1'), 'CORP\alice', 'operator sees users');
 select results_eq($$select canonical_name from public.search_titles(p_user := 'ali')$$, $$values ('Chrome Remote Desktop')$$,
-  'analyst: search by user');
+  'operator: search by user');
 reset role;
 
 -- Global admin ------------------------------------------------------------------------------------

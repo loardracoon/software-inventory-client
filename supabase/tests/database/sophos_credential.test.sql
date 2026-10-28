@@ -13,8 +13,8 @@ select plan(16);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@example.com'),
-  ('00000000-0000-0000-0000-00000000000b', 'analyst@example.com');
-update public.profiles set role = 'analyst' where email = 'analyst@example.com';
+  ('00000000-0000-0000-0000-00000000000b', 'operator@example.com');
+update public.profiles set role = 'operator' where email = 'operator@example.com';
 
 create function pg_temp.login(uid uuid) returns void language plpgsql as $$
 begin
@@ -32,8 +32,8 @@ reset role;
 select pg_temp.login('00000000-0000-0000-0000-00000000000b');
 select throws_ok(
   $$select public.set_sophos_credential('11111111-2222-3333-4444-555566667777', 'first-secret-value-0123456789')$$,
-  '42501', null, 'analyst cannot set the credential');
-select throws_ok('select public.clear_sophos_credential()', '42501', null, 'analyst cannot remove the credential');
+  '42501', null, 'operator cannot set the credential');
+select throws_ok('select public.clear_sophos_credential()', '42501', null, 'operator cannot remove the credential');
 reset role;
 
 -- Admin sets it ---------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ select pg_temp.login('00000000-0000-0000-0000-00000000000b');
 select results_eq(
   'select configured, client_id_hint, configured_by_email from public.get_sophos_connection_status()',
   $$values (true, null::text, null::text)$$,
-  'analyst only learns that a credential is set');
+  'operator only learns that a credential is set');
 reset role;
 
 -- Service role reads it -------------------------------------------------------------------------

@@ -20,13 +20,13 @@ select plan(46);
 -- Fixtures ----------------------------------------------------------------------------------------
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@example.com'),
-  ('00000000-0000-0000-0000-00000000000b', 'analyst@example.com'),
+  ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
   ('00000000-0000-0000-0000-00000000000c', 'viewer@example.com');
 insert into public.tenants (id, sophos_tenant_id, name, id_type) values
   ('10000000-0000-0000-0000-00000000000a', 'sophos-a', 'Tenant A', 'partner'),
   ('10000000-0000-0000-0000-00000000000b', 'sophos-b', 'Tenant B', 'partner');
 insert into public.tenant_members (user_id, tenant_id, role) values
-  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'analyst'),
+  ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'operator'),
   ('00000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a', 'viewer');
 insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platform, associated_user) values
   ('20000000-0000-0000-0000-0000000000a1', '10000000-0000-0000-0000-00000000000a', 'ep-w1', 'W1', 'windows', 'CORP\alice'),
@@ -60,8 +60,8 @@ $$;
 -- Hub connection ----------------------------------------------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select throws_ok($$select public.set_hub_connection('https://hub.example.com', 'hubkey-0123456789abcdef')$$, '42501', null,
-  'analyst cannot set the hub connection');
-select throws_ok($$select public.set_hub_sharing(false)$$, '42501', null, 'analyst cannot switch sharing');
+  'operator cannot set the hub connection');
+select throws_ok($$select public.set_hub_sharing(false)$$, '42501', null, 'operator cannot switch sharing');
 reset role;
 
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
@@ -167,7 +167,7 @@ select results_eq('select failures, last_error, synced_at from public.hub_connec
 -- Saved searches ----------------------------------------------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select lives_ok($$insert into public.saved_searches (name, params, owner_id) values ('My Git', '{"q": "git"}', auth.uid())$$,
-  'analyst saves a personal search');
+  'operator saves a personal search');
 select throws_ok($$insert into public.saved_searches (name, params, owner_id) values ('For all', '{}', null)$$, '42501', null,
   'only admins share searches');
 reset role;
@@ -196,9 +196,9 @@ select throws_ok($$select public.export_csv('computers', '{}')$$, '42501', null,
 reset role;
 
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
-select is(pg_temp.lines(public.export_csv('computers', '{}')), 3, 'analyst: header + the 2 computers of its tenant');
+select is(pg_temp.lines(public.export_csv('computers', '{}')), 3, 'operator: header + the 2 computers of its tenant');
 select ok((select position('"W1","Tenant A","windows"' in x) = 1 + position(E'\r\n' in x) + 1 and position('"CORP\alice"' in x) > 0
-  from public.export_csv('computers', '{"search": "w1"}') x), 'filters apply and the analyst sees users');
+  from public.export_csv('computers', '{"search": "w1"}') x), 'filters apply and the operator sees users');
 select ok(public.export_csv('software', '{}') like '%"''=HYPERLINK(""http://x"")"%', 'formulas are neutralised and quotes doubled');
 select is(pg_temp.lines(public.export_csv('changes', '{"change": "updated"}')), 2, 'changes export follows the filters');
 select throws_ok($$select public.export_csv('title_computers', '{}')$$, '22023', null, 'a title export needs the title');
