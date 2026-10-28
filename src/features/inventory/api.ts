@@ -164,6 +164,8 @@ export type SoftwareFilters = {
   user: string;
   versionBelow: string;
   asOf: string | null;
+  // Policy classes (Phase 9); a title counts under the most restrictive class of its installed versions.
+  policy: Database["public"]["Enums"]["policy_class"][];
 };
 
 const TITLE_SORT = new Set(["computers", "versions", "first_seen", "canonical_name"]);
@@ -182,6 +184,7 @@ export async function searchTitles(filters: SoftwareFilters, request: PageReques
       ...(filters.user.trim() ? { p_user: filters.user.trim() } : {}),
       ...(filters.versionBelow.trim() ? { p_version_below: filters.versionBelow.trim() } : {}),
       ...(filters.asOf ? { p_as_of: filters.asOf } : {}),
+      ...(filters.policy.length ? { p_policy: filters.policy } : {}),
       p_sort: sort && TITLE_SORT.has(sort.id) ? sort.id : "computers",
       p_desc: sort ? sort.desc : true,
       p_limit: request.pageSize,

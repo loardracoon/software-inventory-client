@@ -11,6 +11,8 @@
 //   6 poll             per-endpoint status and results while they arrive; give up after the grace time
 //   6b ingest          raw results → snapshots → versioned inventory (Phase 5); title_summary refresh
 //   6c hub_sync        Dictionary Hub pull / share / request status when due (Phase 7, _shared/hub-sync.ts)
+//   6d policy          policy classes of new (title, version) pairs; every pair after a publish or a
+//                      dictionary change (Phase 9, _shared/policy-run.ts)
 //   7 schedule_retries no_response → later the same day; from the 3rd attempt, the next daily window
 //   8 close_cycles     cycles with nothing left close early as complete
 
@@ -19,6 +21,7 @@ import { decideEndpoint, rowsByEndpoint, runName, runPastGrace } from "../_share
 import { syncComputers } from "../_shared/computer-sync.ts";
 import { hubSyncDue, loadHub, runHubSync, type HubSyncSummary } from "../_shared/hub-sync.ts";
 import { ingestPending, type IngestSummary } from "../_shared/ingest.ts";
+import { runPolicyEvaluation, type PolicyRunSummary, type RpcClient } from "../_shared/policy-run.ts";
 import { adminClient, authorize, corsHeaders, errorMessage, HttpError, json, loadSophosClient, LogBuffer } from "../_shared/edge.ts";
 import { advanceProbes, loadTenants, newProbeSummary, sophosTenantOf, startProbes, type TenantRow } from "../_shared/probe-runner.ts";
 import { createQueryProvider, readAllResults, type ProviderName } from "../_shared/query-provider.ts";
@@ -80,6 +83,7 @@ Deno.serve(async (req) => {
     cyclesCompleted: 0,
     ingest: null as IngestSummary | null,
     hubSync: null as HubSyncSummary | null,
+    policy: null as PolicyRunSummary | null,
     stoppedEarly: false,
     problems: [] as string[],
   };
@@ -358,6 +362,16 @@ Deno.serve(async (req) => {
         }
       } catch (error) {
         problem(`Dictionary sync failed: ${errorMessage(error)}`, null, "warn");
+      }
+    }
+
+    // 6d. policy
+    if (step("policy")) {
+      try {
+        summary.policy = await runPolicyEvaluation(admin as unknown as RpcClient, { alert: true, timeLeft });
+        for (const message of summary.policy.errors) problem(`Policy evaluation: ${message}`, null, "warn");
+      } catch (error) {
+        problem(`Policy evaluation failed: ${errorMessage(error)}`, null, "warn");
       }
     }
 

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CategoryTag, categoryFromRow } from "@/components/shared/category-tag";
+import { ClassBadge } from "@/features/policy/class-badge";
 import { toCategoryOrigin } from "@/components/shared/change-badge";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorLine } from "@/components/shared/error-line";
@@ -42,6 +43,14 @@ const bytes = (value: unknown, binary = false) => {
   const giga = binary ? 1024 ** 3 : 1e9;
   const tera = giga * (binary ? 1024 : 1000);
   return n >= tera ? `${(n / tera).toFixed(1)} TB` : `${Math.round(n / giga)} GB`;
+};
+
+// Class of this installation's (title, version) under the published policy (Phase 9).
+const policyCell: ServerColumnDef<InstallationRow> = {
+  id: "policy",
+  header: "Policy",
+  enableSorting: false,
+  cell: ({ row }) => <ClassBadge cls={row.original.policy_class} size="sm" />,
 };
 
 const categoryCell: ServerColumnDef<InstallationRow> = {
@@ -86,6 +95,7 @@ const EXTENSION_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   },
   { accessorKey: "version", header: "Version" },
   categoryCell,
+  policyCell,
   {
     id: "signals",
     header: "Signals",
@@ -116,6 +126,7 @@ const PROGRAM_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   { accessorKey: "vendor", header: "Publisher", enableSorting: false, cell: ({ getValue }) => (getValue() as string | null) ?? "—" },
   { accessorKey: "version", header: "Version" },
   categoryCell,
+  policyCell,
   {
     accessorKey: "valid_from",
     header: "In inventory since",
@@ -133,6 +144,7 @@ const PACKAGE_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   { accessorKey: "version", header: "Version" },
   { accessorKey: "path", header: "Path", enableSorting: false, cell: ({ getValue }) => <span className="font-mono text-xs">{(getValue() as string | null) ?? "—"}</span> },
   categoryCell,
+  policyCell,
 ];
 
 export function ComputerDetailPage() {

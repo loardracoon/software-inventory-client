@@ -78,6 +78,12 @@
   --color-alert-lime: var(--alert-lime);
   --color-alert-green: var(--alert-green);
 
+  /* Application policy classes */
+  --color-class-core: var(--class-core);
+  --color-class-sanctioned: var(--class-sanctioned);
+  --color-class-tolerated: var(--class-tolerated);
+  --color-class-unsanctioned: var(--class-unsanctioned);
+
   --radius-pill: var(--radius-pill);
 }
 

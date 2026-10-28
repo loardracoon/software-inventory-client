@@ -68,3 +68,12 @@
   --shadow-md: 0 6px 18px rgba(0,0,0,0.40);
   --shadow-lg: 0 16px 40px rgba(0,0,0,0.50);
 }
+
+/* Application policy classes (Phase 9). Same colours in both themes; the class name is always shown
+   next to the colour, and numbers are never only inside a coloured shape. */
+:root {
+  --class-core: var(--slate);
+  --class-sanctioned: var(--sophos-blue);
+  --class-tolerated: var(--sky-blue);
+  --class-unsanctioned: var(--alert-red);
+}

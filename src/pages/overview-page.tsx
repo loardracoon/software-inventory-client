@@ -23,6 +23,7 @@ import { formatDate, formatDateTime, formatNumber } from "@/lib/format";
 import { label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
 import { CycleCard } from "@/features/inventory/cycle-card";
+import { PolicyCard } from "@/features/policy/policy-card";
 
 export function OverviewPage() {
   const { selectedTenantId } = useTenant();
@@ -79,6 +80,8 @@ export function OverviewPage() {
           description={`${formatNumber(s?.added_7d)} added · ${formatNumber(s?.updated_7d)} updated · ${formatNumber(s?.removed_7d)} removed`}
         />
       </div>
+
+      {s && s.computers > 0 ? <PolicyCard tenantId={selectedTenantId} /> : null}
 
       {s && s.computers === 0 ? (
         <EmptyState

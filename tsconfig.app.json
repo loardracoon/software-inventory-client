@@ -16,7 +16,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": { "@/*": ["./src/*"] }
+    "paths": { "@/*": ["./src/*"], "@policy": ["./supabase/functions/_shared/policy.ts"] }
   },
   "include": ["src"]
 }

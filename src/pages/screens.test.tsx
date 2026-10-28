@@ -135,6 +135,45 @@ describe("Software", () => {
     await waitFor(() => expect(lastFilters(api.searchTitles).versionBelow).toBe("2.45"));
   });
 
+  it("filters by policy class from the URL and shows the class with the deciding rule", async () => {
+    vi.mocked(api.searchTitles).mockResolvedValue({
+      rows: [
+        {
+          title_id: "x2",
+          kind: "program",
+          source: "programs",
+          canonical_name: "Adobe Acrobat",
+          vendor: "Adobe",
+          external_id: null,
+          category_slug: null,
+          level1_name: null,
+          level2_name: null,
+          attention_level: null,
+          origin: "unclassified",
+          method: null,
+          confidence: null,
+          computers: 8,
+          versions: 2,
+          latest_version: "25.0",
+          first_seen: "2026-10-05T13:00:00Z",
+          policy_class: "unsanctioned_app",
+          policy_rule_lineage_id: "l1",
+          policy_rule_name: "Old Acrobat",
+          mixed_versions: true,
+          total_count: 1,
+        },
+      ] as never,
+      rowCount: 1,
+    });
+    renderAt("/software?policy=unsanctioned-app", "/software", <SoftwarePage />);
+
+    expect(await screen.findByRole("button", { name: "Unsanctioned" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Old Acrobat" })).toHaveAttribute("href", "/policies/rules/l1");
+    expect(screen.getByText("Mixed versions")).toBeInTheDocument();
+    expect(lastFilters(api.searchTitles).policy).toEqual(["unsanctioned_app"]);
+    expect(screen.getByLabelText("Policy class")).toHaveValue("unsanctioned-app");
+  });
+
   it("reads every filter from the URL (saved searches are links)", async () => {
     vi.mocked(api.fetchCategories).mockResolvedValue([
       { slug: "remote-access", name: "Remote access", parent_slug: null, level: 1 },
@@ -149,6 +188,7 @@ describe("Software", () => {
         attention: ["not_allowed"],
         platform: "windows",
         versionBelow: "2.0",
+        policy: [],
       }),
     );
     expect(await screen.findByRole("option", { name: "Remote access + Proxy and tunnel" })).toBeInTheDocument();

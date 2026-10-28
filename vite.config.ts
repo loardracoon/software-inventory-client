@@ -11,7 +11,11 @@ const usePolling = process.env.VITE_USE_POLLING === "true";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      // The policy evaluator is shared with the Edge Functions, so the editor preview and the server agree.
+      "@policy": fileURLToPath(new URL("./supabase/functions/_shared/policy.ts", import.meta.url)),
+    },
   },
   server: {
     host: true,

@@ -20,6 +20,7 @@ const ROUTES: [string, string][] = [
   ["/", "Overview"],
   ["/computers", "Computers"],
   ["/software", "Software"],
+  ["/policies", "Policies"],
   ["/changes", "Changes"],
   ["/scans", "Scans"],
   ["/settings", "Settings"],

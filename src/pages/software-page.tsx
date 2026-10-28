@@ -16,6 +16,8 @@ import { fetchOpenRequestTitleIds, useCanContribute } from "@/features/dictionar
 import { ExportButton } from "@/features/dictionary/export-button";
 import { ReclassifyDialog, type ReclassifyTarget } from "@/features/dictionary/reclassify-dialog";
 import { fetchCategories, fetchNeedsAttention, searchTitles, type AttentionLevel, type SoftwareFilters, type TitleKind, type TitleRow } from "@/features/inventory/api";
+import { ClassBadge } from "@/features/policy/class-badge";
+import { CLASS_INFO, CLASS_ORDER, classFromParam } from "@/features/policy/classes";
 import { SaveSearchButton } from "@/features/saved-searches/save-search-button";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { endOfDayIso, formatDate, formatNumber } from "@/lib/format";
@@ -74,6 +76,24 @@ function columns(canContribute: boolean, requested: Set<string>, reclassify: (ro
         </div>
       ),
     },
+    {
+      id: "policy",
+      header: "Policy",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex flex-col items-start gap-1">
+          <ClassBadge cls={row.original.policy_class} size="sm" />
+          {row.original.policy_rule_lineage_id ? (
+            <Link to={`/policies/rules/${row.original.policy_rule_lineage_id}`} className="text-xs">
+              {row.original.policy_rule_name}
+            </Link>
+          ) : row.original.policy_class ? (
+            <span className="text-xs text-text-muted">Default class</span>
+          ) : null}
+          {row.original.mixed_versions ? <span className="text-xs text-text-muted">Mixed versions</span> : null}
+        </div>
+      ),
+    },
     { accessorKey: "computers", header: "Computers", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "versions", header: "Versions", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "latest_version", header: "Newest", enableSorting: false, cell: ({ getValue }) => (getValue() as string | null) ?? "—" },
@@ -124,6 +144,7 @@ export function SoftwarePage() {
   const user = params.get("user") ?? "";
   const versionBelow = params.get("below") ?? "";
   const installedOn = params.get("on") ?? "";
+  const policy = classFromParam(params.get("policy"));
   const [requested, setRequested] = useState<Set<string>>(new Set());
   const [reclassifying, setReclassifying] = useState<ReclassifyTarget | null>(null);
 
@@ -173,8 +194,9 @@ export function SoftwarePage() {
       user,
       versionBelow,
       asOf: installedOn ? endOfDayIso(installedOn) : null,
+      policy: policy ? [policy] : [],
     }),
-    [selectedTenantId, query, kind, category, attention, source, platform, user, versionBelow, installedOn],
+    [selectedTenantId, query, kind, category, attention, source, platform, user, versionBelow, installedOn, policy],
   );
 
   const fetchPage = useCallback(async (request: ServerPageRequest<SoftwareFilters>) => {
@@ -232,6 +254,14 @@ export function SoftwarePage() {
         </Field>
         <Field label="Attention" htmlFor="software-attention">
           <NativeSelect id="software-attention" value={attention} onChange={(v) => setParam("attention", v)} options={ATTENTION_OPTIONS} />
+        </Field>
+        <Field label="Policy class" htmlFor="software-policy">
+          <NativeSelect
+            id="software-policy"
+            value={policy ? CLASS_INFO[policy].machineId : ""}
+            onChange={(v) => setParam("policy", v)}
+            options={[{ value: "", label: "All classes" }, ...CLASS_ORDER.map((c) => ({ value: CLASS_INFO[c].machineId, label: CLASS_INFO[c].label }))]}
+          />
         </Field>
         <Field label="Platform" htmlFor="software-platform">
           <NativeSelect

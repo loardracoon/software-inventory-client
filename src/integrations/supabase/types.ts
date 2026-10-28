@@ -649,6 +649,128 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"policies": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"default_class": Database["public"]['Enums']["policy_class"],"evaluated_at": string | null,"id": string,"note": string | null,"published_at": string | null,"published_by": string | null,"status": Database["public"]['Enums']["policy_status"],"tenant_id": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"default_class"?: Database["public"]['Enums']["policy_class"],"evaluated_at"?: string | null,"id"?: string,"note"?: string | null,"published_at"?: string | null,"published_by"?: string | null,"status"?: Database["public"]['Enums']["policy_status"],"tenant_id": string,"version": number
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"default_class"?: Database["public"]['Enums']["policy_class"],"evaluated_at"?: string | null,"id"?: string,"note"?: string | null,"published_at"?: string | null,"published_by"?: string | null,"status"?: Database["public"]['Enums']["policy_status"],"tenant_id"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "policies_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policies_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"policy_class_changes": {
+                  Row: {
+                    "changed_at": string,"from_class": Database["public"]['Enums']["policy_class"],"id": number,"policy_version": number,"rule_id": string | null,"tenant_id": string,"title_id": string,"to_class": Database["public"]['Enums']["policy_class"],"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "changed_at"?: string,"from_class": Database["public"]['Enums']["policy_class"],"id"?: never,"policy_version": number,"rule_id"?: string | null,"tenant_id": string,"title_id": string,"to_class": Database["public"]['Enums']["policy_class"],"version": string
+                  }
+                  Update: {
+                    "changed_at"?: string,"from_class"?: Database["public"]['Enums']["policy_class"],"id"?: never,"policy_version"?: number,"rule_id"?: string | null,"tenant_id"?: string,"title_id"?: string,"to_class"?: Database["public"]['Enums']["policy_class"],"version"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "policy_class_changes_rule_id_fkey"
+      columns: ["rule_id"]
+isOneToOne: false
+      referencedRelation: "policy_rules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
+    }
+                  ]
+                },"policy_conditions": {
+                  Row: {
+                    "case_sensitive": boolean,"field": Database["public"]['Enums']["policy_field"],"id": string,"operator": Database["public"]['Enums']["policy_operator"],"position": number,"rule_id": string,"value": string | null,"value2": string | null,"values": (string)[] | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "case_sensitive"?: boolean,"field": Database["public"]['Enums']["policy_field"],"id"?: string,"operator": Database["public"]['Enums']["policy_operator"],"position": number,"rule_id": string,"value"?: string | null,"value2"?: string | null,"values"?: (string)[] | null
+                  }
+                  Update: {
+                    "case_sensitive"?: boolean,"field"?: Database["public"]['Enums']["policy_field"],"id"?: string,"operator"?: Database["public"]['Enums']["policy_operator"],"position"?: number,"rule_id"?: string,"value"?: string | null,"value2"?: string | null,"values"?: (string)[] | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "policy_conditions_rule_id_fkey"
+      columns: ["rule_id"]
+isOneToOne: false
+      referencedRelation: "policy_rules"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"policy_rules": {
+                  Row: {
+                    "alert_on_new": boolean,"business_purpose": string | null,"class": Database["public"]['Enums']["policy_class"],"created_at": string,"created_by": string | null,"enabled": boolean,"id": string,"kinds": (Database["public"]['Enums']["title_kind"])[],"lineage_id": string,"match": Database["public"]['Enums']["rule_match"],"mitigating_controls": string | null,"name": string,"owner": string | null,"policy_id": string,"position": number,"review_by": string | null,"risk_accepted_by": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alert_on_new"?: boolean,"business_purpose"?: string | null,"class": Database["public"]['Enums']["policy_class"],"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"kinds": (Database["public"]['Enums']["title_kind"])[],"lineage_id"?: string,"match"?: Database["public"]['Enums']["rule_match"],"mitigating_controls"?: string | null,"name": string,"owner"?: string | null,"policy_id": string,"position": number,"review_by"?: string | null,"risk_accepted_by"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "alert_on_new"?: boolean,"business_purpose"?: string | null,"class"?: Database["public"]['Enums']["policy_class"],"created_at"?: string,"created_by"?: string | null,"enabled"?: boolean,"id"?: string,"kinds"?: (Database["public"]['Enums']["title_kind"])[],"lineage_id"?: string,"match"?: Database["public"]['Enums']["rule_match"],"mitigating_controls"?: string | null,"name"?: string,"owner"?: string | null,"policy_id"?: string,"position"?: number,"review_by"?: string | null,"risk_accepted_by"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "policy_rules_policy_id_fkey"
+      columns: ["policy_id"]
+isOneToOne: false
+      referencedRelation: "policies"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"profiles": {
                   Row: {
                     "created_at": string,"display_name": string | null,"email": string,"id": string,"role": Database["public"]['Enums']["app_role"],"updated_at": string
@@ -1085,6 +1207,62 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"title_version_policy": {
+                  Row: {
+                    "class": Database["public"]['Enums']["policy_class"],"evaluated_at": string,"policy_version": number,"rule_id": string | null,"tenant_id": string,"title_id": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class": Database["public"]['Enums']["policy_class"],"evaluated_at"?: string,"policy_version": number,"rule_id"?: string | null,"tenant_id": string,"title_id": string,"version"?: string
+                  }
+                  Update: {
+                    "class"?: Database["public"]['Enums']["policy_class"],"evaluated_at"?: string,"policy_version"?: number,"rule_id"?: string | null,"tenant_id"?: string,"title_id"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "title_version_policy_rule_id_fkey"
+      columns: ["rule_id"]
+isOneToOne: false
+      referencedRelation: "policy_rules"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_policy_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_policy_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_policy_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_policy_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "title_version_policy_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "title_version_policy_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -1157,6 +1335,38 @@ isOneToOne: false
                   ComputedFields: never
                   Relationships: [
                     
+                  ]
+                },"title_policy": {
+                  Row: {
+                    "class": Database["public"]['Enums']["policy_class"] | null,"mixed_versions": boolean | null,"rule_id": string | null,"tenant_id": string,"title_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
+    }
                   ]
                 },"title_summary": {
                   Row: {
@@ -1290,7 +1500,7 @@ isOneToOne: false
                   ]
                 },"v_installation_details": {
                   Row: {
-                    "attention_level": Database["public"]['Enums']["attention_level"] | null,"attrs": Json | null,"canonical_name": string,"category_slug": string | null,"computer_id": string,"confidence": number | null,"domain": Database["public"]['Enums']["inventory_domain"],"external_id": string | null,"first_seen_snapshot": string | null,"hostname": string,"id": string,"kind": Database["public"]['Enums']["title_kind"],"last_seen_snapshot": string | null,"level1_name": string | null,"level2_name": string | null,"method": string | null,"origin": string | null,"path": string | null,"platform": Database["public"]['Enums']["platform"],"scope_key": string | null,"source": string,"tenant_id": string,"title_id": string,"user_masked": boolean | null,"username": string | null,"valid_from": string,"valid_to": string | null,"vendor": string | null,"version": string | null
+                    "attention_level": Database["public"]['Enums']["attention_level"] | null,"attrs": Json | null,"canonical_name": string,"category_slug": string | null,"computer_id": string,"confidence": number | null,"domain": Database["public"]['Enums']["inventory_domain"],"external_id": string | null,"first_seen_snapshot": string | null,"hostname": string,"id": string,"kind": Database["public"]['Enums']["title_kind"],"last_seen_snapshot": string | null,"level1_name": string | null,"level2_name": string | null,"method": string | null,"origin": string | null,"path": string | null,"platform": Database["public"]['Enums']["platform"],"policy_class": Database["public"]['Enums']["policy_class"] | null,"scope_key": string | null,"source": string,"tenant_id": string,"title_id": string,"user_masked": boolean | null,"username": string | null,"valid_from": string,"valid_to": string | null,"vendor": string | null,"version": string | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -1406,6 +1616,50 @@ isOneToOne: false
       referencedColumns: ["title_id"]
     },{
       foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
+    }
+                  ]
+                },"v_policy_class_changes": {
+                  Row: {
+                    "canonical_name": string,"changed_at": string,"external_id": string | null,"from_class": Database["public"]['Enums']["policy_class"],"id": number,"kind": Database["public"]['Enums']["title_kind"],"policy_version": number,"rule_lineage_id": string | null,"rule_name": string | null,"source": string,"tenant_id": string,"title_id": string,"to_class": Database["public"]['Enums']["policy_class"],"vendor": string | null,"version": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "policy_class_changes_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
       referencedRelation: "v_title_summary"
@@ -1678,6 +1932,72 @@ isOneToOne: false
 "overview_stats":
 { Args: { "p_tenant_id"?: string }; Returns: Json
                            },
+"policy_delete_rule":
+{ Args: { "p_lineage_id": string,"p_tenant_id": string }; Returns: undefined
+                           },
+"policy_discard_draft":
+{ Args: { "p_tenant_id": string }; Returns: undefined
+                           },
+"policy_due_tenants":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "full_run": boolean,"policy_id": string,"tenant_id": string
+            }[]
+                           },
+"policy_ensure_draft":
+{ Args: { "p_tenant_id": string }; Returns: string
+                           },
+"policy_eval_inputs":
+{ Args: { "p_after_title"?: string,"p_after_version"?: string,"p_limit"?: number,"p_only_new"?: boolean,"p_tenant_id": string }; Returns: {
+              "category_name": string,"category_slug": string,"external_id": string,"kind": Database["public"]['Enums']["title_kind"],"name": string,"subcategory_name": string,"subcategory_slug": string,"title_id": string,"vendor": string,"version": string
+            }[]
+                           },
+"policy_evaluation_finished":
+{ Args: { "p_policy_id": string }; Returns: undefined
+                           },
+"policy_get":
+{ Args: { "p_tenant_id": string }; Returns: Json
+                           },
+"policy_json":
+{ Args: { "p_policy_id": string }; Returns: Json
+                           },
+"policy_move_rule":
+{ Args: { "p_lineage_id": string,"p_position": number,"p_tenant_id": string }; Returns: number
+                           },
+"policy_overview":
+{ Args: { "p_tenant_id"?: string }; Returns: Json
+                           },
+"policy_place_rule":
+{ Args: { "p_draft": string,"p_position": number,"p_rule_id": string }; Returns: number
+                           },
+"policy_preview_inputs":
+{ Args: { "p_tenant_id": string }; Returns: {
+              "category_name": string,"category_slug": string,"computers": number,"current_class": Database["public"]['Enums']["policy_class"],"current_rule_id": string,"external_id": string,"installations": number,"kind": Database["public"]['Enums']["title_kind"],"name": string,"subcategory_name": string,"subcategory_slug": string,"title_id": string,"vendor": string,"version": string
+            }[]
+                           },
+"policy_publish":
+{ Args: { "p_tenant_id": string }; Returns: Json
+                           },
+"policy_published":
+{ Args: { "p_tenant_id": string }; Returns: Json
+                           },
+"policy_require_admin":
+{ Args: { "p_tenant_id": string }; Returns: undefined
+                           },
+"policy_rule_history":
+{ Args: { "p_lineage_id": string,"p_tenant_id": string }; Returns: Json
+                           },
+"policy_save_rule":
+{ Args: { "p_rule": Json,"p_tenant_id": string }; Returns: string
+                           },
+"policy_set_default_class":
+{ Args: { "p_class": Database["public"]['Enums']["policy_class"],"p_tenant_id": string }; Returns: undefined
+                           },
+"policy_set_rule_enabled":
+{ Args: { "p_enabled": boolean,"p_lineage_id": string,"p_tenant_id": string }; Returns: undefined
+                           },
+"policy_store_results":
+{ Args: { "p_alert"?: boolean,"p_policy_id": string,"p_results": Json,"p_tenant_id": string }; Returns: Json
+                           },
 "purge_raw_results":
 { Args: { "p_days"?: number }; Returns: number
                            },
@@ -1714,8 +2034,8 @@ isOneToOne: false
 { Args: { "p_later_at"?: string,"p_next_at": string,"p_tenant_id": string }; Returns: number
                            },
 "search_titles":
-{ Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string }; Returns: {
-              "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"method": string,"origin": string,"source": string,"title_id": string,"total_count": number,"vendor": string,"versions": number
+{ Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_policy"?: (Database["public"]['Enums']["policy_class"])[],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string }; Returns: {
+              "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"method": string,"mixed_versions": boolean,"origin": string,"policy_class": Database["public"]['Enums']["policy_class"],"policy_rule_lineage_id": string,"policy_rule_name": string,"source": string,"title_id": string,"total_count": number,"vendor": string,"versions": number
             }[]
                            },
 "set_alert_settings":
@@ -1754,7 +2074,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","query_provider": "live_endpoint_search"|"live_discover_rest","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
+            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1874,7 +2194,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"query_provider": ["live_endpoint_search", "live_discover_rest"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
+            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"policy_class": ["core_system", "sanctioned_app", "tolerated_app", "unsanctioned_app"],"policy_field": ["vendor", "name", "category", "subcategory", "version", "external_id"],"policy_operator": ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "regex", "in", "not_in", "gt", "gte", "lt", "lte", "between"],"policy_status": ["draft", "published", "archived"],"query_provider": ["live_endpoint_search", "live_discover_rest"],"rule_match": ["all", "any"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
           }
         }
 } as const

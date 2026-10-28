@@ -12,6 +12,8 @@ const ComputersPage = lazy(() => import("@/pages/computers-page").then((m) => ({
 const ComputerDetailPage = lazy(() => import("@/pages/computer-detail-page").then((m) => ({ default: m.ComputerDetailPage })));
 const SoftwarePage = lazy(() => import("@/pages/software-page").then((m) => ({ default: m.SoftwarePage })));
 const SoftwareTitlePage = lazy(() => import("@/pages/software-title-page").then((m) => ({ default: m.SoftwareTitlePage })));
+const PoliciesPage = lazy(() => import("@/pages/policies-page").then((m) => ({ default: m.PoliciesPage })));
+const PolicyRulePage = lazy(() => import("@/pages/policy-rule-page").then((m) => ({ default: m.PolicyRulePage })));
 const ChangesPage = lazy(() => import("@/pages/changes-page").then((m) => ({ default: m.ChangesPage })));
 const ScansPage = lazy(() => import("@/pages/scans-page").then((m) => ({ default: m.ScansPage })));
 const SettingsPage = lazy(() => import("@/pages/settings-page").then((m) => ({ default: m.SettingsPage })));
@@ -47,6 +49,9 @@ export default function App() {
         <Route path="computers/:id" element={<Page><ComputerDetailPage /></Page>} />
         <Route path="software" element={<Page><SoftwarePage /></Page>} />
         <Route path="software/:titleId" element={<Page><SoftwareTitlePage /></Page>} />
+        <Route path="policies" element={<Page><PoliciesPage /></Page>} />
+        <Route path="policies/rules/new" element={<Page><PolicyRulePage /></Page>} />
+        <Route path="policies/rules/:lineageId" element={<Page><PolicyRulePage /></Page>} />
         <Route path="changes" element={<Page><ChangesPage /></Page>} />
         <Route path="scans" element={<Page><ScansPage /></Page>} />
         <Route path="settings" element={<Page><SettingsPage /></Page>} />
