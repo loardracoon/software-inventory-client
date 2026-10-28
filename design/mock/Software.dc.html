@@ -29,6 +29,8 @@ button.chip{min-height:36px;cursor:pointer}
 button.req{min-height:36px;padding:0 4px;border:0;background:none;font:inherit;font-size:13px;font-weight:600;color:var(--text-brand);cursor:pointer;white-space:nowrap}
 button.req:hover{text-decoration:underline}
 .fld-label{display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--text-strong)}
+.cls{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;background:var(--surface-page);border:1px solid var(--border-subtle);font-size:13px;font-weight:600;color:var(--text-strong);white-space:nowrap}
+.cls i{width:10px;height:10px;border-radius:999px;display:inline-block;flex:0 0 auto}
 </style>
 </helmet>
 <div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
@@ -42,6 +44,7 @@ button.req:hover{text-decoration:underline}
 <a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
 <a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
 <a class="nav-a on" href="Software.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Policies.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Policies</a>
 <a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
 <a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
 <a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
@@ -97,6 +100,15 @@ button.req:hover{text-decoration:underline}
 <option value="info">Info</option>
 </x-import>
 </div>
+<div style="flex: 1 1 170px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Select" label="Policy class" value="{{pol}}" on-change="{{onPol}}">
+<option value="all">Any policy class</option>
+<option value="core">Core system</option>
+<option value="sanctioned">Sanctioned</option>
+<option value="tolerated">Tolerated</option>
+<option value="unsanctioned">Unsanctioned</option>
+</x-import>
+</div>
 <div style="flex: 1 1 150px; min-width: 0;">
 <x-import component-from-global-scope="SophosDS.Select" label="Platform">
 <option>All platforms</option>
@@ -136,14 +148,15 @@ button.req:hover{text-decoration:underline}
 <x-import component-from-global-scope="SophosDS.Tabs" items="{{tabs}}" value="{{kind}}" on-change="{{onKind}}"></x-import>
 </div>
 <div style="overflow-x: auto;">
-<table class="inv" style="min-width: 1140px;">
-<thead><tr><th scope="col">Title</th><th scope="col">Kind · source</th><th scope="col">Category</th><th scope="col" class="num">Computers</th><th scope="col" class="num">Versions</th><th scope="col">Newest</th><th scope="col">Dictionary</th></tr></thead>
+<table class="inv" style="min-width: 1320px;">
+<thead><tr><th scope="col">Title</th><th scope="col">Kind · source</th><th scope="col">Category</th><th scope="col">Policy</th><th scope="col" class="num">Computers</th><th scope="col" class="num">Versions</th><th scope="col">Newest</th><th scope="col">Dictionary</th></tr></thead>
 <tbody>
 <sc-for list="{{rows}}" as="r" hint-placeholder-count="11">
 <tr>
 <td><div style="display: flex; flex-direction: column; gap: 2px; max-width: 260px;"><a href="Computers.dc.html" style="font-weight: 600; text-decoration: none;">{{r.name}}</a><sc-if value="{{r.hasId}}" hint-placeholder-val="{{ false }}"><span class="mono" style="color: var(--text-muted);">{{r.extId}}</span></sc-if></div></td>
 <td><div style="display: flex; flex-direction: column; gap: 2px;"><span style="white-space: nowrap;">{{r.kindLabel}}</span><span style="font-size: 12px; color: var(--text-muted);">{{r.source}}</span></div></td>
 <td><div style="display: flex; flex-direction: column; align-items: flex-start; gap: 3px; max-width: 300px;"><span style="font-size: 12px; color: var(--text-muted);">{{r.l1}}</span><div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">{{r.l2}}</span><sc-if value="{{r.flag}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SophosDS.Badge" color="{{r.color}}" soft="{{yes}}">{{r.attLabel}}</x-import></sc-if></div><span style="font-size: 12px; color: var(--text-muted);">{{r.origin}}</span></div></td>
+<td><div style="display: flex; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 220px;"><span class="cls"><i aria-hidden="true" style="background: {{r.polColor}};"></i>{{r.polLabel}}</span><a href="Policies.dc.html" style="font-size: 12px; text-decoration: none;">{{r.polRule}}</a></div></td>
 <td class="num" style="font-weight: 600; color: var(--text-strong);">{{r.computers}}</td>
 <td class="num">{{r.versions}}</td>
 <td class="mono" style="font-size: 13px;">{{r.latest}}</td>
@@ -237,46 +250,259 @@ button.req:hover{text-decoration:underline}
 </sc-if>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1800}}'>
+/* Application policy: classes, fields, operators, evaluator and sample data.
+   Classes follow CIS Controls v8.1, Control 2 (software inventory and control). */
+var PC_CLASSES = {
+  core: { key: 'core', id: 'core-system', label: 'Core system', color: '#6A889B',
+    meaning: 'Operating system, drivers, runtimes and security agents the asset needs to run.',
+    cis: 'Authorized · 2.1, 2.5' },
+  sanctioned: { key: 'sanctioned', id: 'sanctioned-app', label: 'Sanctioned', color: '#2006F7',
+    meaning: 'Approved for business use, with a business purpose and a supported version.',
+    cis: 'Authorized · 2.1, 2.2, 2.5' },
+  tolerated: { key: 'tolerated', id: 'tolerated-app', label: 'Tolerated', color: '#009CFB',
+    meaning: 'Not authorized, kept under a documented exception with an owner, mitigating controls and a monthly review.',
+    cis: 'Documented exception · 2.2, 2.3' },
+  unsanctioned: { key: 'unsanctioned', id: 'unsanctioned-app', label: 'Unsanctioned', color: '#EA0022',
+    meaning: 'Unauthorized or unsupported with no exception. Remove it from enterprise assets.',
+    cis: 'Unauthorized · 2.3' }
+};
+var PC_ORDER = ['core', 'sanctioned', 'tolerated', 'unsanctioned'];
+
+var PC_FIELDS = {
+  vendor: { label: 'Vendor / publisher', type: 'text' },
+  name: { label: 'App name', type: 'text' },
+  category: { label: 'Category', type: 'cat1' },
+  subcategory: { label: 'Subcategory', type: 'cat2' },
+  version: { label: 'Version', type: 'version' },
+  extid: { label: 'Extension or package ID', type: 'text' }
+};
+var PC_OP_LABEL = {
+  equals: 'is', not_equals: 'is not', contains: 'contains', not_contains: 'does not contain',
+  starts_with: 'starts with', ends_with: 'ends with', regex: 'matches regex', in: 'is one of', not_in: 'is not one of',
+  gt: '>', gte: '≥', lt: '<', lte: '≤', between: 'between'
+};
+var PC_KINDS = { program: 'Programs', extension: 'Browser extensions', ide_extension: 'IDE extensions', package: 'Packages' };
+
+/* Compare dotted versions number by number: 10.2 > 9.14, 21.011.20039 < 24. Non-numeric parts compare as text. */
+function pcVer(a, b) {
+  var x = String(a).trim().split(/[.\-+_ ]/), y = String(b).trim().split(/[.\-+_ ]/);
+  var n = Math.max(x.length, y.length);
+  for (var i = 0; i < n; i++) {
+    var p = x[i] === undefined ? '0' : x[i], q = y[i] === undefined ? '0' : y[i];
+    if (/^\d+$/.test(p) && /^\d+$/.test(q)) {
+      var d = parseInt(p, 10) - parseInt(q, 10);
+      if (d) return d < 0 ? -1 : 1;
+    } else if (p !== q) {
+      return p < q ? -1 : 1;
+    }
+  }
+  return 0;
+}
+function pcValue(t, f) {
+  if (f === 'vendor') return t.vendor || '';
+  if (f === 'name') return t.name || '';
+  if (f === 'category') return t.l1 || '';
+  if (f === 'subcategory') return t.l2 || '';
+  if (f === 'version') return t.version || '';
+  if (f === 'extid') return t.extId || '';
+  return '';
+}
+function pcList(c) {
+  if (c.vs && c.vs.length) return c.vs;
+  return String(c.v || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+}
+/* Returns { ok, error }. Text compares ignore case unless c.cs is true. */
+function pcTest(c, t) {
+  var type = PC_FIELDS[c.f].type, raw = pcValue(t, c.f);
+  if (c.op === 'regex') {
+    try { return { ok: new RegExp(c.v || '', c.cs ? '' : 'i').test(raw) }; }
+    catch (e) { return { ok: false, error: 'Invalid regular expression' }; }
+  }
+  if (type === 'version') {
+    if (!raw) return { ok: false };
+    var cmp = pcVer(raw, c.v || '0');
+    if (c.op === 'equals') return { ok: cmp === 0 };
+    if (c.op === 'not_equals') return { ok: cmp !== 0 };
+    if (c.op === 'gt') return { ok: cmp > 0 };
+    if (c.op === 'gte') return { ok: cmp >= 0 };
+    if (c.op === 'lt') return { ok: cmp < 0 };
+    if (c.op === 'lte') return { ok: cmp <= 0 };
+    if (c.op === 'between') return { ok: cmp >= 0 && pcVer(raw, c.v2 || c.v || '0') <= 0 };
+    return { ok: false };
+  }
+  var norm = function (s) { return c.cs ? String(s) : String(s).toLowerCase(); };
+  var a = norm(raw), list = pcList(c).map(norm), v = norm(c.v || '');
+  if (c.op === 'equals') return { ok: a === v };
+  if (c.op === 'not_equals') return { ok: a !== v };
+  if (c.op === 'contains') return { ok: !!v && a.indexOf(v) !== -1 };
+  if (c.op === 'not_contains') return { ok: !v || a.indexOf(v) === -1 };
+  if (c.op === 'starts_with') return { ok: !!v && a.indexOf(v) === 0 };
+  if (c.op === 'ends_with') return { ok: !!v && a.slice(-v.length) === v };
+  if (c.op === 'in') return { ok: list.indexOf(a) !== -1 };
+  if (c.op === 'not_in') return { ok: list.indexOf(a) === -1 };
+  return { ok: false };
+}
+function pcRuleTest(r, t) {
+  if (!r.enabled) return { ok: false, reason: 'Rule is disabled' };
+  if (r.kinds.indexOf(t.kind) === -1) return { ok: false, reason: 'Does not apply to ' + PC_KINDS[t.kind].toLowerCase() };
+  var results = r.conds.map(function (c) { return pcTest(c, t); });
+  var ok = r.match === 'any' ? results.some(function (x) { return x.ok; }) : results.every(function (x) { return x.ok; });
+  if (ok) return { ok: true };
+  if (r.match === 'any') return { ok: false, reason: 'No condition matches' };
+  var i = results.findIndex(function (x) { return !x.ok; });
+  return { ok: false, reason: pcCondText(r.conds[i]) + ' is false (' + (pcValue(t, r.conds[i].f) || 'empty') + ')' };
+}
+function pcClassify(rules, t, dflt) {
+  for (var i = 0; i < rules.length; i++) {
+    if (pcRuleTest(rules[i], t).ok) return { cls: rules[i].cls, index: i, rule: rules[i] };
+  }
+  return { cls: dflt, index: -1, rule: null };
+}
+function pcCondText(c) {
+  var f = PC_FIELDS[c.f].label, op = PC_OP_LABEL[c.op];
+  if (c.op === 'in' || c.op === 'not_in') return f + ' ' + op + ' ' + pcList(c).join(', ');
+  if (c.op === 'between') return f + ' between ' + (c.v || '?') + ' and ' + (c.v2 || '?');
+  return f + ' ' + op + ' ' + (c.v || '?') + (c.cs ? ' (case-sensitive)' : '');
+}
+
+/* Sample titles: the shape of title_summary rows, with the class inputs the rules read. */
+var PC_TITLES = [
+  { name: 'Microsoft Visual C++ 2015-2022 Redistributable (x64)', vendor: 'Microsoft Corporation', kind: 'program', l1: 'System applications', l2: 'OS components and runtimes', version: '14.40.33810', computers: 401 },
+  { name: 'Microsoft Edge WebView2 Runtime', vendor: 'Microsoft Corporation', kind: 'program', l1: 'System applications', l2: 'OS components and runtimes', version: '130.0.2849.56', computers: 398 },
+  { name: 'Intel Graphics Driver', vendor: 'Intel Corporation', kind: 'program', l1: 'System applications', l2: 'Drivers and hardware utilities', version: '31.0.101.5590', computers: 260 },
+  { name: 'Dell Command | Update', vendor: 'Dell Inc.', kind: 'program', l1: 'System applications', l2: 'OEM utilities', version: '5.4.0', computers: 188 },
+  { name: 'Chrome Web Store Payments', vendor: 'Google', kind: 'extension', extId: 'nmmhkkegccagdldgiimedpiccmgmieda', l1: 'System applications', l2: 'Browser components', version: '1.0.0.6', computers: 140 },
+  { name: 'Sophos Endpoint Agent', vendor: 'Sophos Limited', kind: 'program', l1: 'Sophos applications', l2: 'Sophos agents and tools', version: '2024.3.1', computers: 412 },
+  { name: 'Google Chrome', vendor: 'Google LLC', kind: 'program', l1: 'General internet', l2: 'Web browsers', version: '130.0.6723.92', computers: 377 },
+  { name: 'Microsoft 365 Apps for business', vendor: 'Microsoft Corporation', kind: 'program', l1: 'General business', l2: 'Office and documents', version: '16.0.18129.20158', computers: 366 },
+  { name: 'Adobe Acrobat (64-bit)', vendor: 'Adobe', kind: 'program', l1: 'General business', l2: 'Office and documents', version: '24.003.20180', computers: 141 },
+  { name: 'Adobe Acrobat Reader DC', vendor: 'Adobe Systems Incorporated', kind: 'program', l1: 'General business', l2: 'Office and documents', version: '21.011.20039', computers: 23 },
+  { name: 'Adobe Acrobat: PDF edit, convert, sign tools', vendor: 'Adobe', kind: 'extension', extId: 'efaidnbmnnnibpcajpcglclefindmkaj', l1: 'General business', l2: 'Office and documents', version: '26.10.1.0', computers: 52 },
+  { name: 'Zoom Workplace', vendor: 'Zoom Video Communications, Inc.', kind: 'program', l1: 'Conferencing', l2: 'Video meetings', version: '6.2.6', computers: 214 },
+  { name: 'Cisco Webex Meetings', vendor: 'Cisco Systems', kind: 'program', l1: 'Conferencing', l2: 'Video meetings', version: '44.10.0', computers: 37 },
+  { name: 'Slack', vendor: 'Slack Technologies', kind: 'program', l1: 'Instant messenger', l2: 'Team chat', version: '4.41.97', computers: 58 },
+  { name: 'AnyDesk', vendor: 'AnyDesk Software GmbH', kind: 'program', l1: 'Remote access', l2: 'Remote desktop and support', version: '9.0.5', computers: 21 },
+  { name: 'TeamViewer', vendor: 'TeamViewer Germany GmbH', kind: 'program', l1: 'Remote access', l2: 'Remote desktop and support', version: '15.58.4', computers: 9 },
+  { name: 'anydesk', vendor: 'AnyDesk Software GmbH', kind: 'package', extId: 'anydesk', l1: 'Remote access', l2: 'Remote desktop and support', version: '9.0.5', computers: 2 },
+  { name: 'RustDesk', vendor: 'Purslane Ltd', kind: 'program', l1: 'Remote access', l2: 'Remote desktop and support', version: '1.3.2', computers: 2 },
+  { name: 'Chrome Remote Desktop', vendor: 'Google', kind: 'extension', extId: 'inomeogfingihgjfjlpeplalcfajhgai', l1: 'Remote access', l2: 'Remote desktop and support', version: '2.1', computers: 11 },
+  { name: 'PuTTY', vendor: 'Simon Tatham', kind: 'program', l1: 'Remote access', l2: 'SSH and terminal clients', version: '0.81', computers: 17 },
+  { name: 'FortiClient VPN', vendor: 'Fortinet Technologies Inc', kind: 'program', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', version: '7.4.1', computers: 44 },
+  { name: 'OpenVPN Connect', vendor: 'OpenVPN Inc.', kind: 'program', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', version: '3.5.1', computers: 4 },
+  { name: 'Urban VPN Proxy', vendor: 'Urban Cyber Security Inc.', kind: 'extension', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', version: '5.11.2', computers: 5 },
+  { name: 'wireguard-tools', vendor: '', kind: 'package', extId: 'wireguard-tools', l1: 'Proxy and tunnel', l2: 'Tunnels and mesh networks', version: '1.0.20210914', computers: 3 },
+  { name: 'Tor Browser', vendor: 'The Tor Project', kind: 'program', l1: 'Proxy and tunnel', l2: 'Anonymizers', version: '14.0', computers: 1 },
+  { name: 'qBittorrent', vendor: 'The qBittorrent project', kind: 'program', l1: 'P2P', l2: 'Torrent clients', version: '4.6.5', computers: 2 },
+  { name: 'Keeper® Password Manager & Digital Vault', vendor: 'Keeper Security', kind: 'extension', extId: 'bfogiafebfohielmmehodmfbbebbbpei', l1: 'Security and identity', l2: 'Password managers', version: '17.9.0', computers: 31 },
+  { name: 'Bitwarden Password Manager', vendor: 'Bitwarden Inc.', kind: 'extension', extId: 'nngceckbapebfimnlniiiahkandclblb', l1: 'Security and identity', l2: 'Password managers', version: '2024.10.1', computers: 48 },
+  { name: 'Advanced IP Scanner', vendor: 'Famatech Corp.', kind: 'program', l1: 'Security and identity', l2: 'Security testing tools', version: '2.5.4594', computers: 6 },
+  { name: 'Visual Studio Code', vendor: 'Microsoft Corporation', kind: 'program', l1: 'Developer tools', l2: 'IDEs and editors', version: '1.95.1', computers: 66 },
+  { name: 'typescript', vendor: 'Microsoft Corp.', kind: 'package', extId: 'typescript', l1: 'Developer tools', l2: 'Libraries and packages', version: '5.9.2', computers: 38 },
+  { name: 'GitHub Copilot', vendor: 'GitHub', kind: 'ide_extension', extId: 'github.copilot', l1: 'Generative AI', l2: 'AI coding assistants', version: '1.245.0', computers: 22 },
+  { name: 'Awesome Screen Recorder & Screenshot', vendor: 'Awesome Screenshot', kind: 'extension', extId: 'nlipoenfbbikpbjkfpfillcgkoblgpmj', l1: 'General business', l2: 'Screen capture and recording', version: '4.4.41', computers: 9 },
+  { name: 'OBS Studio', vendor: 'OBS Project', kind: 'program', l1: 'General business', l2: 'Screen capture and recording', version: '30.2.3', computers: 7 },
+  { name: 'Gmail', vendor: 'Google', kind: 'extension', extId: 'pjkljhegncpnkpknbcohdijeoejaedia', l1: 'General internet', l2: 'Legacy Chrome apps', version: '8.2', computers: 14 },
+  { name: 'YouTube', vendor: 'Google', kind: 'extension', extId: 'blpcfgokakmgnkcojhhkbfbldkacnbeo', l1: 'General internet', l2: 'Legacy Chrome apps', version: '4.2.8', computers: 9 },
+  { name: 'Momentum', vendor: 'Momentum Dash', kind: 'extension', extId: 'laookkfknpbbblfpciffpaejjkokdgca', l1: 'General internet', l2: 'Browser utilities', version: '2.26.6', computers: 8 },
+  { name: 'Spotify', vendor: 'Spotify AB', kind: 'program', l1: 'Streaming media', l2: 'Music and podcasts', version: '1.2.48.405', computers: 74 },
+  { name: 'Player do NOW NET Claro', vendor: 'Claro', kind: 'extension', extId: 'npflpmeannakjekldamofnldpiefjmmi', l1: 'Other', l2: 'Other', version: '1.9.3.43', computers: 6 },
+  { name: 'Add to Amazon Wish List', vendor: 'Amazon', kind: 'extension', extId: 'ciagpekplgpbepdgggflgmahnjgiaced', l1: 'E-commerce', l2: 'Shopping assistants', version: '1.0.0.11', computers: 7 },
+  { name: 'Ollama', vendor: 'Ollama', kind: 'program', l1: 'Generative AI', l2: 'Local AI runtimes', version: '0.4.1', computers: 2 },
+  { name: 'Parsec', vendor: 'Parsec Cloud, Inc.', kind: 'program', l1: 'Unclassified', l2: 'Not in the dictionary yet', version: '150-97', computers: 3 }
+];
+
+/* Published policy (version 13). tTitles / tComputers are tenant-wide counts from title_summary. */
+var PC_ALL_KINDS = ['program', 'extension', 'ide_extension', 'package'];
+var PC_RULES = [
+  { id: 'r1', name: 'Operating system, drivers and runtimes', cls: 'core', match: 'all', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'category', op: 'equals', v: 'System applications' }],
+    owner: 'IT Operations', purpose: 'Components required by Windows, macOS, Linux and the browsers.', tTitles: 401, tComputers: 412 },
+  { id: 'r2', name: 'Sophos agents', cls: 'core', match: 'all', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'category', op: 'equals', v: 'Sophos applications' }],
+    owner: 'Security team', purpose: 'Endpoint protection and ZTNA agents.', tTitles: 11, tComputers: 412 },
+  { id: 'r3', name: 'Unsupported Acrobat and Reader', cls: 'unsanctioned', match: 'all', enabled: true, kinds: ['program'],
+    conds: [{ f: 'vendor', op: 'contains', v: 'Adobe' }, { f: 'name', op: 'regex', v: 'Acrobat|Reader' }, { f: 'version', op: 'lt', v: '24' }],
+    owner: 'Security team', purpose: 'Versions out of vendor support (CIS 2.2). Update or remove.', tTitles: 4, tComputers: 19 },
+  { id: 'r4', name: 'Approved business suite', cls: 'sanctioned', match: 'all', enabled: true, kinds: ['program', 'extension'],
+    conds: [{ f: 'category', op: 'in', vs: ['General business', 'Conferencing', 'Instant messenger', 'General internet'] },
+            { f: 'vendor', op: 'in', vs: ['Microsoft Corporation', 'Adobe', 'Zoom Video Communications, Inc.', 'Cisco Systems', 'Slack Technologies', 'Google LLC'] }],
+    owner: 'IT Operations', purpose: 'Office, PDF, meetings, chat and the standard browser.', tTitles: 291, tComputers: 408 },
+  { id: 'r5', name: 'Approved remote support', cls: 'tolerated', match: 'all', enabled: true, kinds: ['program', 'package'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Remote desktop and support' }, { f: 'name', op: 'regex', v: '^(AnyDesk|TeamViewer)$' }, { f: 'version', op: 'gte', v: '9.0' }],
+    owner: 'IT Service Desk', purpose: 'Vendor support sessions for line-of-business systems.',
+    controls: 'Unattended access disabled; sessions logged; access only from the support VLAN.', riskBy: 'CISO', review: '2026-11-15', tTitles: 3, tComputers: 30 },
+  { id: 'r6', name: 'Corporate VPN and password managers', cls: 'sanctioned', match: 'any', enabled: true, kinds: ['program', 'extension'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Corporate VPN clients' }, { f: 'extid', op: 'in', v: 'bfogiafebfohielmmehodmfbbebbbpei, nngceckbapebfimnlniiiahkandclblb' }],
+    owner: 'Security team', purpose: 'Remote access through the corporate VPN; Keeper and Bitwarden are the approved vaults.', tTitles: 24, tComputers: 75 },
+  { id: 'r7', name: 'Developer tools', cls: 'sanctioned', match: 'all', enabled: true, kinds: ['program', 'ide_extension', 'package'],
+    conds: [{ f: 'category', op: 'equals', v: 'Developer tools' }],
+    owner: 'Engineering', purpose: 'IDEs, runtimes, CLIs and libraries used by the engineering teams.', tTitles: 256, tComputers: 92 },
+  { id: 'r8', name: 'Legacy Chrome apps', cls: 'tolerated', match: 'all', enabled: true, kinds: ['extension'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Legacy Chrome apps' }],
+    owner: 'Workplace team', purpose: 'Removal scheduled with the Chrome policy rollout.',
+    controls: 'No permissions beyond the Google domains; removed by policy on next Chrome update.', riskBy: 'IT Manager', review: '2026-10-15', tTitles: 6, tComputers: 14 },
+  { id: 'r9', name: 'Screen capture and AI tools under review', cls: 'tolerated', match: 'any', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'subcategory', op: 'in', vs: ['Screen capture and recording', 'AI assistants', 'AI browser extensions'] }],
+    owner: 'Security team', purpose: 'Waiting for the acceptable-use policy on recording and AI tools.',
+    controls: 'DLP watches uploads from these tools; users acknowledged the interim rules.', riskBy: 'CISO', review: '2026-11-30', tTitles: 54, tComputers: 41 },
+  { id: 'r10', name: 'Anonymizers, P2P and unwanted software', cls: 'unsanctioned', match: 'any', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'subcategory', op: 'in', vs: ['Anonymizers', 'Torrent clients', 'Other P2P networks'] }, { f: 'category', op: 'equals', v: 'Unwanted software' }],
+    owner: 'Security team', purpose: 'Never allowed on enterprise assets.', tTitles: 9, tComputers: 3 },
+  { id: 'r11', name: 'Consumer VPN, tunnels and other remote access', cls: 'unsanctioned', match: 'any', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'subcategory', op: 'in', vs: ['Consumer VPN and proxy services', 'Tunnels and mesh networks'] }, { f: 'subcategory', op: 'equals', v: 'Remote desktop and support' }],
+    owner: 'Security team', purpose: 'Anything that opens a path around the firewall, except the tools in rule 5.', tTitles: 46, tComputers: 22 },
+  { id: 'r12', name: 'Local AI runtimes', cls: 'unsanctioned', match: 'all', enabled: false, kinds: ['program', 'package'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Local AI runtimes' }],
+    owner: 'Security team', purpose: 'Draft: waiting for the AI policy.', tTitles: 0, tComputers: 0 }
+];
+var PC_DEFAULT = 'unsanctioned';
+var PC_DEFAULT_COUNTS = { tTitles: 179, tComputers: 286 };
+var PC_TODAY = '2026-10-24';
+
 var SW_TITLES = [
-  { name: 'AnyDesk', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 21, versions: 4, latest: '9.0.5' },
-  { name: 'TeamViewer', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 9, versions: 3, latest: '15.58.4' },
-  { name: 'RustDesk', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 2, versions: 1, latest: '1.3.2' },
-  { name: 'Chrome Remote Desktop', kind: 'extension', source: 'Chrome', extId: 'inomeogfingihgjfjlpeplalcfajhgai', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 11, versions: 1, latest: '2.1' },
-  { name: 'Chrome Remote Desktop', kind: 'extension', source: 'Chrome', extId: 'gbchcmhmhahfdphkhkmpfmihenigjmpp', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 3, versions: 1, latest: '77.0.3836.0' },
-  { name: 'anydesk', kind: 'package', source: 'Chocolatey', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · rule', computers: 2, versions: 1, latest: '9.0.5' },
-  { name: 'PuTTY', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'SSH and terminal clients', att: 'info', origin: 'Hub · Jev auto 0.97', computers: 17, versions: 2, latest: '0.81' },
-  { name: 'FortiClient VPN', kind: 'program', source: 'Windows programs', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', att: 'info', origin: 'Hub · reviewed', computers: 44, versions: 2, latest: '7.4.1' },
-  { name: 'OpenVPN Connect', kind: 'program', source: 'macOS apps', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', att: 'info', origin: 'Hub · reviewed', computers: 4, versions: 2, latest: '3.5.1' },
-  { name: 'Urban VPN Proxy', kind: 'extension', source: 'Chrome', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', att: 'review', origin: 'Hub · reviewed', computers: 5, versions: 2, latest: '5.11.2', req: 'REQ-0041 · open' },
-  { name: 'wireguard-tools', kind: 'package', source: 'Homebrew', l1: 'Proxy and tunnel', l2: 'Tunnels and mesh networks', att: 'review', origin: 'Hub · Jev 0.89, reviewed', computers: 3, versions: 1, latest: '1.0.20210914' },
-  { name: 'Tor Browser', kind: 'program', source: 'Windows programs', l1: 'Proxy and tunnel', l2: 'Anonymizers', att: 'not_allowed', origin: 'Hub · rule', computers: 1, versions: 1, latest: '14.0' },
-  { name: 'Awesome Screen Recorder & Screenshot', kind: 'extension', source: 'Chrome', extId: 'nlipoenfbbikpbjkfpfillcgkoblgpmj', l1: 'General business', l2: 'Screen capture and recording', att: 'review', origin: 'Hub · reviewed', computers: 9, versions: 4, latest: '4.4.41' },
-  { name: 'OBS Studio', kind: 'program', source: 'Windows programs', l1: 'General business', l2: 'Screen capture and recording', att: 'review', origin: 'Hub · reviewed', computers: 7, versions: 2, latest: '30.2.3' },
-  { name: 'ShareX', kind: 'program', source: 'Windows programs', l1: 'General business', l2: 'Screen capture and recording', att: 'not_allowed', origin: 'Local override · Not allowed', computers: 5, versions: 1, latest: '16.1.0' },
-  { name: 'Adobe Acrobat: PDF edit, convert, sign tools', kind: 'extension', source: 'Chrome', extId: 'efaidnbmnnnibpcajpcglclefindmkaj', l1: 'General business', l2: 'Office and documents', att: 'info', origin: 'Hub · Jev auto 0.98', computers: 52, versions: 4, latest: '26.10.1.0' },
-  { name: 'Keeper® Password Manager & Digital Vault', kind: 'extension', source: 'Chrome', extId: 'bfogiafebfohielmmehodmfbbebbbpei', l1: 'Security and identity', l2: 'Password managers', att: 'info', origin: 'Hub · reviewed', computers: 31, versions: 3, latest: '17.9.0' },
-  { name: 'Bitwarden Password Manager', kind: 'extension', source: 'Chrome, Edge', l1: 'Security and identity', l2: 'Password managers', att: 'info', origin: 'Hub · reviewed', computers: 48, versions: 2, latest: '2024.10.1' },
-  { name: 'Advanced IP Scanner', kind: 'program', source: 'Windows programs', l1: 'Security and identity', l2: 'Security testing tools', att: 'review', origin: 'Hub · reviewed', computers: 6, versions: 1, latest: '2.5.4594' },
-  { name: 'GitHub Copilot', kind: 'ide_extension', source: 'VS Code', l1: 'Generative AI', l2: 'AI coding assistants', att: 'review', origin: 'Hub · reviewed', computers: 22, versions: 3, latest: '1.245.0' },
-  { name: 'Ollama', kind: 'program', source: 'Windows programs', l1: 'Generative AI', l2: 'Local AI runtimes', att: 'review', origin: 'Hub · reviewed', computers: 2, versions: 1, latest: '0.4.1' },
-  { name: 'Visual Studio Code', kind: 'program', source: 'Windows programs, macOS apps', l1: 'Developer tools', l2: 'IDEs and editors', att: 'info', origin: 'Hub · reviewed', computers: 66, versions: 5, latest: '1.95.1' },
-  { name: 'typescript', kind: 'package', source: 'npm', l1: 'Developer tools', l2: 'Libraries and packages', att: 'info', origin: 'Hub · rule', computers: 38, versions: 6, latest: '5.9.2' },
-  { name: 'Gmail', kind: 'extension', source: 'Chrome', extId: 'pjkljhegncpnkpknbcohdijeoejaedia', l1: 'General internet', l2: 'Legacy Chrome apps', att: 'review', origin: 'Hub · rule', computers: 14, versions: 1, latest: '8.2' },
-  { name: 'YouTube', kind: 'extension', source: 'Chrome', extId: 'blpcfgokakmgnkcojhhkbfbldkacnbeo', l1: 'General internet', l2: 'Legacy Chrome apps', att: 'review', origin: 'Hub · rule', computers: 9, versions: 1, latest: '4.2.8' },
-  { name: 'Momentum', kind: 'extension', source: 'Chrome', extId: 'laookkfknpbbblfpciffpaejjkokdgca', l1: 'General internet', l2: 'Browser utilities', att: 'info', origin: 'Hub · Jev auto 0.96', computers: 8, versions: 3, latest: '2.26.6' },
-  { name: 'Add to Amazon Wish List', kind: 'extension', source: 'Chrome', extId: 'ciagpekplgpbepdgggflgmahnjgiaced', l1: 'E-commerce', l2: 'Shopping assistants', att: 'review', origin: 'Hub · reviewed', computers: 7, versions: 1, latest: '1.0.0.11' },
-  { name: 'Player do NOW NET Claro', kind: 'extension', source: 'Chrome', extId: 'npflpmeannakjekldamofnldpiefjmmi', l1: 'Other', l2: 'Other', att: 'info', origin: 'Hub · reviewed', computers: 6, versions: 1, latest: '1.9.3.43', req: 'REQ-0042 · open' },
-  { name: 'Parsec', kind: 'program', source: 'Windows programs', l1: 'Unclassified', l2: 'Not in the dictionary yet', att: 'none', origin: 'Sent to hub · Oct 20', computers: 3, versions: 1, latest: '150-97' }
+  { name: 'AnyDesk', vendor: 'AnyDesk Software GmbH', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 21, versions: 4, latest: '9.0.5' },
+  { name: 'TeamViewer', vendor: 'TeamViewer Germany GmbH', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 9, versions: 3, latest: '15.58.4' },
+  { name: 'RustDesk', vendor: 'Purslane Ltd', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 2, versions: 1, latest: '1.3.2' },
+  { name: 'Chrome Remote Desktop', vendor: 'Google', kind: 'extension', source: 'Chrome', extId: 'inomeogfingihgjfjlpeplalcfajhgai', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 11, versions: 1, latest: '2.1' },
+  { name: 'Chrome Remote Desktop', vendor: 'Google', kind: 'extension', source: 'Chrome', extId: 'gbchcmhmhahfdphkhkmpfmihenigjmpp', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · reviewed', computers: 3, versions: 1, latest: '77.0.3836.0' },
+  { name: 'anydesk', vendor: 'AnyDesk Software GmbH', kind: 'package', source: 'Chocolatey', l1: 'Remote access', l2: 'Remote desktop and support', att: 'review', origin: 'Hub · rule', computers: 2, versions: 1, latest: '9.0.5' },
+  { name: 'PuTTY', vendor: 'Simon Tatham', kind: 'program', source: 'Windows programs', l1: 'Remote access', l2: 'SSH and terminal clients', att: 'info', origin: 'Hub · Jev auto 0.97', computers: 17, versions: 2, latest: '0.81' },
+  { name: 'FortiClient VPN', vendor: 'Fortinet Technologies Inc', kind: 'program', source: 'Windows programs', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', att: 'info', origin: 'Hub · reviewed', computers: 44, versions: 2, latest: '7.4.1' },
+  { name: 'OpenVPN Connect', vendor: 'OpenVPN Inc.', kind: 'program', source: 'macOS apps', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', att: 'info', origin: 'Hub · reviewed', computers: 4, versions: 2, latest: '3.5.1' },
+  { name: 'Urban VPN Proxy', vendor: 'Urban Cyber Security Inc.', kind: 'extension', source: 'Chrome', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', att: 'review', origin: 'Hub · reviewed', computers: 5, versions: 2, latest: '5.11.2', req: 'REQ-0041 · open' },
+  { name: 'wireguard-tools', vendor: '', kind: 'package', source: 'Homebrew', l1: 'Proxy and tunnel', l2: 'Tunnels and mesh networks', att: 'review', origin: 'Hub · Jev 0.89, reviewed', computers: 3, versions: 1, latest: '1.0.20210914' },
+  { name: 'Tor Browser', vendor: 'The Tor Project', kind: 'program', source: 'Windows programs', l1: 'Proxy and tunnel', l2: 'Anonymizers', att: 'not_allowed', origin: 'Hub · rule', computers: 1, versions: 1, latest: '14.0' },
+  { name: 'Awesome Screen Recorder & Screenshot', vendor: 'Awesome Screenshot', kind: 'extension', source: 'Chrome', extId: 'nlipoenfbbikpbjkfpfillcgkoblgpmj', l1: 'General business', l2: 'Screen capture and recording', att: 'review', origin: 'Hub · reviewed', computers: 9, versions: 4, latest: '4.4.41' },
+  { name: 'OBS Studio', vendor: 'OBS Project', kind: 'program', source: 'Windows programs', l1: 'General business', l2: 'Screen capture and recording', att: 'review', origin: 'Hub · reviewed', computers: 7, versions: 2, latest: '30.2.3' },
+  { name: 'ShareX', vendor: 'ShareX Team', kind: 'program', source: 'Windows programs', l1: 'General business', l2: 'Screen capture and recording', att: 'not_allowed', origin: 'Local override · Not allowed', computers: 5, versions: 1, latest: '16.1.0' },
+  { name: 'Adobe Acrobat: PDF edit, convert, sign tools', vendor: 'Adobe', kind: 'extension', source: 'Chrome', extId: 'efaidnbmnnnibpcajpcglclefindmkaj', l1: 'General business', l2: 'Office and documents', att: 'info', origin: 'Hub · Jev auto 0.98', computers: 52, versions: 4, latest: '26.10.1.0' },
+  { name: 'Keeper® Password Manager & Digital Vault', vendor: 'Keeper Security', kind: 'extension', source: 'Chrome', extId: 'bfogiafebfohielmmehodmfbbebbbpei', l1: 'Security and identity', l2: 'Password managers', att: 'info', origin: 'Hub · reviewed', computers: 31, versions: 3, latest: '17.9.0' },
+  { name: 'Bitwarden Password Manager', vendor: 'Bitwarden Inc.', kind: 'extension', source: 'Chrome, Edge', extId: 'nngceckbapebfimnlniiiahkandclblb', l1: 'Security and identity', l2: 'Password managers', att: 'info', origin: 'Hub · reviewed', computers: 48, versions: 2, latest: '2024.10.1' },
+  { name: 'Advanced IP Scanner', vendor: 'Famatech Corp.', kind: 'program', source: 'Windows programs', l1: 'Security and identity', l2: 'Security testing tools', att: 'review', origin: 'Hub · reviewed', computers: 6, versions: 1, latest: '2.5.4594' },
+  { name: 'GitHub Copilot', vendor: 'GitHub', kind: 'ide_extension', source: 'VS Code', l1: 'Generative AI', l2: 'AI coding assistants', att: 'review', origin: 'Hub · reviewed', computers: 22, versions: 3, latest: '1.245.0' },
+  { name: 'Ollama', vendor: 'Ollama', kind: 'program', source: 'Windows programs', l1: 'Generative AI', l2: 'Local AI runtimes', att: 'review', origin: 'Hub · reviewed', computers: 2, versions: 1, latest: '0.4.1' },
+  { name: 'Visual Studio Code', vendor: 'Microsoft Corporation', kind: 'program', source: 'Windows programs, macOS apps', l1: 'Developer tools', l2: 'IDEs and editors', att: 'info', origin: 'Hub · reviewed', computers: 66, versions: 5, latest: '1.95.1' },
+  { name: 'typescript', vendor: 'Microsoft Corp.', kind: 'package', source: 'npm', l1: 'Developer tools', l2: 'Libraries and packages', att: 'info', origin: 'Hub · rule', computers: 38, versions: 6, latest: '5.9.2' },
+  { name: 'Gmail', vendor: 'Google', kind: 'extension', source: 'Chrome', extId: 'pjkljhegncpnkpknbcohdijeoejaedia', l1: 'General internet', l2: 'Legacy Chrome apps', att: 'review', origin: 'Hub · rule', computers: 14, versions: 1, latest: '8.2' },
+  { name: 'YouTube', vendor: 'Google', kind: 'extension', source: 'Chrome', extId: 'blpcfgokakmgnkcojhhkbfbldkacnbeo', l1: 'General internet', l2: 'Legacy Chrome apps', att: 'review', origin: 'Hub · rule', computers: 9, versions: 1, latest: '4.2.8' },
+  { name: 'Momentum', vendor: 'Momentum Dash', kind: 'extension', source: 'Chrome', extId: 'laookkfknpbbblfpciffpaejjkokdgca', l1: 'General internet', l2: 'Browser utilities', att: 'info', origin: 'Hub · Jev auto 0.96', computers: 8, versions: 3, latest: '2.26.6' },
+  { name: 'Add to Amazon Wish List', vendor: 'Amazon', kind: 'extension', source: 'Chrome', extId: 'ciagpekplgpbepdgggflgmahnjgiaced', l1: 'E-commerce', l2: 'Shopping assistants', att: 'review', origin: 'Hub · reviewed', computers: 7, versions: 1, latest: '1.0.0.11' },
+  { name: 'Player do NOW NET Claro', vendor: 'Claro', kind: 'extension', source: 'Chrome', extId: 'npflpmeannakjekldamofnldpiefjmmi', l1: 'Other', l2: 'Other', att: 'info', origin: 'Hub · reviewed', computers: 6, versions: 1, latest: '1.9.3.43', req: 'REQ-0042 · open' },
+  { name: 'Parsec', vendor: 'Parsec Cloud, Inc.', kind: 'program', source: 'Windows programs', l1: 'Unclassified', l2: 'Not in the dictionary yet', att: 'none', origin: 'Sent to hub · Oct 20', computers: 3, versions: 1, latest: '150-97' }
 ];
 var SW_CATS = ['Remote access', 'Proxy and tunnel', 'General business', 'Security and identity', 'Generative AI', 'Developer tools', 'General internet', 'E-commerce', 'Other', 'Unclassified'];
 var SW_ATT = { info: ['blue', 'Info', false], review: ['high', 'Review', true], not_allowed: ['critical', 'Not allowed', true], none: ['medium', 'Unclassified', true] };
+/* Policy class of a Software row: the same evaluator and published rules as the Policies page. */
+function swPolicy(t) {
+  return pcClassify(PC_RULES, { name: t.name, vendor: t.vendor, kind: t.kind, l1: t.l1, l2: t.l2, version: t.latest, extId: t.extId }, PC_DEFAULT);
+}
 var SW_KIND = { program: 'Program', extension: 'Browser extension', ide_extension: 'IDE extension', package: 'Package' };
 
 class Component extends DCLogic {
   constructor(props) {
     super(props);
-    this.state = { q: '', kind: 'all', att: 'all', cats: ['Remote access', 'Proxy and tunnel'], requests: {}, nextReq: 43, dlg: null, suggest: 'Remote access / Remote desktop and support', reason: '', reasonError: false, toast: null };
+    this.state = { q: '', kind: 'all', att: 'all', pol: 'all', cats: ['Remote access', 'Proxy and tunnel'], requests: {}, nextReq: 43, dlg: null, suggest: 'Remote access / Remote desktop and support', reason: '', reasonError: false, toast: null };
   }
   toggleCat(c) {
     this.setState(function (st) {
@@ -291,6 +517,7 @@ class Component extends DCLogic {
     var base = indexed.filter(function (t) {
       if (s.cats.length && s.cats.indexOf(t.l1) === -1) return false;
       if (s.att !== 'all' && t.att !== s.att) return false;
+      if (s.pol !== 'all' && swPolicy(t).cls !== s.pol) return false;
       if (q && (t.name + ' ' + (t.extId || '') + ' ' + t.source + ' ' + t.l2).toLowerCase().indexOf(q) === -1) return false;
       return true;
     });
@@ -301,6 +528,7 @@ class Component extends DCLogic {
         var a = SW_ATT[t.att];
         var req = s.requests[t.idx] || t.req || '';
         return Object.assign({}, t, {
+          polLabel: PC_CLASSES[swPolicy(t).cls].label, polColor: PC_CLASSES[swPolicy(t).cls].color, polRule: swPolicy(t).index === -1 ? 'Default · no rule matched' : 'Rule ' + (swPolicy(t).index + 1) + ' · ' + swPolicy(t).rule.name,
           kindLabel: SW_KIND[t.kind], color: a[0], attLabel: a[1], flag: a[2], hasId: !!t.extId, extId: t.extId || '',
           hasReq: !!req, reqLabel: req, canReq: !req,
           reqAria: 'Request reclassification of ' + t.name,
@@ -321,6 +549,8 @@ class Component extends DCLogic {
       onSearch: function (e) { self.setState({ q: e.target.value }); },
       att: s.att,
       onAtt: function (e) { self.setState({ att: e.target.value }); },
+      pol: s.pol,
+      onPol: function (e) { self.setState({ pol: e.target.value }); },
       chips: chips,
       clearCats: function () { self.setState({ cats: [], q: '', att: 'all' }); },
       tabs: [

@@ -20,6 +20,14 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline
 .nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
 .nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.pol-seg{display:block;min-width:4px;transition:opacity .15s}
+.pol-seg:hover,.pol-seg:focus-visible{opacity:0.8}
+.pol-fact{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle)}
+.pol-fact:first-child{padding-top:0}
+.pol-fact div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pol-fact b{font-size:14px;font-weight:600;color:var(--text-strong)}
+.pol-fact span{font-size:13px;line-height:1.5;color:var(--text-muted)}
+.pol-fact a{font-size:14px;font-weight:600;white-space:nowrap}
 </style>
 </helmet>
 <div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
@@ -33,6 +41,7 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline
 <a class="nav-a on" href="Main.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
 <a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
 <a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Policies.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Policies</a>
 <a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
 <a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
 <a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
@@ -76,6 +85,47 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline
 <div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">PACKAGES</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">2,177</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">npm, Chocolatey, pip, Homebrew</p></div></x-import></div>
 <div style="flex: 1 1 170px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Card"><div style="display: flex; flex-direction: column; gap: 10px; min-height: 118px;"><x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CHANGES · 7 DAYS</x-import><div style="font-family: var(--font-display); font-size: 40px; line-height: 1; color: var(--text-strong);">236</div><p style="margin: 0; font-size: 13px; line-height: 1.5; color: var(--text-muted);">148 added · 61 updated · 27 removed</p></div></x-import></div>
 </div>
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1 1 480px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">APPLICATION POLICY · CIS CONTROL 2</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">238 titles are unsanctioned, and 179 of them match no rule yet</h2>
+</div>
+<a href="Policies.dc.html" style="font-size: 14px; font-weight: 600;">Open policies</a>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 24px 40px;">
+<div style="flex: 3 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 18px;">
+<sc-for list="{{polBars}}" as="b" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px;"><span style="font-weight: 600; color: var(--text-strong);">{{b.label}}</span><span style="color: var(--text-muted);">{{b.total}}</span></div>
+<div role="group" aria-label="{{b.aria}}" style="display: flex; gap: 2px; height: 24px;">
+<sc-for list="{{b.segs}}" as="g" hint-placeholder-count="4">
+<a href="Software.dc.html" class="pol-seg" aria-label="{{g.aria}}" onMouseEnter="{{g.hover}}" onFocus="{{g.hover}}" onMouseLeave="{{clearPol}}" onBlur="{{clearPol}}" style="flex: {{g.flex}} 1 0px; background: {{g.color}}; border-radius: {{g.radius}};"></a>
+</sc-for>
+</div>
+<span style="min-height: 18px; font-size: 12px; color: var(--text-muted);">{{b.tip}}</span>
+</div>
+</sc-for>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px 20px; padding-top: 4px; border-top: 1px solid var(--border-subtle);">
+<sc-for list="{{polLegend}}" as="l" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 2px; padding-top: 10px;">
+<span style="display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--text-strong);"><i aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: {{l.color}};"></i>{{l.label}}</span>
+<span style="font-size: 13px; color: var(--text-body);">{{l.titles}}</span>
+<span style="font-size: 12px; color: var(--text-muted);">{{l.installs}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="flex: 2 1 300px; min-width: 0; display: flex; flex-direction: column;">
+<div class="pol-fact"><div><b>757 unsanctioned installations</b><span>On 61 computers · remove them or document an exception</span></div><a href="Software.dc.html">Show</a></div>
+<div class="pol-fact"><div><b>1 exception past its review date</b><span>Legacy Chrome apps, due Oct 15 · 1 more due in 30 days</span></div><a href="Policies.dc.html">Review</a></div>
+<div class="pol-fact"><div><b>179 titles match no rule</b><span>They fall to the default class, Unsanctioned, until a rule covers them</span></div><a href="Policies.dc.html">Add rules</a></div>
+</div>
+</div>
+</div>
+</x-import>
 
 <div style="display: flex; flex-wrap: wrap; gap: 24px;">
 <div style="flex: 3 1 520px; min-width: 0;">
@@ -190,14 +240,25 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline
 </div>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2100}}'>
 var OV_WEEKS = [
   ['W32', 120, 80, 30], ['W33', 95, 140, 22], ['W34', 110, 60, 35], ['W35', 130, 75, 28],
   ['W36', 88, 210, 19], ['W37', 102, 66, 31], ['W38', 160, 72, 40], ['W39', 91, 58, 24],
   ['W40', 115, 190, 33], ['W41', 97, 64, 21], ['W42', 124, 70, 30], ['W43', 148, 61, 27]
 ];
 
+var OV_POLICY = [
+  { key: 'core', label: 'Core system', color: '#6A889B', titles: 412, installs: 9861 },
+  { key: 'sanctioned', label: 'Sanctioned', color: '#2006F7', titles: 571, installs: 7402 },
+  { key: 'tolerated', label: 'Tolerated', color: '#009CFB', titles: 63, installs: 611 },
+  { key: 'unsanctioned', label: 'Unsanctioned', color: '#EA0022', titles: 238, installs: 757 }
+];
+
 class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { polHover: null };
+  }
   renderVals() {
     var max = 0;
     OV_WEEKS.forEach(function (w) { max = Math.max(max, w[1] + w[2] + w[3]); });
@@ -214,7 +275,38 @@ class Component extends DCLogic {
     var chartLabel = 'Changes per week, weeks 32 to 43: ' + OV_WEEKS.map(function (w) {
       return w[0] + ' ' + w[1] + ' added, ' + w[2] + ' updated, ' + w[3] + ' removed';
     }).join('; ');
-    return { yes: true, logoH: 22, weeks: weeks, chartLabel: chartLabel };
+    var self = this, hov = this.state.polHover;
+    function bar(measure, label, unit) {
+      var total = OV_POLICY.reduce(function (n, c) { return n + c[measure]; }, 0);
+      var segs = OV_POLICY.map(function (c, i) {
+        var pct = (c[measure] * 100 / total).toFixed(1);
+        return {
+          flex: c[measure], color: c.color,
+          radius: i === 0 ? '4px 0 0 4px' : (i === OV_POLICY.length - 1 ? '0 4px 4px 0' : '0'),
+          aria: c.label + ': ' + c[measure].toLocaleString('en-US') + ' ' + unit + ', ' + pct + '%',
+          hover: function () { self.setState({ polHover: { measure: measure, key: c.key } }); }
+        };
+      });
+      var tip = 'Hover or focus a segment for its numbers.';
+      if (hov && hov.measure === measure) {
+        var c = OV_POLICY.find(function (x) { return x.key === hov.key; });
+        tip = c.label + ' · ' + c[measure].toLocaleString('en-US') + ' ' + unit + ' · ' + (c[measure] * 100 / total).toFixed(1) + '% of ' + unit;
+      }
+      return { label: label, total: total.toLocaleString('en-US') + ' ' + unit, segs: segs, tip: tip,
+        aria: label + ' by policy class: ' + segs.map(function (g) { return g.aria; }).join('; ') };
+    }
+    var tTitles = OV_POLICY.reduce(function (n, c) { return n + c.titles; }, 0);
+    var tInstalls = OV_POLICY.reduce(function (n, c) { return n + c.installs; }, 0);
+    return {
+      yes: true, logoH: 22, weeks: weeks, chartLabel: chartLabel,
+      polBars: [bar('titles', 'Software titles', 'titles'), bar('installs', 'Installations', 'installs')],
+      polLegend: OV_POLICY.map(function (c) {
+        return { label: c.label, color: c.color,
+          titles: c.titles.toLocaleString('en-US') + ' titles · ' + (c.titles * 100 / tTitles).toFixed(1) + '%',
+          installs: c.installs.toLocaleString('en-US') + ' installs · ' + (c.installs * 100 / tInstalls).toFixed(1) + '%' };
+      }),
+      clearPol: function () { self.setState({ polHover: null }); }
+    };
   }
 }
 </script>

@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit policy rule · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+table.inv{width:100%;border-collapse:collapse;font-size:14px}
+table.inv th{text-align:left;padding:0 16px;height:44px;background:var(--surface-subtle);border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.inv td{padding:12px 16px;border-bottom:1px solid var(--border-subtle);vertical-align:top;color:var(--text-body)}
+table.inv tbody tr:hover td{background:var(--surface-subtle)}
+table.inv td.num,table.inv th.num{text-align:right}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cls{display:inline-flex;align-items:center;gap:6px;padding:3px 10px 3px 8px;border-radius:999px;background:var(--surface-page);border:1px solid var(--border-subtle);font-size:13px;font-weight:600;color:var(--text-strong);white-space:nowrap}
+.cls i{width:10px;height:10px;border-radius:999px;display:inline-block;flex:0 0 auto}
+.cls.sm{padding:1px 8px 1px 6px;font-size:12px}
+.cond{display:inline-block;padding:3px 8px;border-radius:6px;background:var(--surface-subtle);font-size:12px;line-height:1.4;color:var(--text-strong);overflow-wrap:anywhere}
+.join{font-family:var(--font-display);font-size:10px;font-weight:600;letter-spacing:0.1em;color:var(--text-muted)}
+button.icon{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer;flex:0 0 auto}
+button.icon:hover{background:var(--surface-subtle);color:var(--text-strong)}
+button.icon:disabled{opacity:0.35;cursor:default;background:transparent}
+.tip{display:flex;flex-direction:column;gap:2px;font-size:13px;line-height:1.5;color:var(--text-body)}
+.tip b{font-weight:600;color:var(--text-strong)}
+.fld-label{display:block;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--text-strong)}
+.sel,.inp{width:100%;min-width:0;height:40px;box-sizing:border-box;padding:0 12px;border:1.5px solid var(--border-control);border-radius:8px;background:var(--surface-raised);color:var(--text-body);font-family:var(--font-sans);font-size:14px}
+.inp.mono-inp,.mono-inp{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+.inp.bad{border-color:var(--text-critical)}
+.ta{width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid var(--border-control);border-radius:8px;background:var(--surface-raised);color:var(--text-body);font-family:var(--font-sans);font-size:14px;line-height:1.5;resize:vertical}
+.cond-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;padding:12px;border-radius:12px;border:1px solid var(--border-subtle);background:var(--surface-page)}
+.chip-v{display:inline-flex;align-items:center;gap:2px;padding:2px 2px 2px 10px;border-radius:999px;background:var(--surface-subtle);font-size:13px;color:var(--text-strong)}
+.chip-v button{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:999px;background:transparent;color:var(--text-muted);cursor:pointer}
+.chip-v button:hover{background:var(--border-subtle);color:var(--text-strong)}
+.cs-btn{flex:0 0 auto;width:40px;height:40px;border:1.5px solid var(--border-control);border-radius:8px;background:var(--surface-raised);color:var(--text-muted);font-weight:600;font-size:13px;cursor:pointer}
+.cs-btn.on{background:var(--action);border-color:var(--action);color:var(--on-action)}
+.seg{min-height:36px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:var(--text-body);font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer}
+.seg.on{background:var(--action);color:var(--on-action)}
+.cls-card{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-radius:12px;border:1.5px solid var(--border-subtle);background:var(--surface-page);text-align:left;font-family:var(--font-sans);cursor:pointer}
+.cls-card:hover{border-color:var(--border-control)}
+.cls-card.on{border:2px solid var(--action);padding:13.5px 15.5px;box-shadow:var(--shadow-sm)}
+.add-btn{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1.5px dashed var(--border-control);border-radius:999px;background:transparent;color:var(--text-brand);font-family:var(--font-sans);font-size:14px;font-weight:600;cursor:pointer}
+.add-btn:hover{border-color:var(--action)}
+.hist{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5}
+.hist b{display:block;font-weight:600;color:var(--text-strong)}
+.hist span{color:var(--text-muted)}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a" href="Main.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a on" href="Policies.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Policies</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 560px;">
+<nav aria-label="Breadcrumb" style="font-size: 13px; color: var(--text-muted);"><a href="Policies.dc.html">Policies</a> <span aria-hidden="true">/</span> Rule {{posLabel}}</nav>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">{{titleName}}</h1>
+<sc-if value="{{dirty}}" hint-placeholder-val="{{ false }}"><x-import component-from-global-scope="SophosDS.Badge" color="medium">Unsaved changes</x-import></sc-if>
+</div>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Last published in policy version 13 on Thu, Oct 22 by AD. Saving creates a draft; titles are reclassified when you publish the policy.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="ghost" size="sm" on-click="{{del}}">Delete rule</x-import>
+<a class="sds-btn sds-btn--secondary sds-btn--sm" href="Policies.dc.html">Cancel</a>
+<x-import component-from-global-scope="SophosDS.Button" variant="primary" size="sm" on-click="{{save}}">Save rule</x-import>
+</div>
+</div>
+
+<sc-if value="{{hasToast}}" hint-placeholder-val="{{ false }}">
+<x-import component-from-global-scope="SophosDS.Toast" tone="{{toastTone}}" title="{{toastTitle}}" message="{{toastMessage}}" on-close="{{closeToast}}"></x-import>
+</sc-if>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+
+<div style="flex: 3 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">RULE</x-import>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+<div style="flex: 3 1 280px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" label="Name" value="{{name}}" on-change="{{onName}}"></x-import></div>
+<div style="flex: 1 1 140px; min-width: 0;">
+<label class="fld-label" for="rule-pos">Position</label>
+<select id="rule-pos" class="sel" value="{{posValue}}" onChange="{{onPos}}">
+<option value="1">1 of 12</option>
+<option value="2">2 of 12</option>
+<option value="3">3 of 12</option>
+<option value="4">4 of 12</option>
+<option value="5">5 of 12</option>
+<option value="6">6 of 12</option>
+<option value="7">7 of 12</option>
+<option value="8">8 of 12</option>
+<option value="9">9 of 12</option>
+<option value="10">10 of 12</option>
+<option value="11">11 of 12</option>
+<option value="12">12 of 12</option>
+</select>
+</div>
+<div style="flex: 0 0 auto; padding-bottom: 8px;"><x-import component-from-global-scope="SophosDS.Switch" label="Enabled" checked="{{enabled}}" on-change="{{toggleEnabled}}"></x-import></div>
+</div>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CLASS</x-import>
+<span style="font-size: 13px; color: var(--text-muted);">What a title that matches this rule becomes. Classes follow CIS Controls v8.1, Control 2.</span>
+</div>
+<div role="radiogroup" aria-label="Class" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+<sc-for list="{{classOpts}}" as="k" hint-placeholder-count="4">
+<button type="button" role="radio" aria-checked="{{k.checked}}" class="{{k.cardCls}}" onClick="{{k.pick}}">
+<span style="display: flex; align-items: center; justify-content: space-between; gap: 8px;"><span style="display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 600; color: var(--text-strong);"><i aria-hidden="true" style="width: 12px; height: 12px; border-radius: 999px; background: {{k.color}};"></i>{{k.label}}</span><span class="mono" style="color: var(--text-muted);">{{k.id}}</span></span>
+<span style="font-size: 13px; line-height: 1.5; color: var(--text-body);">{{k.meaning}}</span>
+<span style="font-size: 12px; color: var(--text-muted);">CIS {{k.cis}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CONDITIONS</x-import>
+<span style="font-size: 13px; color: var(--text-muted);">{{matchHint}}</span>
+</div>
+<div role="group" aria-label="Match" style="display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-subtle);">
+<button type="button" class="{{matchAllCls}}" aria-pressed="{{matchAll}}" onClick="{{setAll}}">All conditions (AND)</button>
+<button type="button" class="{{matchAnyCls}}" aria-pressed="{{matchAny}}" onClick="{{setAny}}">Any condition (OR)</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<sc-for list="{{conds}}" as="c" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<sc-if value="{{c.showJoin}}" hint-placeholder-val="{{ false }}"><span class="join" style="padding-left: 4px;">{{c.join}}</span></sc-if>
+<div class="cond-row">
+<div style="flex: 1 1 190px; min-width: 0;">
+<label class="sr" for="{{c.fieldId}}">Field of condition {{c.n}}</label>
+<select id="{{c.fieldId}}" class="sel" value="{{c.f}}" onChange="{{c.onField}}">
+<option value="vendor">Vendor / publisher</option>
+<option value="name">App name</option>
+<option value="category">Category</option>
+<option value="subcategory">Subcategory</option>
+<option value="version">Version</option>
+<option value="extid">Extension or package ID</option>
+</select>
+</div>
+<div style="flex: 1 1 180px; min-width: 0;">
+<label class="sr" for="{{c.opId}}">Operator of condition {{c.n}}</label>
+<sc-if value="{{c.isText}}" hint-placeholder-val="{{ true }}">
+<select id="{{c.opId}}" class="sel" value="{{c.op}}" onChange="{{c.onOp}}">
+<option value="equals">is (exact match)</option>
+<option value="not_equals">is not</option>
+<option value="contains">contains</option>
+<option value="not_contains">does not contain</option>
+<option value="starts_with">starts with</option>
+<option value="ends_with">ends with</option>
+<option value="regex">matches regex</option>
+<option value="in">is one of</option>
+<option value="not_in">is not one of</option>
+</select>
+</sc-if>
+<sc-if value="{{c.isCat}}" hint-placeholder-val="{{ false }}">
+<select id="{{c.opId}}" class="sel" value="{{c.op}}" onChange="{{c.onOp}}">
+<option value="equals">is</option>
+<option value="not_equals">is not</option>
+<option value="in">is one of</option>
+<option value="not_in">is not one of</option>
+</select>
+</sc-if>
+<sc-if value="{{c.isVersion}}" hint-placeholder-val="{{ false }}">
+<select id="{{c.opId}}" class="sel" value="{{c.op}}" onChange="{{c.onOp}}">
+<option value="equals">equals</option>
+<option value="not_equals">does not equal</option>
+<option value="gt">greater than</option>
+<option value="gte">greater than or equal to</option>
+<option value="lt">less than</option>
+<option value="lte">less than or equal to</option>
+<option value="between">between</option>
+<option value="regex">matches regex</option>
+</select>
+</sc-if>
+</div>
+<div style="flex: 2 1 260px; min-width: 0; display: flex; flex-direction: column; gap: 6px;">
+<sc-if value="{{c.showInput}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; align-items: center; gap: 8px;">
+<label class="sr" for="{{c.valId}}">Value of condition {{c.n}}</label>
+<input id="{{c.valId}}" class="{{c.inpCls}}" value="{{c.v}}" onChange="{{c.onV}}" placeholder="{{c.placeholder}}" spellcheck="false">
+<sc-if value="{{c.showBetween}}" hint-placeholder-val="{{ false }}"><span style="font-size: 13px; color: var(--text-muted);">and</span><label class="sr" for="{{c.val2Id}}">Upper version of condition {{c.n}}</label><input id="{{c.val2Id}}" class="inp mono-inp" value="{{c.v2}}" onChange="{{c.onV2}}" placeholder="e.g. 15.99"></sc-if>
+<sc-if value="{{c.showCs}}" hint-placeholder-val="{{ false }}"><button type="button" class="{{c.csCls}}" aria-pressed="{{c.csOn}}" onClick="{{c.toggleCs}}" title="Match case" aria-label="Match case">Aa</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{c.showCat1}}" hint-placeholder-val="{{ false }}">
+<label class="sr" for="{{c.valId}}">Category of condition {{c.n}}</label>
+<select id="{{c.valId}}" class="sel" value="{{c.v}}" onChange="{{c.onV}}">
+<option value="">Choose a category</option>
+<option value="Remote access">Remote access</option>
+<option value="Proxy and tunnel">Proxy and tunnel</option>
+<option value="File transfer">File transfer</option>
+<option value="Storage and backup">Storage and backup</option>
+<option value="P2P">P2P</option>
+<option value="Download applications">Download applications</option>
+<option value="Conferencing">Conferencing</option>
+<option value="Instant messenger">Instant messenger</option>
+<option value="VoIP">VoIP</option>
+<option value="Desktop mail">Desktop mail</option>
+<option value="Web mail">Web mail</option>
+<option value="Streaming media">Streaming media</option>
+<option value="Social networking">Social networking</option>
+<option value="Gaming">Gaming</option>
+<option value="E-commerce">E-commerce</option>
+<option value="Generative AI">Generative AI</option>
+<option value="General business">General business</option>
+<option value="General internet">General internet</option>
+<option value="Software update">Software update</option>
+<option value="Infrastructure">Infrastructure</option>
+<option value="Network services">Network services</option>
+<option value="Industrial control system">Industrial control system</option>
+<option value="Mobile applications">Mobile applications</option>
+<option value="System applications">System applications</option>
+<option value="Sophos applications">Sophos applications</option>
+<option value="Security and identity">Security and identity</option>
+<option value="Developer tools">Developer tools</option>
+<option value="Unwanted software">Unwanted software</option>
+<option value="Other">Other</option>
+</select>
+</sc-if>
+<sc-if value="{{c.showCat2}}" hint-placeholder-val="{{ false }}">
+<label class="sr" for="{{c.valId}}">Subcategory of condition {{c.n}}</label>
+<select id="{{c.valId}}" class="sel" value="{{c.v}}" onChange="{{c.onV}}">
+<option value="">Choose a subcategory</option>
+<optgroup label="Remote access">
+<option value="Remote desktop and support">Remote desktop and support</option>
+<option value="Remote management agents (RMM)">Remote management agents (RMM)</option>
+<option value="VNC and RDP servers">VNC and RDP servers</option>
+<option value="SSH and terminal clients">SSH and terminal clients</option>
+</optgroup>
+<optgroup label="Proxy and tunnel">
+<option value="Corporate VPN clients">Corporate VPN clients</option>
+<option value="Consumer VPN and proxy services">Consumer VPN and proxy services</option>
+<option value="Tunnels and mesh networks">Tunnels and mesh networks</option>
+<option value="Anonymizers">Anonymizers</option>
+</optgroup>
+<optgroup label="File transfer">
+<option value="FTP and SFTP clients">FTP and SFTP clients</option>
+<option value="Direct file sharing">Direct file sharing</option>
+</optgroup>
+<optgroup label="Storage and backup">
+<option value="Cloud storage sync">Cloud storage sync</option>
+<option value="Backup software">Backup software</option>
+</optgroup>
+<optgroup label="P2P">
+<option value="Torrent clients">Torrent clients</option>
+<option value="Other P2P networks">Other P2P networks</option>
+</optgroup>
+<optgroup label="Download applications">
+<option value="Download managers">Download managers</option>
+<option value="Media downloaders">Media downloaders</option>
+</optgroup>
+<optgroup label="Conferencing">
+<option value="Video meetings">Video meetings</option>
+</optgroup>
+<optgroup label="Instant messenger">
+<option value="Team chat">Team chat</option>
+<option value="Consumer messaging">Consumer messaging</option>
+</optgroup>
+<optgroup label="VoIP">
+<option value="Softphones">Softphones</option>
+</optgroup>
+<optgroup label="Desktop mail">
+<option value="Mail clients">Mail clients</option>
+</optgroup>
+<optgroup label="Web mail">
+<option value="Web mail helpers">Web mail helpers</option>
+</optgroup>
+<optgroup label="Streaming media">
+<option value="Video streaming">Video streaming</option>
+<option value="Music and podcasts">Music and podcasts</option>
+<option value="Media players and casting">Media players and casting</option>
+</optgroup>
+<optgroup label="Social networking">
+<option value="Social network apps and extensions">Social network apps and extensions</option>
+</optgroup>
+<optgroup label="Gaming">
+<option value="Game launchers and stores">Game launchers and stores</option>
+<option value="Games">Games</option>
+</optgroup>
+<optgroup label="E-commerce">
+<option value="Shopping assistants">Shopping assistants</option>
+</optgroup>
+<optgroup label="Generative AI">
+<option value="AI assistants">AI assistants</option>
+<option value="AI browser extensions">AI browser extensions</option>
+<option value="AI coding assistants">AI coding assistants</option>
+<option value="Local AI runtimes">Local AI runtimes</option>
+</optgroup>
+<optgroup label="General business">
+<option value="Office and documents">Office and documents</option>
+<option value="Notes and knowledge">Notes and knowledge</option>
+<option value="Design and creative">Design and creative</option>
+<option value="Screen capture and recording">Screen capture and recording</option>
+<option value="Business applications">Business applications</option>
+<option value="Compression and file utilities">Compression and file utilities</option>
+</optgroup>
+<optgroup label="General internet">
+<option value="Web browsers">Web browsers</option>
+<option value="Browser utilities">Browser utilities</option>
+<option value="Learning">Learning</option>
+<option value="Legacy Chrome apps">Legacy Chrome apps</option>
+</optgroup>
+<optgroup label="Software update">
+<option value="Updaters">Updaters</option>
+</optgroup>
+<optgroup label="Infrastructure">
+<option value="Virtualization and containers">Virtualization and containers</option>
+<option value="Admin tools">Admin tools</option>
+</optgroup>
+<optgroup label="Network services">
+<option value="Web and app servers">Web and app servers</option>
+<option value="Mail servers">Mail servers</option>
+<option value="Database servers">Database servers</option>
+<option value="Local development stacks">Local development stacks</option>
+</optgroup>
+<optgroup label="Industrial control system">
+<option value="ICS engineering and HMI software">ICS engineering and HMI software</option>
+</optgroup>
+<optgroup label="Mobile applications">
+<option value="Phone companions">Phone companions</option>
+</optgroup>
+<optgroup label="System applications">
+<option value="OS components and runtimes">OS components and runtimes</option>
+<option value="Drivers and hardware utilities">Drivers and hardware utilities</option>
+<option value="OEM utilities">OEM utilities</option>
+<option value="Browser components">Browser components</option>
+</optgroup>
+<optgroup label="Sophos applications">
+<option value="Sophos agents and tools">Sophos agents and tools</option>
+</optgroup>
+<optgroup label="Security and identity">
+<option value="Antivirus and EDR (third party)">Antivirus and EDR (third party)</option>
+<option value="Password managers">Password managers</option>
+<option value="Authenticators and MFA">Authenticators and MFA</option>
+<option value="Encryption tools">Encryption tools</option>
+<option value="Security testing tools">Security testing tools</option>
+</optgroup>
+<optgroup label="Developer tools">
+<option value="IDEs and editors">IDEs and editors</option>
+<option value="Language runtimes and SDKs">Language runtimes and SDKs</option>
+<option value="CLIs and version control">CLIs and version control</option>
+<option value="Libraries and packages">Libraries and packages</option>
+<option value="IDE extensions">IDE extensions</option>
+</optgroup>
+<optgroup label="Unwanted software">
+<option value="Adware and browser hijackers">Adware and browser hijackers</option>
+<option value="Cracks and license bypass">Cracks and license bypass</option>
+<option value="Crypto miners">Crypto miners</option>
+</optgroup>
+<optgroup label="Other">
+<option value="Other">Other</option>
+</optgroup>
+</select>
+</sc-if>
+<sc-if value="{{c.showMulti}}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px;">
+<sc-for list="{{c.chips}}" as="ch" hint-placeholder-count="2">
+<span class="chip-v">{{ch.label}}<button type="button" onClick="{{ch.remove}}" aria-label="{{ch.removeLabel}}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button></span>
+</sc-for>
+</div>
+<sc-if value="{{c.multiCat1}}" hint-placeholder-val="{{ false }}">
+<label class="sr" for="{{c.valId}}">Add a category to condition {{c.n}}</label>
+<select id="{{c.valId}}" class="sel" value="" onChange="{{c.onAdd}}">
+<option value="">Add a category</option>
+<option value="Remote access">Remote access</option>
+<option value="Proxy and tunnel">Proxy and tunnel</option>
+<option value="File transfer">File transfer</option>
+<option value="Storage and backup">Storage and backup</option>
+<option value="P2P">P2P</option>
+<option value="Download applications">Download applications</option>
+<option value="Conferencing">Conferencing</option>
+<option value="Instant messenger">Instant messenger</option>
+<option value="VoIP">VoIP</option>
+<option value="Desktop mail">Desktop mail</option>
+<option value="Web mail">Web mail</option>
+<option value="Streaming media">Streaming media</option>
+<option value="Social networking">Social networking</option>
+<option value="Gaming">Gaming</option>
+<option value="E-commerce">E-commerce</option>
+<option value="Generative AI">Generative AI</option>
+<option value="General business">General business</option>
+<option value="General internet">General internet</option>
+<option value="Software update">Software update</option>
+<option value="Infrastructure">Infrastructure</option>
+<option value="Network services">Network services</option>
+<option value="Industrial control system">Industrial control system</option>
+<option value="Mobile applications">Mobile applications</option>
+<option value="System applications">System applications</option>
+<option value="Sophos applications">Sophos applications</option>
+<option value="Security and identity">Security and identity</option>
+<option value="Developer tools">Developer tools</option>
+<option value="Unwanted software">Unwanted software</option>
+<option value="Other">Other</option>
+</select>
+</sc-if>
+<sc-if value="{{c.multiCat2}}" hint-placeholder-val="{{ false }}">
+<label class="sr" for="{{c.valId}}">Add a subcategory to condition {{c.n}}</label>
+<select id="{{c.valId}}" class="sel" value="" onChange="{{c.onAdd}}">
+<option value="">Add a subcategory</option>
+<optgroup label="Remote access">
+<option value="Remote desktop and support">Remote desktop and support</option>
+<option value="Remote management agents (RMM)">Remote management agents (RMM)</option>
+<option value="VNC and RDP servers">VNC and RDP servers</option>
+<option value="SSH and terminal clients">SSH and terminal clients</option>
+</optgroup>
+<optgroup label="Proxy and tunnel">
+<option value="Corporate VPN clients">Corporate VPN clients</option>
+<option value="Consumer VPN and proxy services">Consumer VPN and proxy services</option>
+<option value="Tunnels and mesh networks">Tunnels and mesh networks</option>
+<option value="Anonymizers">Anonymizers</option>
+</optgroup>
+<optgroup label="File transfer">
+<option value="FTP and SFTP clients">FTP and SFTP clients</option>
+<option value="Direct file sharing">Direct file sharing</option>
+</optgroup>
+<optgroup label="Storage and backup">
+<option value="Cloud storage sync">Cloud storage sync</option>
+<option value="Backup software">Backup software</option>
+</optgroup>
+<optgroup label="P2P">
+<option value="Torrent clients">Torrent clients</option>
+<option value="Other P2P networks">Other P2P networks</option>
+</optgroup>
+<optgroup label="Download applications">
+<option value="Download managers">Download managers</option>
+<option value="Media downloaders">Media downloaders</option>
+</optgroup>
+<optgroup label="Conferencing">
+<option value="Video meetings">Video meetings</option>
+</optgroup>
+<optgroup label="Instant messenger">
+<option value="Team chat">Team chat</option>
+<option value="Consumer messaging">Consumer messaging</option>
+</optgroup>
+<optgroup label="VoIP">
+<option value="Softphones">Softphones</option>
+</optgroup>
+<optgroup label="Desktop mail">
+<option value="Mail clients">Mail clients</option>
+</optgroup>
+<optgroup label="Web mail">
+<option value="Web mail helpers">Web mail helpers</option>
+</optgroup>
+<optgroup label="Streaming media">
+<option value="Video streaming">Video streaming</option>
+<option value="Music and podcasts">Music and podcasts</option>
+<option value="Media players and casting">Media players and casting</option>
+</optgroup>
+<optgroup label="Social networking">
+<option value="Social network apps and extensions">Social network apps and extensions</option>
+</optgroup>
+<optgroup label="Gaming">
+<option value="Game launchers and stores">Game launchers and stores</option>
+<option value="Games">Games</option>
+</optgroup>
+<optgroup label="E-commerce">
+<option value="Shopping assistants">Shopping assistants</option>
+</optgroup>
+<optgroup label="Generative AI">
+<option value="AI assistants">AI assistants</option>
+<option value="AI browser extensions">AI browser extensions</option>
+<option value="AI coding assistants">AI coding assistants</option>
+<option value="Local AI runtimes">Local AI runtimes</option>
+</optgroup>
+<optgroup label="General business">
+<option value="Office and documents">Office and documents</option>
+<option value="Notes and knowledge">Notes and knowledge</option>
+<option value="Design and creative">Design and creative</option>
+<option value="Screen capture and recording">Screen capture and recording</option>
+<option value="Business applications">Business applications</option>
+<option value="Compression and file utilities">Compression and file utilities</option>
+</optgroup>
+<optgroup label="General internet">
+<option value="Web browsers">Web browsers</option>
+<option value="Browser utilities">Browser utilities</option>
+<option value="Learning">Learning</option>
+<option value="Legacy Chrome apps">Legacy Chrome apps</option>
+</optgroup>
+<optgroup label="Software update">
+<option value="Updaters">Updaters</option>
+</optgroup>
+<optgroup label="Infrastructure">
+<option value="Virtualization and containers">Virtualization and containers</option>
+<option value="Admin tools">Admin tools</option>
+</optgroup>
+<optgroup label="Network services">
+<option value="Web and app servers">Web and app servers</option>
+<option value="Mail servers">Mail servers</option>
+<option value="Database servers">Database servers</option>
+<option value="Local development stacks">Local development stacks</option>
+</optgroup>
+<optgroup label="Industrial control system">
+<option value="ICS engineering and HMI software">ICS engineering and HMI software</option>
+</optgroup>
+<optgroup label="Mobile applications">
+<option value="Phone companions">Phone companions</option>
+</optgroup>
+<optgroup label="System applications">
+<option value="OS components and runtimes">OS components and runtimes</option>
+<option value="Drivers and hardware utilities">Drivers and hardware utilities</option>
+<option value="OEM utilities">OEM utilities</option>
+<option value="Browser components">Browser components</option>
+</optgroup>
+<optgroup label="Sophos applications">
+<option value="Sophos agents and tools">Sophos agents and tools</option>
+</optgroup>
+<optgroup label="Security and identity">
+<option value="Antivirus and EDR (third party)">Antivirus and EDR (third party)</option>
+<option value="Password managers">Password managers</option>
+<option value="Authenticators and MFA">Authenticators and MFA</option>
+<option value="Encryption tools">Encryption tools</option>
+<option value="Security testing tools">Security testing tools</option>
+</optgroup>
+<optgroup label="Developer tools">
+<option value="IDEs and editors">IDEs and editors</option>
+<option value="Language runtimes and SDKs">Language runtimes and SDKs</option>
+<option value="CLIs and version control">CLIs and version control</option>
+<option value="Libraries and packages">Libraries and packages</option>
+<option value="IDE extensions">IDE extensions</option>
+</optgroup>
+<optgroup label="Unwanted software">
+<option value="Adware and browser hijackers">Adware and browser hijackers</option>
+<option value="Cracks and license bypass">Cracks and license bypass</option>
+<option value="Crypto miners">Crypto miners</option>
+</optgroup>
+<optgroup label="Other">
+<option value="Other">Other</option>
+</optgroup>
+</select>
+</sc-if>
+</sc-if>
+<sc-if value="{{c.hasHint}}" hint-placeholder-val="{{ false }}"><span style="font-size: 12px; color: var(--text-muted);">{{c.hint}}</span></sc-if>
+<sc-if value="{{c.hasError}}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: 12px; color: var(--text-critical);">{{c.error}}</span></sc-if>
+</div>
+<button type="button" class="icon" onClick="{{c.remove}}" disabled="{{c.only}}" aria-label="{{c.removeLabel}}" style="margin-top: 4px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg></button>
+</div>
+</div>
+</sc-for>
+</div>
+<div><button type="button" class="add-btn" onClick="{{addCond}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Add condition</button></div>
+
+<fieldset style="margin: 0; padding: 16px 0 0; border: 0; border-top: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 10px;">
+<legend class="fld-label" style="padding: 0; margin-bottom: 8px; float: left;">Applies to</legend>
+<div style="clear: both; display: flex; flex-wrap: wrap; gap: 8px 24px;">
+<sc-for list="{{kindOpts}}" as="k" hint-placeholder-count="4">
+<label style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 14px; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{k.checked}}" onChange="{{k.toggle}}" style="width: 18px; height: 18px; accent-color: var(--action);">{{k.label}}</label>
+</sc-for>
+</div>
+<sc-if value="{{noKinds}}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: 12px; color: var(--text-critical);">Pick at least one kind of software.</span></sc-if>
+</fieldset>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">{{docEyebrow}}</x-import>
+<span style="font-size: 13px; line-height: 1.5; color: var(--text-muted);">{{docHint}}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+<x-import component-from-global-scope="SophosDS.Input" label="Owner" value="{{owner}}" on-change="{{onOwner}}" placeholder="Team accountable for this rule"></x-import>
+<sc-if value="{{isTolerated}}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="SophosDS.Input" label="Risk accepted by" value="{{riskBy}}" on-change="{{onRiskBy}}" placeholder="Name or role"></x-import>
+</sc-if>
+</div>
+<div>
+<label class="fld-label" for="doc-purpose">{{purposeLabel}}</label>
+<textarea id="doc-purpose" class="ta" rows="2" value="{{purpose}}" onChange="{{onPurpose}}"></textarea>
+</div>
+<sc-if value="{{isTolerated}}" hint-placeholder-val="{{ true }}">
+<div>
+<label class="fld-label" for="doc-controls">Mitigating controls</label>
+<textarea id="doc-controls" class="ta" rows="2" value="{{controls}}" onChange="{{onControls}}"></textarea>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px;">
+<div style="flex: 0 1 240px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="date" label="Review by" value="{{review}}" on-change="{{onReview}}" hint="Monthly, or sooner (CIS 2.3)"></x-import></div>
+<span style="flex: 1 1 240px; padding-bottom: 28px; font-size: 13px; color: var(--text-muted);">{{reviewNote}}</span>
+</div>
+</sc-if>
+<sc-if value="{{isUnsanctioned}}" hint-placeholder-val="{{ false }}">
+<label style="display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 14px; color: var(--text-body); cursor: pointer;"><input type="checkbox" checked="{{alertNew}}" onChange="{{toggleAlert}}" style="width: 18px; height: 18px; accent-color: var(--action);">Alert when a new installation is detected</label>
+</sc-if>
+<sc-if value="{{hasDocError}}" hint-placeholder-val="{{ false }}"><span role="alert" style="font-size: 12px; color: var(--text-critical);">{{docError}}</span></sc-if>
+</div>
+</x-import>
+
+</div>
+
+<div style="flex: 2 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 6px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">LIVE PREVIEW</x-import>
+<span style="font-family: var(--font-subtitle); font-size: 20px; line-height: 1.25; color: var(--text-strong);">{{previewHead}}</span>
+<span style="font-size: 13px; color: var(--text-muted);">{{previewSub}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border-radius: 12px; background: var(--surface-subtle);">
+<span style="font-size: 13px; font-weight: 600; color: var(--text-strong);">{{movesHead}}</span>
+<sc-for list="{{moves}}" as="m" hint-placeholder-count="2">
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px;"><span style="color: var(--text-strong);">{{m.name}}</span><span class="cls sm"><i aria-hidden="true" style="background: {{m.fromColor}};"></i>{{m.from}}</span><span aria-hidden="true" style="color: var(--text-muted);">→</span><span class="sr">moves to</span><span class="cls sm"><i aria-hidden="true" style="background: {{m.toColor}};"></i>{{m.to}}</span></div>
+</sc-for>
+</div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; border-top: 1px solid var(--border-subtle);">
+<sc-for list="{{matches}}" as="t" hint-placeholder-count="4">
+<li style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px;"><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">{{t.name}}</span><span class="mono" style="color: var(--text-muted);">{{t.version}}</span></div>
+<span style="font-size: 12px; color: var(--text-muted);">{{t.meta}}</span>
+<span style="font-size: 12px; font-weight: 600; color: {{t.outColor}};">{{t.outcome}}</span>
+</li>
+</sc-for>
+</ul>
+<sc-if value="{{noMatches}}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: var(--text-muted);">No sample title matches these conditions.</p></sc-if>
+</div>
+</x-import>
+
+<x-import component-from-global-scope="SophosDS.Card" tone="subtle">
+<div style="display: flex; flex-direction: column; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">RULE HISTORY</x-import>
+<div class="hist"><span class="mono">v13</span><div><b>Version condition raised from 7.0 to 9.0</b><span>Thu, Oct 22 · AD · AnyDesk advisory for versions below 9</span></div></div>
+<div class="hist"><span class="mono">v11</span><div><b>Review date moved to Nov 15</b><span>Thu, Oct 15 · AD · monthly review done, exception kept</span></div></div>
+<div class="hist"><span class="mono">v7</span><div><b>Rule created as Tolerated</b><span>Tue, Sep 15 · AD · approved by the CISO</span></div></div>
+</div>
+</x-import>
+</div>
+
+</div>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Sample data. The preview evaluates this draft live, in its position among the other rules, against the 42 sample titles of the mock.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2200}}'>
+/* Application policy: classes, fields, operators, evaluator and sample data.
+   Classes follow CIS Controls v8.1, Control 2 (software inventory and control). */
+var PC_CLASSES = {
+  core: { key: 'core', id: 'core-system', label: 'Core system', color: '#6A889B',
+    meaning: 'Operating system, drivers, runtimes and security agents the asset needs to run.',
+    cis: 'Authorized · 2.1, 2.5' },
+  sanctioned: { key: 'sanctioned', id: 'sanctioned-app', label: 'Sanctioned', color: '#2006F7',
+    meaning: 'Approved for business use, with a business purpose and a supported version.',
+    cis: 'Authorized · 2.1, 2.2, 2.5' },
+  tolerated: { key: 'tolerated', id: 'tolerated-app', label: 'Tolerated', color: '#009CFB',
+    meaning: 'Not authorized, kept under a documented exception with an owner, mitigating controls and a monthly review.',
+    cis: 'Documented exception · 2.2, 2.3' },
+  unsanctioned: { key: 'unsanctioned', id: 'unsanctioned-app', label: 'Unsanctioned', color: '#EA0022',
+    meaning: 'Unauthorized or unsupported with no exception. Remove it from enterprise assets.',
+    cis: 'Unauthorized · 2.3' }
+};
+var PC_ORDER = ['core', 'sanctioned', 'tolerated', 'unsanctioned'];
+
+var PC_FIELDS = {
+  vendor: { label: 'Vendor / publisher', type: 'text' },
+  name: { label: 'App name', type: 'text' },
+  category: { label: 'Category', type: 'cat1' },
+  subcategory: { label: 'Subcategory', type: 'cat2' },
+  version: { label: 'Version', type: 'version' },
+  extid: { label: 'Extension or package ID', type: 'text' }
+};
+var PC_OP_LABEL = {
+  equals: 'is', not_equals: 'is not', contains: 'contains', not_contains: 'does not contain',
+  starts_with: 'starts with', ends_with: 'ends with', regex: 'matches regex', in: 'is one of', not_in: 'is not one of',
+  gt: '>', gte: '≥', lt: '<', lte: '≤', between: 'between'
+};
+var PC_KINDS = { program: 'Programs', extension: 'Browser extensions', ide_extension: 'IDE extensions', package: 'Packages' };
+
+/* Compare dotted versions number by number: 10.2 > 9.14, 21.011.20039 < 24. Non-numeric parts compare as text. */
+function pcVer(a, b) {
+  var x = String(a).trim().split(/[.\-+_ ]/), y = String(b).trim().split(/[.\-+_ ]/);
+  var n = Math.max(x.length, y.length);
+  for (var i = 0; i < n; i++) {
+    var p = x[i] === undefined ? '0' : x[i], q = y[i] === undefined ? '0' : y[i];
+    if (/^\d+$/.test(p) && /^\d+$/.test(q)) {
+      var d = parseInt(p, 10) - parseInt(q, 10);
+      if (d) return d < 0 ? -1 : 1;
+    } else if (p !== q) {
+      return p < q ? -1 : 1;
+    }
+  }
+  return 0;
+}
+function pcValue(t, f) {
+  if (f === 'vendor') return t.vendor || '';
+  if (f === 'name') return t.name || '';
+  if (f === 'category') return t.l1 || '';
+  if (f === 'subcategory') return t.l2 || '';
+  if (f === 'version') return t.version || '';
+  if (f === 'extid') return t.extId || '';
+  return '';
+}
+function pcList(c) {
+  if (c.vs && c.vs.length) return c.vs;
+  return String(c.v || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+}
+/* Returns { ok, error }. Text compares ignore case unless c.cs is true. */
+function pcTest(c, t) {
+  var type = PC_FIELDS[c.f].type, raw = pcValue(t, c.f);
+  if (c.op === 'regex') {
+    try { return { ok: new RegExp(c.v || '', c.cs ? '' : 'i').test(raw) }; }
+    catch (e) { return { ok: false, error: 'Invalid regular expression' }; }
+  }
+  if (type === 'version') {
+    if (!raw) return { ok: false };
+    var cmp = pcVer(raw, c.v || '0');
+    if (c.op === 'equals') return { ok: cmp === 0 };
+    if (c.op === 'not_equals') return { ok: cmp !== 0 };
+    if (c.op === 'gt') return { ok: cmp > 0 };
+    if (c.op === 'gte') return { ok: cmp >= 0 };
+    if (c.op === 'lt') return { ok: cmp < 0 };
+    if (c.op === 'lte') return { ok: cmp <= 0 };
+    if (c.op === 'between') return { ok: cmp >= 0 && pcVer(raw, c.v2 || c.v || '0') <= 0 };
+    return { ok: false };
+  }
+  var norm = function (s) { return c.cs ? String(s) : String(s).toLowerCase(); };
+  var a = norm(raw), list = pcList(c).map(norm), v = norm(c.v || '');
+  if (c.op === 'equals') return { ok: a === v };
+  if (c.op === 'not_equals') return { ok: a !== v };
+  if (c.op === 'contains') return { ok: !!v && a.indexOf(v) !== -1 };
+  if (c.op === 'not_contains') return { ok: !v || a.indexOf(v) === -1 };
+  if (c.op === 'starts_with') return { ok: !!v && a.indexOf(v) === 0 };
+  if (c.op === 'ends_with') return { ok: !!v && a.slice(-v.length) === v };
+  if (c.op === 'in') return { ok: list.indexOf(a) !== -1 };
+  if (c.op === 'not_in') return { ok: list.indexOf(a) === -1 };
+  return { ok: false };
+}
+function pcRuleTest(r, t) {
+  if (!r.enabled) return { ok: false, reason: 'Rule is disabled' };
+  if (r.kinds.indexOf(t.kind) === -1) return { ok: false, reason: 'Does not apply to ' + PC_KINDS[t.kind].toLowerCase() };
+  var results = r.conds.map(function (c) { return pcTest(c, t); });
+  var ok = r.match === 'any' ? results.some(function (x) { return x.ok; }) : results.every(function (x) { return x.ok; });
+  if (ok) return { ok: true };
+  if (r.match === 'any') return { ok: false, reason: 'No condition matches' };
+  var i = results.findIndex(function (x) { return !x.ok; });
+  return { ok: false, reason: pcCondText(r.conds[i]) + ' is false (' + (pcValue(t, r.conds[i].f) || 'empty') + ')' };
+}
+function pcClassify(rules, t, dflt) {
+  for (var i = 0; i < rules.length; i++) {
+    if (pcRuleTest(rules[i], t).ok) return { cls: rules[i].cls, index: i, rule: rules[i] };
+  }
+  return { cls: dflt, index: -1, rule: null };
+}
+function pcCondText(c) {
+  var f = PC_FIELDS[c.f].label, op = PC_OP_LABEL[c.op];
+  if (c.op === 'in' || c.op === 'not_in') return f + ' ' + op + ' ' + pcList(c).join(', ');
+  if (c.op === 'between') return f + ' between ' + (c.v || '?') + ' and ' + (c.v2 || '?');
+  return f + ' ' + op + ' ' + (c.v || '?') + (c.cs ? ' (case-sensitive)' : '');
+}
+
+/* Sample titles: the shape of title_summary rows, with the class inputs the rules read. */
+var PC_TITLES = [
+  { name: 'Microsoft Visual C++ 2015-2022 Redistributable (x64)', vendor: 'Microsoft Corporation', kind: 'program', l1: 'System applications', l2: 'OS components and runtimes', version: '14.40.33810', computers: 401 },
+  { name: 'Microsoft Edge WebView2 Runtime', vendor: 'Microsoft Corporation', kind: 'program', l1: 'System applications', l2: 'OS components and runtimes', version: '130.0.2849.56', computers: 398 },
+  { name: 'Intel Graphics Driver', vendor: 'Intel Corporation', kind: 'program', l1: 'System applications', l2: 'Drivers and hardware utilities', version: '31.0.101.5590', computers: 260 },
+  { name: 'Dell Command | Update', vendor: 'Dell Inc.', kind: 'program', l1: 'System applications', l2: 'OEM utilities', version: '5.4.0', computers: 188 },
+  { name: 'Chrome Web Store Payments', vendor: 'Google', kind: 'extension', extId: 'nmmhkkegccagdldgiimedpiccmgmieda', l1: 'System applications', l2: 'Browser components', version: '1.0.0.6', computers: 140 },
+  { name: 'Sophos Endpoint Agent', vendor: 'Sophos Limited', kind: 'program', l1: 'Sophos applications', l2: 'Sophos agents and tools', version: '2024.3.1', computers: 412 },
+  { name: 'Google Chrome', vendor: 'Google LLC', kind: 'program', l1: 'General internet', l2: 'Web browsers', version: '130.0.6723.92', computers: 377 },
+  { name: 'Microsoft 365 Apps for business', vendor: 'Microsoft Corporation', kind: 'program', l1: 'General business', l2: 'Office and documents', version: '16.0.18129.20158', computers: 366 },
+  { name: 'Adobe Acrobat (64-bit)', vendor: 'Adobe', kind: 'program', l1: 'General business', l2: 'Office and documents', version: '24.003.20180', computers: 141 },
+  { name: 'Adobe Acrobat Reader DC', vendor: 'Adobe Systems Incorporated', kind: 'program', l1: 'General business', l2: 'Office and documents', version: '21.011.20039', computers: 23 },
+  { name: 'Adobe Acrobat: PDF edit, convert, sign tools', vendor: 'Adobe', kind: 'extension', extId: 'efaidnbmnnnibpcajpcglclefindmkaj', l1: 'General business', l2: 'Office and documents', version: '26.10.1.0', computers: 52 },
+  { name: 'Zoom Workplace', vendor: 'Zoom Video Communications, Inc.', kind: 'program', l1: 'Conferencing', l2: 'Video meetings', version: '6.2.6', computers: 214 },
+  { name: 'Cisco Webex Meetings', vendor: 'Cisco Systems', kind: 'program', l1: 'Conferencing', l2: 'Video meetings', version: '44.10.0', computers: 37 },
+  { name: 'Slack', vendor: 'Slack Technologies', kind: 'program', l1: 'Instant messenger', l2: 'Team chat', version: '4.41.97', computers: 58 },
+  { name: 'AnyDesk', vendor: 'AnyDesk Software GmbH', kind: 'program', l1: 'Remote access', l2: 'Remote desktop and support', version: '9.0.5', computers: 21 },
+  { name: 'TeamViewer', vendor: 'TeamViewer Germany GmbH', kind: 'program', l1: 'Remote access', l2: 'Remote desktop and support', version: '15.58.4', computers: 9 },
+  { name: 'anydesk', vendor: 'AnyDesk Software GmbH', kind: 'package', extId: 'anydesk', l1: 'Remote access', l2: 'Remote desktop and support', version: '9.0.5', computers: 2 },
+  { name: 'RustDesk', vendor: 'Purslane Ltd', kind: 'program', l1: 'Remote access', l2: 'Remote desktop and support', version: '1.3.2', computers: 2 },
+  { name: 'Chrome Remote Desktop', vendor: 'Google', kind: 'extension', extId: 'inomeogfingihgjfjlpeplalcfajhgai', l1: 'Remote access', l2: 'Remote desktop and support', version: '2.1', computers: 11 },
+  { name: 'PuTTY', vendor: 'Simon Tatham', kind: 'program', l1: 'Remote access', l2: 'SSH and terminal clients', version: '0.81', computers: 17 },
+  { name: 'FortiClient VPN', vendor: 'Fortinet Technologies Inc', kind: 'program', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', version: '7.4.1', computers: 44 },
+  { name: 'OpenVPN Connect', vendor: 'OpenVPN Inc.', kind: 'program', l1: 'Proxy and tunnel', l2: 'Corporate VPN clients', version: '3.5.1', computers: 4 },
+  { name: 'Urban VPN Proxy', vendor: 'Urban Cyber Security Inc.', kind: 'extension', l1: 'Proxy and tunnel', l2: 'Consumer VPN and proxy services', version: '5.11.2', computers: 5 },
+  { name: 'wireguard-tools', vendor: '', kind: 'package', extId: 'wireguard-tools', l1: 'Proxy and tunnel', l2: 'Tunnels and mesh networks', version: '1.0.20210914', computers: 3 },
+  { name: 'Tor Browser', vendor: 'The Tor Project', kind: 'program', l1: 'Proxy and tunnel', l2: 'Anonymizers', version: '14.0', computers: 1 },
+  { name: 'qBittorrent', vendor: 'The qBittorrent project', kind: 'program', l1: 'P2P', l2: 'Torrent clients', version: '4.6.5', computers: 2 },
+  { name: 'Keeper® Password Manager & Digital Vault', vendor: 'Keeper Security', kind: 'extension', extId: 'bfogiafebfohielmmehodmfbbebbbpei', l1: 'Security and identity', l2: 'Password managers', version: '17.9.0', computers: 31 },
+  { name: 'Bitwarden Password Manager', vendor: 'Bitwarden Inc.', kind: 'extension', extId: 'nngceckbapebfimnlniiiahkandclblb', l1: 'Security and identity', l2: 'Password managers', version: '2024.10.1', computers: 48 },
+  { name: 'Advanced IP Scanner', vendor: 'Famatech Corp.', kind: 'program', l1: 'Security and identity', l2: 'Security testing tools', version: '2.5.4594', computers: 6 },
+  { name: 'Visual Studio Code', vendor: 'Microsoft Corporation', kind: 'program', l1: 'Developer tools', l2: 'IDEs and editors', version: '1.95.1', computers: 66 },
+  { name: 'typescript', vendor: 'Microsoft Corp.', kind: 'package', extId: 'typescript', l1: 'Developer tools', l2: 'Libraries and packages', version: '5.9.2', computers: 38 },
+  { name: 'GitHub Copilot', vendor: 'GitHub', kind: 'ide_extension', extId: 'github.copilot', l1: 'Generative AI', l2: 'AI coding assistants', version: '1.245.0', computers: 22 },
+  { name: 'Awesome Screen Recorder & Screenshot', vendor: 'Awesome Screenshot', kind: 'extension', extId: 'nlipoenfbbikpbjkfpfillcgkoblgpmj', l1: 'General business', l2: 'Screen capture and recording', version: '4.4.41', computers: 9 },
+  { name: 'OBS Studio', vendor: 'OBS Project', kind: 'program', l1: 'General business', l2: 'Screen capture and recording', version: '30.2.3', computers: 7 },
+  { name: 'Gmail', vendor: 'Google', kind: 'extension', extId: 'pjkljhegncpnkpknbcohdijeoejaedia', l1: 'General internet', l2: 'Legacy Chrome apps', version: '8.2', computers: 14 },
+  { name: 'YouTube', vendor: 'Google', kind: 'extension', extId: 'blpcfgokakmgnkcojhhkbfbldkacnbeo', l1: 'General internet', l2: 'Legacy Chrome apps', version: '4.2.8', computers: 9 },
+  { name: 'Momentum', vendor: 'Momentum Dash', kind: 'extension', extId: 'laookkfknpbbblfpciffpaejjkokdgca', l1: 'General internet', l2: 'Browser utilities', version: '2.26.6', computers: 8 },
+  { name: 'Spotify', vendor: 'Spotify AB', kind: 'program', l1: 'Streaming media', l2: 'Music and podcasts', version: '1.2.48.405', computers: 74 },
+  { name: 'Player do NOW NET Claro', vendor: 'Claro', kind: 'extension', extId: 'npflpmeannakjekldamofnldpiefjmmi', l1: 'Other', l2: 'Other', version: '1.9.3.43', computers: 6 },
+  { name: 'Add to Amazon Wish List', vendor: 'Amazon', kind: 'extension', extId: 'ciagpekplgpbepdgggflgmahnjgiaced', l1: 'E-commerce', l2: 'Shopping assistants', version: '1.0.0.11', computers: 7 },
+  { name: 'Ollama', vendor: 'Ollama', kind: 'program', l1: 'Generative AI', l2: 'Local AI runtimes', version: '0.4.1', computers: 2 },
+  { name: 'Parsec', vendor: 'Parsec Cloud, Inc.', kind: 'program', l1: 'Unclassified', l2: 'Not in the dictionary yet', version: '150-97', computers: 3 }
+];
+
+/* Published policy (version 13). tTitles / tComputers are tenant-wide counts from title_summary. */
+var PC_ALL_KINDS = ['program', 'extension', 'ide_extension', 'package'];
+var PC_RULES = [
+  { id: 'r1', name: 'Operating system, drivers and runtimes', cls: 'core', match: 'all', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'category', op: 'equals', v: 'System applications' }],
+    owner: 'IT Operations', purpose: 'Components required by Windows, macOS, Linux and the browsers.', tTitles: 401, tComputers: 412 },
+  { id: 'r2', name: 'Sophos agents', cls: 'core', match: 'all', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'category', op: 'equals', v: 'Sophos applications' }],
+    owner: 'Security team', purpose: 'Endpoint protection and ZTNA agents.', tTitles: 11, tComputers: 412 },
+  { id: 'r3', name: 'Unsupported Acrobat and Reader', cls: 'unsanctioned', match: 'all', enabled: true, kinds: ['program'],
+    conds: [{ f: 'vendor', op: 'contains', v: 'Adobe' }, { f: 'name', op: 'regex', v: 'Acrobat|Reader' }, { f: 'version', op: 'lt', v: '24' }],
+    owner: 'Security team', purpose: 'Versions out of vendor support (CIS 2.2). Update or remove.', tTitles: 4, tComputers: 19 },
+  { id: 'r4', name: 'Approved business suite', cls: 'sanctioned', match: 'all', enabled: true, kinds: ['program', 'extension'],
+    conds: [{ f: 'category', op: 'in', vs: ['General business', 'Conferencing', 'Instant messenger', 'General internet'] },
+            { f: 'vendor', op: 'in', vs: ['Microsoft Corporation', 'Adobe', 'Zoom Video Communications, Inc.', 'Cisco Systems', 'Slack Technologies', 'Google LLC'] }],
+    owner: 'IT Operations', purpose: 'Office, PDF, meetings, chat and the standard browser.', tTitles: 291, tComputers: 408 },
+  { id: 'r5', name: 'Approved remote support', cls: 'tolerated', match: 'all', enabled: true, kinds: ['program', 'package'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Remote desktop and support' }, { f: 'name', op: 'regex', v: '^(AnyDesk|TeamViewer)$' }, { f: 'version', op: 'gte', v: '9.0' }],
+    owner: 'IT Service Desk', purpose: 'Vendor support sessions for line-of-business systems.',
+    controls: 'Unattended access disabled; sessions logged; access only from the support VLAN.', riskBy: 'CISO', review: '2026-11-15', tTitles: 3, tComputers: 30 },
+  { id: 'r6', name: 'Corporate VPN and password managers', cls: 'sanctioned', match: 'any', enabled: true, kinds: ['program', 'extension'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Corporate VPN clients' }, { f: 'extid', op: 'in', v: 'bfogiafebfohielmmehodmfbbebbbpei, nngceckbapebfimnlniiiahkandclblb' }],
+    owner: 'Security team', purpose: 'Remote access through the corporate VPN; Keeper and Bitwarden are the approved vaults.', tTitles: 24, tComputers: 75 },
+  { id: 'r7', name: 'Developer tools', cls: 'sanctioned', match: 'all', enabled: true, kinds: ['program', 'ide_extension', 'package'],
+    conds: [{ f: 'category', op: 'equals', v: 'Developer tools' }],
+    owner: 'Engineering', purpose: 'IDEs, runtimes, CLIs and libraries used by the engineering teams.', tTitles: 256, tComputers: 92 },
+  { id: 'r8', name: 'Legacy Chrome apps', cls: 'tolerated', match: 'all', enabled: true, kinds: ['extension'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Legacy Chrome apps' }],
+    owner: 'Workplace team', purpose: 'Removal scheduled with the Chrome policy rollout.',
+    controls: 'No permissions beyond the Google domains; removed by policy on next Chrome update.', riskBy: 'IT Manager', review: '2026-10-15', tTitles: 6, tComputers: 14 },
+  { id: 'r9', name: 'Screen capture and AI tools under review', cls: 'tolerated', match: 'any', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'subcategory', op: 'in', vs: ['Screen capture and recording', 'AI assistants', 'AI browser extensions'] }],
+    owner: 'Security team', purpose: 'Waiting for the acceptable-use policy on recording and AI tools.',
+    controls: 'DLP watches uploads from these tools; users acknowledged the interim rules.', riskBy: 'CISO', review: '2026-11-30', tTitles: 54, tComputers: 41 },
+  { id: 'r10', name: 'Anonymizers, P2P and unwanted software', cls: 'unsanctioned', match: 'any', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'subcategory', op: 'in', vs: ['Anonymizers', 'Torrent clients', 'Other P2P networks'] }, { f: 'category', op: 'equals', v: 'Unwanted software' }],
+    owner: 'Security team', purpose: 'Never allowed on enterprise assets.', tTitles: 9, tComputers: 3 },
+  { id: 'r11', name: 'Consumer VPN, tunnels and other remote access', cls: 'unsanctioned', match: 'any', enabled: true, kinds: PC_ALL_KINDS,
+    conds: [{ f: 'subcategory', op: 'in', vs: ['Consumer VPN and proxy services', 'Tunnels and mesh networks'] }, { f: 'subcategory', op: 'equals', v: 'Remote desktop and support' }],
+    owner: 'Security team', purpose: 'Anything that opens a path around the firewall, except the tools in rule 5.', tTitles: 46, tComputers: 22 },
+  { id: 'r12', name: 'Local AI runtimes', cls: 'unsanctioned', match: 'all', enabled: false, kinds: ['program', 'package'],
+    conds: [{ f: 'subcategory', op: 'equals', v: 'Local AI runtimes' }],
+    owner: 'Security team', purpose: 'Draft: waiting for the AI policy.', tTitles: 0, tComputers: 0 }
+];
+var PC_DEFAULT = 'unsanctioned';
+var PC_DEFAULT_COUNTS = { tTitles: 179, tComputers: 286 };
+var PC_TODAY = '2026-10-24';
+
+
+var PR_EDIT_ID = 'r5';
+var PR_TYPE_DEFAULT_OP = { text: 'equals', cat1: 'equals', cat2: 'equals', version: 'gte' };
+var PR_KIND_LABEL = { program: 'Program', extension: 'Browser extension', ide_extension: 'IDE extension', package: 'Package' };
+
+function prFmtDate(d) {
+  if (!d) return '';
+  var m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var p = d.split('-');
+  return m[parseInt(p[1], 10) - 1] + ' ' + parseInt(p[2], 10) + ', ' + p[0];
+}
+function prInitial() {
+  var r = PC_RULES.find(function (x) { return x.id === PR_EDIT_ID; });
+  var kinds = {};
+  PC_ALL_KINDS.forEach(function (k) { kinds[k] = r.kinds.indexOf(k) !== -1; });
+  return {
+    name: r.name, enabled: r.enabled, pos: PC_RULES.indexOf(r), cls: r.cls, match: r.match, kinds: kinds,
+    conds: r.conds.map(function (c) { return { f: c.f, op: c.op, v: c.v || '', v2: c.v2 || '', vs: (c.vs || []).slice(), cs: !!c.cs }; }),
+    owner: r.owner || '', purpose: r.purpose || '', controls: r.controls || '', riskBy: r.riskBy || '', review: r.review || '', alertNew: true
+  };
+}
+/* Returns an error message, or '' when the condition is complete. */
+function prCondError(c, strict) {
+  var type = PC_FIELDS[c.f].type;
+  if (c.op === 'regex') {
+    if (!c.v) return strict ? 'Enter a regular expression.' : '';
+    try { new RegExp(c.v); return ''; } catch (e) { return 'Invalid regular expression: ' + e.message.replace(/^Invalid regular expression: /, ''); }
+  }
+  if (c.op === 'in' || c.op === 'not_in') return pcList(c).length ? '' : (strict ? 'Add at least one value.' : '');
+  if (!c.v) return strict ? (type === 'cat1' || type === 'cat2' ? 'Choose a value.' : 'Enter a value.') : '';
+  if (c.op === 'between' && !c.v2) return strict ? 'Enter both versions.' : '';
+  if (c.op === 'between' && pcVer(c.v, c.v2) > 0) return 'The first version must be lower than the second.';
+  return '';
+}
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign(prInitial(), { tried: false, dirty: false, toast: null });
+  }
+  edit(patch) { this.setState(Object.assign({ dirty: true }, patch)); }
+  editCond(i, patch) {
+    var conds = this.state.conds.map(function (c, j) { return j === i ? Object.assign({}, c, patch) : c; });
+    this.edit({ conds: conds });
+  }
+  draft() {
+    var s = this.state;
+    return { id: PR_EDIT_ID, name: s.name || 'Untitled rule', cls: s.cls, match: s.match, enabled: s.enabled,
+      kinds: PC_ALL_KINDS.filter(function (k) { return s.kinds[k]; }), conds: s.conds };
+  }
+  renderVals() {
+    var self = this, s = this.state;
+    var draft = this.draft();
+    var others = PC_RULES.filter(function (r) { return r.id !== PR_EDIT_ID; });
+    var pos = Math.min(s.pos, others.length);
+    var draftRules = others.slice(0, pos).concat([draft], others.slice(pos));
+    var cErrors = s.conds.map(function (c) { return prCondError(c, s.tried); });
+    var strictErrors = s.conds.map(function (c) { return prCondError(c, true); }).filter(Boolean).length;
+
+    var conds = s.conds.map(function (c, i) {
+      var type = PC_FIELDS[c.f].type, list = c.op === 'in' || c.op === 'not_in';
+      var isCatType = type === 'cat1' || type === 'cat2';
+      var err = cErrors[i];
+      var hint = '';
+      if (c.op === 'regex') hint = 'JavaScript syntax. ' + (c.cs ? 'Case-sensitive.' : 'Ignores case.');
+      else if (list && !isCatType) hint = 'Separate values with commas.';
+      else if (type === 'version') hint = 'Compared number by number: 10.2 is greater than 9.14.';
+      return {
+        n: i + 1, showJoin: i > 0, join: s.match === 'any' ? 'OR' : 'AND',
+        fieldId: 'c' + i + '-field', opId: 'c' + i + '-op', valId: 'c' + i + '-val', val2Id: 'c' + i + '-val2',
+        f: c.f, op: c.op, v: c.v, v2: c.v2,
+        isText: type === 'text', isCat: isCatType, isVersion: type === 'version',
+        showInput: !isCatType, showBetween: c.op === 'between',
+        showCs: type === 'text', csOn: c.cs ? 'true' : 'false', csCls: 'cs-btn' + (c.cs ? ' on' : ''),
+        inpCls: 'inp' + (type === 'version' || c.op === 'regex' || c.f === 'extid' ? ' mono-inp' : '') + (err ? ' bad' : ''),
+        placeholder: c.op === 'regex' ? 'e.g. ^(AnyDesk|TeamViewer)$' : (type === 'version' ? 'e.g. 9.0' : (list ? 'value 1, value 2' : 'Value')),
+        showCat1: type === 'cat1' && !list, showCat2: type === 'cat2' && !list,
+        showMulti: isCatType && list, multiCat1: type === 'cat1' && list, multiCat2: type === 'cat2' && list,
+        chips: (c.vs || []).map(function (v) {
+          return { label: v, removeLabel: 'Remove ' + v, remove: function () { self.editCond(i, { vs: c.vs.filter(function (x) { return x !== v; }) }); } };
+        }),
+        onAdd: function (e) { var v = e.target.value; if (v && c.vs.indexOf(v) === -1) self.editCond(i, { vs: c.vs.concat([v]) }); },
+        onField: function (e) { var f = e.target.value; self.editCond(i, { f: f, op: PR_TYPE_DEFAULT_OP[PC_FIELDS[f].type], v: '', v2: '', vs: [], cs: false }); },
+        onOp: function (e) {
+          var op = e.target.value, toList = op === 'in' || op === 'not_in', patch = { op: op };
+          if (isCatType && toList && !list) patch.vs = c.v ? [c.v] : [];
+          if (isCatType && !toList && list) patch.v = c.vs[0] || '';
+          self.editCond(i, patch);
+        },
+        onV: function (e) { self.editCond(i, { v: e.target.value }); },
+        onV2: function (e) { self.editCond(i, { v2: e.target.value }); },
+        toggleCs: function () { self.editCond(i, { cs: !c.cs }); },
+        hasHint: !!hint && !err, hint: hint, hasError: !!err, error: err,
+        only: s.conds.length === 1, removeLabel: 'Remove condition ' + (i + 1),
+        remove: function () { self.edit({ conds: s.conds.filter(function (x, j) { return j !== i; }) }); }
+      };
+    });
+
+    /* live preview on the sample titles */
+    var testable = Object.assign({}, draft, { enabled: true });
+    var hits = PC_TITLES.filter(function (t) { return pcRuleTest(testable, t).ok; });
+    var draftIdx = draftRules.indexOf(draft);
+    var gets = 0, shadowed = 0, computers = 0;
+    var matches = hits.map(function (t) {
+      var after = pcClassify(draftRules, t, PC_DEFAULT);
+      var outcome, color;
+      computers += t.computers;
+      if (!s.enabled) { outcome = 'Rule disabled · stays ' + PC_CLASSES[after.cls].label; color = 'var(--text-muted)'; }
+      else if (after.index === draftIdx) { gets++; outcome = 'Becomes ' + PC_CLASSES[s.cls].label; color = 'var(--text-brand)'; }
+      else { shadowed++; outcome = 'Stays ' + PC_CLASSES[after.cls].label + ': rule ' + (after.index + 1) + ' matches first'; color = 'var(--text-muted)'; }
+      return { name: t.name, version: t.version, meta: PR_KIND_LABEL[t.kind] + ' · ' + (t.vendor || 'no vendor') + ' · ' + t.l1 + ' / ' + t.l2, outcome: outcome, outColor: color };
+    });
+    var moves = [];
+    PC_TITLES.forEach(function (t) {
+      var before = pcClassify(PC_RULES, t, PC_DEFAULT), after = pcClassify(draftRules, t, PC_DEFAULT);
+      if (before.cls !== after.cls) {
+        moves.push({ name: t.name, from: PC_CLASSES[before.cls].label, fromColor: PC_CLASSES[before.cls].color, to: PC_CLASSES[after.cls].label, toColor: PC_CLASSES[after.cls].color });
+      }
+    });
+
+    var tol = s.cls === 'tolerated', uns = s.cls === 'unsanctioned';
+    var docError = '';
+    if (s.tried && !s.owner.trim()) docError = 'Add an owner.';
+    if (s.tried && tol && (!s.purpose.trim() || !s.controls.trim() || !s.riskBy.trim() || !s.review)) docError = 'A tolerated rule needs a business purpose, mitigating controls, who accepted the risk and a review date.';
+    var noKinds = PC_ALL_KINDS.every(function (k) { return !s.kinds[k]; });
+    var reviewDays = s.review ? Math.round((Date.parse(s.review) - Date.parse(PC_TODAY)) / 86400000) : null;
+
+    return {
+      yes: true, no: false, logoH: 22,
+      posLabel: String(pos + 1), titleName: s.name || 'Untitled rule', dirty: s.dirty,
+      name: s.name, onName: function (e) { self.edit({ name: e.target.value }); },
+      posValue: String(pos + 1), onPos: function (e) { self.edit({ pos: parseInt(e.target.value, 10) - 1 }); },
+      enabled: s.enabled, toggleEnabled: function () { self.edit({ enabled: !s.enabled }); },
+      classOpts: PC_ORDER.map(function (k) {
+        var c = PC_CLASSES[k], on = s.cls === k;
+        return { label: c.label, id: c.id, color: c.color, meaning: c.meaning, cis: c.cis, checked: on ? 'true' : 'false',
+          cardCls: 'cls-card' + (on ? ' on' : ''), pick: function () { self.edit({ cls: k }); } };
+      }),
+      matchAll: s.match === 'all' ? 'true' : 'false', matchAny: s.match === 'any' ? 'true' : 'false',
+      matchAllCls: 'seg' + (s.match === 'all' ? ' on' : ''), matchAnyCls: 'seg' + (s.match === 'any' ? ' on' : ''),
+      setAll: function () { self.edit({ match: 'all' }); }, setAny: function () { self.edit({ match: 'any' }); },
+      matchHint: s.match === 'all' ? 'A title matches when every condition is true.' : 'A title matches when at least one condition is true.',
+      conds: conds,
+      addCond: function () { self.edit({ conds: s.conds.concat([{ f: 'name', op: 'equals', v: '', v2: '', vs: [], cs: false }]) }); },
+      kindOpts: PC_ALL_KINDS.map(function (k) {
+        return { label: PC_KINDS[k], checked: !!s.kinds[k], toggle: function () { var n = Object.assign({}, s.kinds); n[k] = !n[k]; self.edit({ kinds: n }); } };
+      }),
+      noKinds: noKinds,
+      isTolerated: tol, isUnsanctioned: uns,
+      docEyebrow: tol ? 'DOCUMENTED EXCEPTION · CIS 2.2, 2.3' : (uns ? 'REMEDIATION · CIS 2.3' : 'AUTHORIZATION · CIS 2.1'),
+      docHint: tol ? 'Unauthorized or unsupported software can stay only with a documented exception: why it is needed, how the risk is reduced, who accepted it, and when it is reviewed again.'
+        : (uns ? 'Matching software is unauthorized. Remove it from enterprise assets; it shows as unsanctioned on the dashboard and the computer pages.'
+        : 'The inventory records a business purpose for authorized software.'),
+      purposeLabel: uns ? 'Reason and remediation' : 'Business purpose',
+      owner: s.owner, onOwner: function (e) { self.edit({ owner: e.target.value }); },
+      purpose: s.purpose, onPurpose: function (e) { self.edit({ purpose: e.target.value }); },
+      controls: s.controls, onControls: function (e) { self.edit({ controls: e.target.value }); },
+      riskBy: s.riskBy, onRiskBy: function (e) { self.edit({ riskBy: e.target.value }); },
+      review: s.review, onReview: function (e) { self.edit({ review: e.target.value }); },
+      reviewNote: reviewDays === null ? 'No review date yet.' : (reviewDays < 0 ? 'Overdue by ' + (-reviewDays) + ' days.' : 'Next review in ' + reviewDays + ' days, on ' + prFmtDate(s.review) + '.'),
+      alertNew: s.alertNew, toggleAlert: function () { self.edit({ alertNew: !s.alertNew }); },
+      hasDocError: !!docError, docError: docError,
+      previewHead: hits.length + (hits.length === 1 ? ' sample title matches' : ' sample titles match'),
+      previewSub: computers.toLocaleString('en-US') + ' computers · ' + gets + ' become ' + PC_CLASSES[s.cls].label + (shadowed ? ' · ' + shadowed + ' already matched by an earlier rule' : ''),
+      matches: matches, noMatches: hits.length === 0,
+      movesHead: moves.length ? 'If you publish, ' + moves.length + (moves.length === 1 ? ' title changes class' : ' titles change class') : 'No title changes class',
+      moves: moves.slice(0, 6),
+      del: function () { self.setState({ toast: { tone: 'info', title: 'Rule deleted from the draft', message: 'Titles it matched fall to the next rule or the default class when you publish.' } }); },
+      save: function () {
+        if (strictErrors || noKinds || !s.owner.trim() || (tol && (!s.purpose.trim() || !s.controls.trim() || !s.riskBy.trim() || !s.review))) {
+          self.setState({ tried: true, toast: { tone: 'critical', title: 'The rule is not complete', message: 'Fix the fields marked in red, then save again.' } });
+          return;
+        }
+        self.setState({ tried: false, dirty: false, toast: { tone: 'success', title: 'Rule saved in draft version 14', message: moves.length + (moves.length === 1 ? ' sample title changes' : ' sample titles change') + ' class when you publish the policy.' } });
+      },
+      hasToast: !!s.toast, toastTone: s.toast ? s.toast.tone : 'info', toastTitle: s.toast ? s.toast.title : '', toastMessage: s.toast ? s.toast.message : '',
+      closeToast: function () { self.setState({ toast: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

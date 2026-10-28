@@ -22,6 +22,8 @@ The files here are references, not code to copy. Rebuild each screen with React,
 | `Software.dc.html` | Client | `/software` | Where is a title or a category? Includes the reclassification request dialog |
 | `Scans.dc.html` | Client | `/scans` | Is the collector healthy? Cycle, API budget, retry queue |
 | `Changes.dc.html` | Client | `/changes` | What changed, where and when? |
+| `Policies.dc.html` | Client | `/policies` | Which class does each app get, and which rule decides it? (Phase 9) |
+| `PolicyRule.dc.html` | Client | `/policies/rules/:id` | Edit one rule: conditions, class, documentation, live preview (Phase 9) |
 | `HubInbox.dc.html` | Hub | `/` (Inbox) | Requests, new titles, Jev proposals |
 | `HubEntry.dc.html` | Hub | `/entries/:id` | Edit an entry, research dossier, decide a request |
 | `HubEngines.dc.html` | Hub | `/engines` | Jev and research modes, budgets, auto-published list, prices |
