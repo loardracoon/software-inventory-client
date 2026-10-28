@@ -79,7 +79,7 @@ spec:
             - { name: GOTRUE_DB_DATABASE_URL, valueFrom: { secretKeyRef: { name: supabase, key: AUTH_DB_URL } } }
             - { name: GOTRUE_SITE_URL, value: "https://inventory.clau.sophizo.com.br" }
             - { name: GOTRUE_URI_ALLOW_LIST, value: "https://inventory.clau.sophizo.com.br/**,https://inventory.sophizo.com.br/**" }
-            - # Sign-ups on: the database trigger before_auth_user_created refuses every email without an access rule.
+            # Sign-ups on: the database trigger before_auth_user_created refuses every email without an access rule.
             - { name: GOTRUE_DISABLE_SIGNUP, value: "false" }
             - { name: GOTRUE_JWT_ADMIN_ROLES, value: service_role }
             - { name: GOTRUE_JWT_AUD, value: authenticated }
