@@ -83,7 +83,13 @@ export function SoftwareTitlePage() {
       <PageHeader
         eyebrow={t ? `${label(KIND_LABEL, t.kind)} · ${label(SOURCE_LABEL, t.source)}` : "Software title"}
         title={t?.canonical_name ?? "…"}
-        description={t ? [t.vendor, t.external_id].filter(Boolean).join(" · ") || undefined : undefined}
+        description={
+          t
+            ? [t.vendor, t.external_id, title.data?.spellings.length ? `Same product as ${title.data.spellings.map((s) => s.canonical_name).join(", ")} (versions and computers include them)` : null]
+                .filter(Boolean)
+                .join(" · ") || undefined
+            : undefined
+        }
       />
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_2fr]">
         <Card className="gap-4 px-6">

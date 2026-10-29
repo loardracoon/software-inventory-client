@@ -275,6 +275,12 @@ isOneToOne: false
       foreignKeyName: "change_events_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "change_events_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -353,14 +359,14 @@ isOneToOne: false
                   ]
                 },"dictionary_cache": {
                   Row: {
-                    "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"confidence": number | null,"description": string | null,"hub_seq": number,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"method": string,"revision": number,"source": string,"status": string,"synced_at": string,"vendor": string | null
+                    "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"confidence": number | null,"description": string | null,"hub_seq": number,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"method": string,"product_key": string | null,"revision": number,"source": string,"status": string,"synced_at": string,"vendor": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"confidence"?: number | null,"description"?: string | null,"hub_seq"?: number,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"method": string,"revision"?: number,"source": string,"status"?: string,"synced_at"?: string,"vendor"?: string | null
+                    "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"confidence"?: number | null,"description"?: string | null,"hub_seq"?: number,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"method": string,"product_key"?: string | null,"revision"?: number,"source": string,"status"?: string,"synced_at"?: string,"vendor"?: string | null
                   }
                   Update: {
-                    "attention_level"?: Database["public"]['Enums']["attention_level"],"canonical_name"?: string,"category_slug"?: string,"confidence"?: number | null,"description"?: string | null,"hub_seq"?: number,"kind"?: Database["public"]['Enums']["title_kind"],"match_key"?: string,"method"?: string,"revision"?: number,"source"?: string,"status"?: string,"synced_at"?: string,"vendor"?: string | null
+                    "attention_level"?: Database["public"]['Enums']["attention_level"],"canonical_name"?: string,"category_slug"?: string,"confidence"?: number | null,"description"?: string | null,"hub_seq"?: number,"kind"?: Database["public"]['Enums']["title_kind"],"match_key"?: string,"method"?: string,"product_key"?: string | null,"revision"?: number,"source"?: string,"status"?: string,"synced_at"?: string,"vendor"?: string | null
                   }
                   Relationships: [
                     {
@@ -525,6 +531,12 @@ isOneToOne: false
       foreignKeyName: "installations_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -594,6 +606,12 @@ isOneToOne: true
       columns: ["title_id"]
 isOneToOne: true
       referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "local_overrides_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: true
+      referencedRelation: "title_products"
       referencedColumns: ["title_id"]
     },{
       foreignKeyName: "local_overrides_title_id_fkey"
@@ -716,6 +734,12 @@ isOneToOne: false
       columns: ["title_id"]
 isOneToOne: false
       referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_products"
       referencedColumns: ["title_id"]
     },{
       foreignKeyName: "policy_class_changes_title_id_fkey"
@@ -957,6 +981,12 @@ isOneToOne: false
       foreignKeyName: "reclassification_requests_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "reclassification_requests_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -1141,14 +1171,14 @@ isOneToOne: false
                   ]
                 },"software_titles": {
                   Row: {
-                    "canonical_name": string,"external_id": string | null,"first_seen_at": string,"id": string,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"source": string,"vendor": string | null
+                    "canonical_name": string,"external_id": string | null,"first_seen_at": string,"id": string,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"product_base": string | null,"source": string,"vendor": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "canonical_name": string,"external_id"?: string | null,"first_seen_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"source": string,"vendor"?: string | null
+                    "canonical_name": string,"external_id"?: string | null,"first_seen_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["title_kind"],"match_key": string,"product_base"?: never,"source": string,"vendor"?: string | null
                   }
                   Update: {
-                    "canonical_name"?: string,"external_id"?: string | null,"first_seen_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["title_kind"],"match_key"?: string,"source"?: string,"vendor"?: string | null
+                    "canonical_name"?: string,"external_id"?: string | null,"first_seen_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["title_kind"],"match_key"?: string,"product_base"?: never,"source"?: string,"vendor"?: string | null
                   }
                   Relationships: [
                     
@@ -1253,6 +1283,12 @@ isOneToOne: false
       foreignKeyName: "title_version_policy_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "title_version_policy_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -1318,6 +1354,12 @@ isOneToOne: false
       foreignKeyName: "installations_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -1358,6 +1400,12 @@ isOneToOne: false
       foreignKeyName: "installations_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -1367,6 +1415,14 @@ isOneToOne: false
       referencedRelation: "v_title_summary"
       referencedColumns: ["title_id"]
     }
+                  ]
+                },"title_products": {
+                  Row: {
+                    "product_key": string | null,"title_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
                   ]
                 },"title_summary": {
                   Row: {
@@ -1443,6 +1499,12 @@ isOneToOne: false
       columns: ["title_id"]
 isOneToOne: false
       referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "change_events_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_products"
       referencedColumns: ["title_id"]
     },{
       foreignKeyName: "change_events_title_id_fkey"
@@ -1550,6 +1612,12 @@ isOneToOne: false
       foreignKeyName: "installations_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -1612,6 +1680,12 @@ isOneToOne: false
       foreignKeyName: "installations_title_id_fkey"
       columns: ["title_id"]
 isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "installations_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
       referencedRelation: "title_summary"
       referencedColumns: ["title_id"]
     },{
@@ -1651,6 +1725,12 @@ isOneToOne: false
       columns: ["title_id"]
 isOneToOne: false
       referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "policy_class_changes_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_products"
       referencedColumns: ["title_id"]
     },{
       foreignKeyName: "policy_class_changes_title_id_fkey"
@@ -1998,6 +2078,9 @@ isOneToOne: false
 "policy_store_results":
 { Args: { "p_alert"?: boolean,"p_policy_id": string,"p_results": Json,"p_tenant_id": string }; Returns: Json
                            },
+"product_name":
+{ Args: { "p_name": string }; Returns: string
+                           },
 "purge_raw_results":
 { Args: { "p_days"?: number }; Returns: number
                            },
@@ -2035,7 +2118,7 @@ isOneToOne: false
                            },
 "search_titles":
 { Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_policy"?: (Database["public"]['Enums']["policy_class"])[],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string }; Returns: {
-              "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"method": string,"mixed_versions": boolean,"origin": string,"policy_class": Database["public"]['Enums']["policy_class"],"policy_rule_lineage_id": string,"policy_rule_name": string,"source": string,"title_id": string,"total_count": number,"vendor": string,"versions": number
+              "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"method": string,"mixed_versions": boolean,"origin": string,"policy_class": Database["public"]['Enums']["policy_class"],"policy_rule_lineage_id": string,"policy_rule_name": string,"product_key": string,"source": string,"spellings": number,"title_id": string,"total_count": number,"vendor": string,"versions": number
             }[]
                            },
 "set_alert_settings":
@@ -2059,10 +2142,16 @@ isOneToOne: false
 "store_endpoint_result":
 { Args: { "p_rows": Json,"p_run_id": string,"p_sophos_endpoint_id": string }; Returns: boolean
                            },
+"title_group_ids":
+{ Args: { "p_title_id": string }; Returns: (string)[]
+                           },
 "title_versions":
 { Args: { "p_tenant_id"?: string,"p_title_id": string }; Returns: {
               "computers": number,"version": string
             }[]
+                           },
+"vendor_key":
+{ Args: { "p_vendor": string }; Returns: string
                            },
 "version_key":
 { Args: { "v": string }; Returns: (number)[]

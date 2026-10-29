@@ -51,6 +51,7 @@ function columns(canContribute: boolean, requested: Set<string>, reclassify: (ro
             {row.original.canonical_name}
           </Link>
           <span className="text-xs text-text-muted">{row.original.vendor ?? (row.original.kind === "extension" ? row.original.external_id : "")}</span>
+          {row.original.spellings > 1 ? <span className="text-xs text-text-muted">{row.original.spellings} spellings of this product</span> : null}
         </div>
       ),
     },

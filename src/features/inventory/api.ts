@@ -128,12 +128,17 @@ export type InstallationFilters = { tenantId?: string | null; computerId?: strin
 
 const INSTALLATION_SORT = new Set(["canonical_name", "version", "hostname", "username", "source", "valid_from", "level2_name"]);
 
+// Every title of the product of this title (spellings with a version or architecture in the name).
+export async function titleGroupIds(titleId: string): Promise<string[]> {
+  return (orThrow(await db().rpc("title_group_ids", { p_title_id: titleId })) as string[] | null) ?? [titleId];
+}
+
 export async function fetchInstallations(filters: InstallationFilters, request: PageRequest): Promise<Page<InstallationRow>> {
   const sort = request.sorting[0];
   let q = db().from("v_installation_details").select("*", { count: "exact" });
   if (filters.tenantId) q = q.eq("tenant_id", filters.tenantId);
   if (filters.computerId) q = q.eq("computer_id", filters.computerId);
-  if (filters.titleId) q = q.eq("title_id", filters.titleId);
+  if (filters.titleId) q = q.in("title_id", await titleGroupIds(filters.titleId));
   if (filters.domains?.length) q = q.in("domain", filters.domains);
   q = filters.asOf ? q.lte("valid_from", filters.asOf).or(`valid_to.is.null,valid_to.gt.${filters.asOf}`) : q.is("valid_to", null);
   if (filters.search?.trim()) {
@@ -197,11 +202,15 @@ export async function searchTitles(filters: SoftwareFilters, request: PageReques
 }
 
 export async function fetchTitle(titleId: string) {
-  const [title, classification] = await Promise.all([
+  const [title, classification, ids] = await Promise.all([
     db().from("software_titles").select("*").eq("id", titleId).maybeSingle(),
     db().from("title_classification").select("*").eq("title_id", titleId).maybeSingle(),
+    titleGroupIds(titleId),
   ]);
-  return { title: orThrow(title), classification: orThrow(classification) };
+  // The other spellings of the same product (their versions and computers show on this page too).
+  const others = ids.filter((id) => id !== titleId);
+  const spellings = others.length ? ((orThrow(await db().from("software_titles").select("id, canonical_name").in("id", others).order("canonical_name")) ?? []) as { id: string; canonical_name: string }[]) : [];
+  return { title: orThrow(title), classification: orThrow(classification), spellings };
 }
 
 export async function fetchTitleVersions(titleId: string, tenantId: string | null) {
@@ -234,7 +243,7 @@ export async function fetchChanges(filters: ChangeFilters, request: PageRequest)
   if (filters.from) q = q.gte("detected_at", filters.from);
   if (filters.to) q = q.lte("detected_at", filters.to);
   if (filters.computerId) q = q.eq("computer_id", filters.computerId);
-  if (filters.titleId) q = q.eq("title_id", filters.titleId);
+  if (filters.titleId) q = q.in("title_id", await titleGroupIds(filters.titleId));
   if (filters.search.trim()) {
     const p = likePattern(filters.search);
     q = q.or(`canonical_name.ilike.${p},hostname.ilike.${p},external_id.ilike.${p}`);

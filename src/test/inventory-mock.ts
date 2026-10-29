@@ -35,7 +35,7 @@ export function inventoryApiMock() {
     fetchInstallations: vi.fn(emptyPage),
     scanNow: vi.fn(async () => 0),
     searchTitles: vi.fn(emptyPage),
-    fetchTitle: vi.fn(async () => ({ title: null, classification: null })),
+    fetchTitle: vi.fn(async () => ({ title: null, classification: null, spellings: [] })),
     fetchTitleVersions: vi.fn(async () => []),
     fetchChanges: vi.fn(emptyPage),
     fetchBudget: vi.fn(async () => []),
