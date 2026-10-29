@@ -163,7 +163,7 @@ spec:
     spec:
       containers:
         - name: edge-runtime
-          image: ghcr.io/loardracoon/software-inventory-client-functions:562c4dc01b9832f999bd39741f779748f8c13acb
+          image: ghcr.io/loardracoon/software-inventory-client-functions:14cf8127330811f724c5fd35b3b33cc61ce6c954
           imagePullPolicy: IfNotPresent
           env:
             - { name: SUPABASE_URL, value: "http://kong:8000" }
@@ -225,7 +225,7 @@ spec:
     spec:
       containers:
         - name: nginx
-          image: ghcr.io/loardracoon/software-inventory-client-web:562c4dc01b9832f999bd39741f779748f8c13acb
+          image: ghcr.io/loardracoon/software-inventory-client-web:14cf8127330811f724c5fd35b3b33cc61ce6c954
           imagePullPolicy: IfNotPresent
           env:
             - { name: SUPABASE_URL, value: origin }
