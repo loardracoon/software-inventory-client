@@ -34,3 +34,11 @@ export function parseInvite(body: unknown): Invite {
   if (!ROLES.includes(b.role as Role)) throw new Error("Role must be admin, operator or viewer");
   return { email, role: b.role as Role, redirectTo: parseRedirect(b.redirect_to) };
 }
+
+// Invitations and sign-in links one admin may send per hour (each one is an email): RL_INVITES_PER_HOUR in
+// rate-limits.env (README › Rate limits). Counted from the audit log, which records every send.
+export const INVITE_ACTIONS = ["invite user", "send sign-in link"];
+export function invitesPerHour(value: string | undefined): number {
+  const n = Number.parseInt(value ?? "", 10);
+  return Number.isInteger(n) && n > 0 ? n : 20;
+}

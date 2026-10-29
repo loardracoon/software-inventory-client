@@ -128,6 +128,39 @@ Each condition is alerted once. Failed deliveries are retried for up to 5 attemp
 
 The Scans page shows, per tenant: runs this minute (limit 10), runs today (limit 1,000 on Live Endpoint Search), the normal share left and the reserve left, and active runs (limit 4). Weekly tasks stop at 80 % of the day; the remaining 20 % is kept for retries and Scan now.
 
+### Rate limits and abuse protection
+
+All limits are in one file: **`deploy/k3s/app/rate-limits.env`**. Kustomize turns it into the ConfigMap `rate-limits` (`deploy/k3s/app/kustomization.yaml`), which the gateway, Auth and the Edge Functions load; its name carries a hash of the content, so a change pushed to `main` rolls those pods through Argo CD. Values for a team of up to ~50 users behind one office address:
+
+| Setting | Recommended | What it limits |
+| --- | --- | --- |
+| `RL_AUTH_STRICT_RATE` / `_BURST` | `10r/m` / `10` | Gateway, per address: `/auth/v1/otp`, `magiclink`, `signup`, `recover`, `resend`, `verify` (sign-in links and code checks) |
+| `RL_AUTH_RATE` / `_BURST` | `120r/m` / `60` | Gateway, per address: other Auth calls (session refresh, user) and `/mail/` |
+| `RL_REST_RATE` / `_BURST` | `30r/s` / `120` | Gateway, per address: the database API (a screen sends 10 to 30 requests at once) |
+| `RL_FUNCTIONS_RATE` / `_BURST` | `10r/s` / `60` | Gateway, per address: Edge Functions (Sync now, Scan now, exports, policy evaluation) |
+| `RL_CONN_PER_IP` | `60` | Gateway: open connections per address |
+| `RL_BODY_AUTH` / `RL_BODY_REST` / `RL_BODY_FUNCTIONS` | `64k` / `2m` / `10m` | Gateway: largest request body (HTTP 413 above) |
+| `GOTRUE_RATE_LIMIT_HEADER` | `X-Real-IP` | Auth: the header with the client address. **Without it GoTrue applies none of its per-address limits** (checked in the GoTrue source); the gateway sets it |
+| `GOTRUE_RATE_LIMIT_OTP` | `10` | Auth: sign-in and sign-up requests per address per 5 minutes |
+| `GOTRUE_RATE_LIMIT_VERIFY` | `15` | Auth: magic link and code checks per address per 5 minutes |
+| `GOTRUE_RATE_LIMIT_TOKEN_REFRESH` | `60` | Auth: session refreshes per address per 5 minutes |
+| `GOTRUE_RATE_LIMIT_EMAIL_SENT` | `60` | Auth: emails per hour for the whole app (sign-in links, invitations) |
+| `RL_INVITES_PER_HOUR` | `20` | Edge Function `manage-users`: invitations and sign-in links per admin per hour (counted in the audit log) |
+
+How it works:
+
+- **Gateway** (nginx in the web image, `deploy/k3s/nginx.conf.template`): limits per client address with `limit_req` (HTTP 429), open connections, body sizes and timeouts against slow clients. The image has the recommended values as defaults; the ConfigMap overrides them. The client address comes from `X-Forwarded-For`, trusted only from private networks (the proxy in front), so a client cannot choose its own address. Calls between services (Edge Functions to PostgREST and Auth, database jobs to Edge Functions) carry no `X-Forwarded-For` and are not limited.
+- **Auth** (GoTrue): per-address limits on sign-in, code checks and session refresh, keyed by the `X-Real-IP` header the gateway sets, and one email limit for the whole app.
+- **Edge Functions**: the per-admin invitation limit.
+
+Raise the gateway rates when many users share one public address (one office behind NAT): every limit is per address. Lower them when the app is open to the internet and has few users.
+
+Check the client address after a change: the gateway access log (`kubectl -n inventory logs deploy/gateway`) must show the real public addresses, not one internal address for everyone. On K3S the Traefik service must keep the client address (`externalTrafficPolicy: Local` on `kube-system/traefik`, and no address translation on the firewall in front, or a proxy that sends `X-Forwarded-For`). If every request shows the same address, all users share one limit: fix the address first, or raise the values. A blocked request gets HTTP 429 and a line `limiting requests` in that log.
+
+Limits that were already in place: Sophos API budget per tenant (10 runs per minute, 1,000 per day, Scans › API budget), Hub sync back-off (5 minutes up to 6 hours), retries of 429 and 5xx with back-off in `_shared/http.ts`.
+
+Local development (`supabase start`) uses the Supabase CLI gateway and `supabase/config.toml` › `[auth.rate_limit]` instead.
+
 ### SSO with Entra ID (not enabled yet)
 
 SAML SSO needs a Supabase project on the Pro plan and cannot run on the local stack. When a test Entra tenant is available:

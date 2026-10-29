@@ -3,7 +3,7 @@
 Same flow as the other apps on the server: **push to `main` → GitHub Actions → GHCR → tag bump in `deploy/k3s/app` → Argo CD sync**.
 
 1. `.github/workflows/deploy.yml` runs lint and tests, builds three images tagged with the commit and pushes them to GHCR:
-   - `ghcr.io/<repo>-web`: the front end plus the nginx gateway (`web.Dockerfile`, `nginx.conf`); `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` come from repository variables (public by design);
+   - `ghcr.io/<repo>-web`: the front end plus the nginx gateway (`web.Dockerfile`, `nginx.conf.template`; rate limits from `app/rate-limits.env`, README › Rate limits and abuse protection); `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` come from repository variables (public by design);
    - `ghcr.io/<repo>-functions`: edge-runtime with `supabase/functions` and the `functions/main` router (`functions.Dockerfile`);
    - `ghcr.io/<repo>-migrate`: `supabase/migrations` and `migrate.sh` (`migrate.Dockerfile`).
 2. It writes the new tag into `deploy/k3s/app/*.yaml` and commits it with `[skip ci]` (the folder is in `paths-ignore`, so no loop).

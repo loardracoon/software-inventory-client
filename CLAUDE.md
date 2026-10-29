@@ -75,6 +75,7 @@ Front-end conventions: DS tokens are Tailwind colours (`bg-surface-subtle`, `tex
 
 ## Rules that must not break
 
+- Rate limits live in one file per deployment: deploy/k3s/app/rate-limits.env (README › Rate limits and abuse protection). The gateway is a template (`deploy/k3s/nginx.conf.template`, defaults in `web.Dockerfile` as `RL_*`): add a new limit there and in every rate-limits.env. GoTrue's per-address limits need `GOTRUE_RATE_LIMIT_HEADER=X-Real-IP` (the gateway sets it); calls between services have no X-Forwarded-For and are not limited, so never add one to internal calls.
 - Code, comments, UI copy and migration names in English.
 - Only Edge Functions call Sophos APIs. Sophos credentials, tokens and the service role key never reach the browser or the repo.
 - The browser never sends osquery SQL. Queries live in `query_catalog`, versioned (`inv.extensions.v1`), changed only by migration.

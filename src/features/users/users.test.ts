@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeEmail, parseInvite } from "../../../supabase/functions/_shared/users";
+import { invitesPerHour, normalizeEmail, parseInvite } from "../../../supabase/functions/_shared/users";
 import { NO_ACCESS_MESSAGE, signInErrorMessage } from "../auth/sign-in-error";
 import { normalizeDomain } from "./api";
 
@@ -42,5 +42,14 @@ describe("sign-in errors", () => {
     expect(signInErrorMessage("Database error saving new user")).toBe(NO_ACCESS_MESSAGE);
     expect(signInErrorMessage("Signups not allowed for otp")).toBe(NO_ACCESS_MESSAGE);
     expect(signInErrorMessage("Email rate limit exceeded")).toBe("Email rate limit exceeded");
+  });
+});
+
+describe("invitation limit", () => {
+  it("reads RL_INVITES_PER_HOUR, 20 when missing or invalid", () => {
+    expect(invitesPerHour("5")).toBe(5);
+    expect(invitesPerHour(undefined)).toBe(20);
+    expect(invitesPerHour("0")).toBe(20);
+    expect(invitesPerHour("many")).toBe(20);
   });
 });

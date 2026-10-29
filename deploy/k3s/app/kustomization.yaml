@@ -3,3 +3,9 @@ kind: Kustomization
 resources:
   - stack.yaml
   - migrate-job.yaml
+# Rate limits and abuse protection (README › Rate limits): one ConfigMap for the gateway, Auth and the Edge
+# Functions; its name gets a hash of the content, so a change rolls those pods.
+configMapGenerator:
+  - name: rate-limits
+    namespace: inventory
+    envs: [rate-limits.env]

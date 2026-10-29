@@ -4,7 +4,7 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { adminClient, authorize, corsHeaders, errorMessage, HttpError, json } from "../_shared/edge.ts";
-import { parseInvite } from "../_shared/users.ts";
+import { INVITE_ACTIONS, invitesPerHour, parseInvite } from "../_shared/users.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -25,6 +25,18 @@ Deno.serve(async (req) => {
     invite = parseInvite(await req.json().catch(() => null));
   } catch (error) {
     return json({ error: errorMessage(error) }, 400);
+  }
+
+  // At most RL_INVITES_PER_HOUR emails per admin per hour.
+  const perHour = invitesPerHour(Deno.env.get("RL_INVITES_PER_HOUR"));
+  const { count: sentLastHour } = await admin
+    .from("audit_log")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", callerId)
+    .in("action", INVITE_ACTIONS)
+    .gte("created_at", new Date(Date.now() - 3_600_000).toISOString());
+  if ((sentLastHour ?? 0) >= perHour) {
+    return json({ error: `Limit reached: ${perHour} invitations or sign-in links per hour. Try again later.` }, 429);
   }
 
   try {
