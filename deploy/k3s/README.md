@@ -33,6 +33,42 @@ Traefik serves `https://<host>` with the `tls` secret (self-signed, internal net
 
 App secrets (Sophos credential, Hub client key, provider keys) live in each database's Vault, entered in Settings.
 
+## Keep the Vault key
+
+The database's Vault (Sophos credential or AI keys, Hub key, job secrets) is encrypted with `pgsodium_root.key`, which
+the Postgres image creates at first use in `/etc/postgresql-custom`, **inside the container, outside the data volume**.
+A new database container (an image upgrade, a recreated container, **any restart of the `db-0` pod**) creates a new key, and every Vault secret can no
+longer be read ("invalid ciphertext"). The one-host install keeps the key in the `db-config` volume; the layouts
+below need this once.
+
+1. Check the state (it must show the same number twice; "invalid ciphertext" means the key was already replaced:
+   enter the secrets again in Settings and run step 2 of "First install" again for the job secrets):
+
+   ```bash
+   kubectl -n inventory exec db-0 -- psql -U supabase_admin -h localhost -d postgres -tAc "select count(*), count(decrypted_secret) from vault.decrypted_secrets"
+   ```
+
+2. Keep the current key in a Secret (it is not printed):
+
+   ```bash
+   kubectl -n inventory exec db-0 -- cat /etc/postgresql-custom/pgsodium_root.key > /tmp/pgsodium_root.key
+   kubectl -n inventory create secret generic pgsodium-root-key --from-file=pgsodium_root.key=/tmp/pgsodium_root.key
+   shred -u /tmp/pgsodium_root.key 2>/dev/null || rm -f /tmp/pgsodium_root.key
+   ```
+
+3. Mount it in the `db` StatefulSet of `app/stack.yaml` (only after step 2: a missing Secret stops the pod), push,
+   and let Argo CD roll `db-0`:
+
+   ```yaml
+   # container postgres › volumeMounts:
+   - { name: pgsodium-key, mountPath: /etc/postgresql-custom/pgsodium_root.key, subPath: pgsodium_root.key, readOnly: true }
+   # pod spec › volumes:
+   - name: pgsodium-key
+     secret: { secretName: pgsodium-root-key, defaultMode: 0444 }
+   ```
+
+4. Check again with the command of step 1.
+
 ## First install of a new environment
 
 1. Create the namespace and the secrets above; set the repository variables `VITE_SUPABASE_URL` (`https://<host>`) and `VITE_SUPABASE_ANON_KEY`.

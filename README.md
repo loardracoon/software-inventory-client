@@ -117,7 +117,8 @@ Options:
 
 The script is safe to run again: it keeps the secrets it created. It writes `.env` with new random secrets, starts
 Postgres, Auth, the API, the Edge Functions, the console and Caddy (HTTPS), applies the database migrations, and
-turns on the scheduled jobs. Updates: `./update.sh`. Backups: `./backup.sh` and `./restore.sh`. Details:
+turns on the scheduled jobs. Updates: `./update.sh`. Backups: `./backup.sh` and `./restore.sh`. Removal:
+`./uninstall.sh` (keeps the data) or `./uninstall.sh --purge` (deletes everything). Details:
 [docs/operations.md › Deploy on one host](docs/operations.md#deploy-on-one-host-docker-compose--recommended).
 
 Other ways to run it:

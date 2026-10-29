@@ -80,15 +80,20 @@ if [ -n "$domain" ]; then
   put SITE_ADDRESS "$domain"
   put PUBLIC_URL "https://$domain"
   put HTTP_PORT 80
-  put HTTPS_PORT 443
+  # HTTPS needs 443 too (and 80 for the Let's Encrypt challenge).
+  cat > docker-compose.override.yml <<'YAML'
+services:
+  caddy:
+    ports: ["443:443"]
+YAML
 elif [ -n "$http_port" ] || [ -z "$(get PUBLIC_URL)" ]; then
   port=${http_port:-80}
   name=${host_name:-$(hostname -f 2>/dev/null || hostname)}
   put SITE_ADDRESS "http://:80"
   put PUBLIC_URL "http://$name$([ "$port" = 80 ] || printf ':%s' "$port")"
   put HTTP_PORT "$port"
-  # Caddy does not use 443 in HTTP mode; keep the mapping off any port in use.
-  keep HTTPS_PORT 8443
+  # Plain HTTP publishes only that port.
+  rm -f docker-compose.override.yml
 fi
 if [ -z "$tag" ] && [ -z "$(get APP_TAG)" ]; then
   tag=$(curl -fsS "https://raw.githubusercontent.com/$REPO/main/deploy/k3s/app/stack.yaml" \

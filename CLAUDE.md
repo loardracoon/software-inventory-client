@@ -74,7 +74,7 @@ Front-end conventions: DS tokens are Tailwind colours (`bg-surface-subtle`, `tex
 - `public.version_key(text)` orders dot-separated versions. Revoke `anon` on every new table or view, enable RLS with explicit policies, and add a pgTAP test for each new policy.
 
 ## Rules that must not break
-- Two production layouts run the same images: `deploy/k3s/app/stack.yaml` and the one-host `deploy/compose/docker-compose.yml` (docs/operations.md › Deploy on one host). A change to a service's image, environment or secrets goes into both; `install.sh` must stay safe to run again (never replace a secret in `.env`). CI checks the Compose file and the scripts.
+- Two production layouts run the same images: `deploy/k3s/app/stack.yaml` and the one-host `deploy/compose/docker-compose.yml` (docs/operations.md › Deploy on one host). A change to a service's image, environment or secrets goes into both; `install.sh` must stay safe to run again (never replace a secret in `.env`); the database's Vault key must survive a new db container (`db-config` volume; deploy/k3s/README.md › Keep the Vault key). CI checks the Compose file and the scripts.
 
 - Rate limits live in one file per deployment: deploy/k3s/app/rate-limits.env and deploy/compose/rate-limits.env (docs/operations.md › Rate limits and abuse protection). The gateway is a template (`deploy/k3s/nginx.conf.template`, defaults in `web.Dockerfile` as `RL_*`): add a new limit there and in every rate-limits.env. GoTrue's per-address limits need `GOTRUE_RATE_LIMIT_HEADER=X-Real-IP` (the gateway sets it); calls between services have no X-Forwarded-For and are not limited, so never add one to internal calls.
 - Code, comments, UI copy and migration names in English.

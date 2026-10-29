@@ -66,7 +66,7 @@ What `install.sh` does (it is safe to run again; it keeps the secrets it made):
 5. With `--auto-update`: installs the systemd timers `endpoint-inventory-update` (every 15 minutes) and `endpoint-inventory-backup` (daily, 03:15).
 6. Checks the app through Caddy and prints the next steps: open the address and sign in with your email (**the first account becomes the admin**; without SMTP the link is in Mailpit at `/mail/`, user `mail`, password `MAIL_PASSWORD` in `.env`), then add the Sophos Central credential and the Dictionary Hub in Settings.
 
-What runs: `db` (Postgres with pg_cron and Vault), `auth`, `rest`, `functions`, `kong` (the console and API gateway, the same image as K3S), `mailpit`, and `caddy`, the only published service (HTTPS with Let's Encrypt for a domain, plain HTTP for `--http-port`; it also gives the gateway the client address for the rate limits).
+What runs: `db` (Postgres with pg_cron and Vault; the Vault key is kept in the `db-config` volume), `auth`, `rest`, `functions`, `kong` (the console and API gateway, the same image as K3S), `mailpit`, and `caddy`, the only published service (HTTPS with Let's Encrypt for a domain, plain HTTP for `--http-port`; it also gives the gateway the client address for the rate limits).
 
 | File in `deploy/compose` | What it is |
 | --- | --- |
@@ -77,8 +77,10 @@ What runs: `db` (Postgres with pg_cron and Vault), `auth`, `rest`, `functions`, 
 | `update.sh` | `git pull`, then the image tag CI wrote into `deploy/k3s/app/stack.yaml`: pulls the images, applies new migrations, recreates what changed. `--tag <sha>` pins a build |
 | `backup.sh` | `backups/inventory-<time>.dump` (as `supabase_admin`, so Auth, Vault and the jobs are included); keeps the newest 14 (`KEEP=n`) |
 | `restore.sh <file>` | Stops the app services, restores the dump, starts them again (asks first; `--yes` to skip) |
+| `uninstall.sh` | Removes the containers and the timers, **keeps** the data, `.env` and `backups/` (`./install.sh` brings it back as it was). `--purge` also deletes the database, the volumes, `.env` and the images (type `delete` to confirm); `--purge-backups` deletes `backups/` too |
+| `docker-compose.override.yml` | Written by `install.sh --domain`: publishes port 443 (plain HTTP publishes only `HTTP_PORT`) |
 
-Day to day: `docker compose ps`, `docker compose logs -f kong functions`, change a setting in `.env` or `rate-limits.env` then `docker compose up -d`. Copy `backups/` off the host: a dump holds all the data, and its Vault secrets only open in the install that made it (keep `.env` and the `db-data` volume with it). Plain HTTP (`--http-port`) sends sign-in links and sessions without encryption: use it only on a trusted network.
+Day to day: `docker compose ps`, `docker compose logs -f kong functions`, change a setting in `.env` or `rate-limits.env` then `docker compose up -d`. Copy `backups/` (with `.env`) off the host: a dump holds all the data, and its Vault secrets open only with that install's key, which `backup.sh` also copies to `backups/pgsodium_root.key`. To restore into a new host: install, stop `db`, put the key in the `db-config` volume (`/etc/postgresql-custom/pgsodium_root.key`, owner `postgres`), start `db`, then `./restore.sh`. Plain HTTP (`--http-port`) sends sign-in links and sessions without encryption: use it only on a trusted network.
 
 ## Deploying to a Supabase project
 
