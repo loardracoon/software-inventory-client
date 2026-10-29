@@ -8,7 +8,7 @@ truncate public.tenants, public.software_titles, public.audit_log, public.dictio
 delete from public.profiles;
 delete from public.maintenance_state;
 
-select plan(34);
+select plan(38);
 
 -- Fixtures: 7-Zip 23.01 (affected), 26.05 (fixed) and one without a version in tenant A; 7-Zip in B ----
 insert into auth.users (id, email) values
@@ -129,14 +129,28 @@ select results_eq($$select vuln_id, versions, fixed_in, uncertain, computers::in
 select results_eq($$select hostname, vulns::int, vulns_kev::int, vulns_possible::int from public.v_installation_details order by hostname$$,
   $$values ('PC1', 1, 1, 0), ('PC2', 0, 0, 0), ('PC3', 0, 0, 1)$$, 'installations carry their counts (viewer sees tenant A only)');
 select is(public.vuln_overview() - 'synced_at' - 'evaluated_at',
-  '{"kev": 1, "high": 1, "vulns": 1, "cached": 2, "titles": 1, "critical": 0, "kev_computers": 1, "kev_installations": 1}'::jsonb, 'the Overview card');
+  '{"kev": 1, "high": 1, "vulns": 1, "cached": 2, "titles": 1, "critical": 0, "possible": 0, "possible_titles": 0, "kev_computers": 1, "kev_installations": 1}'::jsonb, 'the Overview card');
 select is((select count(*)::int from public.v_vuln_events), 2, 'Changes lists the new CVE events');
+reset role;
+
+-- 4b. A CVE with no affected version in its data (NVD "-") only may apply: counted apart, own filter.
+select is(public.apply_vulnerability_changes('[{"product_key": "program|igor pavlov|7-zip", "vuln_id": "CVE-2020-0001", "removed": false,
+  "severity": "HIGH", "cvss_score": 7.8, "ranges": [{"version_start": null, "version_end": null, "exact_version": null}], "seq": 8}]', 8) ->> 'upserted', '1',
+  'a CVE without bounds is cached');
+select is(public.vuln_store_matches('10000000-0000-0000-0000-00000000000a', 'e0000000-0000-0000-0000-000000000002',
+  '[{"title_id": "30000000-0000-0000-0000-000000000002", "version": "26.05", "product_key": "program|igor pavlov|7-zip", "vuln_id": "CVE-2020-0001", "uncertain": true}]') ->> 'new', '0',
+  'an uncertain match makes no event');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select results_eq($$select (public.vuln_overview() ->> 'possible')::int, (public.vuln_overview() ->> 'possible_titles')::int, (public.vuln_overview() ->> 'high')::int$$,
+  $$values (1, 1, 1)$$, 'the Overview counts it as may apply, not as high');
+select results_eq($$select canonical_name, vulns_possible::int from public.search_titles(p_vuln := 'possible')$$, $$values ('7-Zip', 1)$$,
+  'the Software filter "possible" lists the product');
 reset role;
 
 -- 5. A CVE removed from the feed removes its matches.
 select is(public.apply_vulnerability_changes('[{"product_key": "program|igor pavlov|7-zip", "vuln_id": "CVE-2025-0411", "removed": true, "seq": 7}]', 7) ->> 'removed', '1',
   'a removed item leaves the cache');
-select is((select count(*)::int from public.title_version_vulns), 0, 'and its matches go with it');
+select is((select count(*)::int from public.title_version_vulns where vuln_id = 'CVE-2025-0411'), 0, 'and its matches go with it');
 
 select * from finish();
 rollback;

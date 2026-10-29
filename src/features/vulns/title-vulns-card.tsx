@@ -12,6 +12,11 @@ import { KevBadge, SeverityBadge } from "./vuln-badges";
 
 const FIRST = 20;
 
+// Why a CVE only may apply: the installation has no version, or the CVE data has no affected version.
+export function uncertainReason(v: Pick<TitleVulnRow, "versions">): string {
+  return v.versions.some((x) => x !== "") ? "the CVE data names no affected version" : "the installed version is unknown";
+}
+
 function VulnItem({ v }: { v: TitleVulnRow }) {
   const versions = v.versions.map((x) => x || "no version");
   return (
@@ -29,7 +34,7 @@ function VulnItem({ v }: { v: TitleVulnRow }) {
             EPSS {(Number(v.epss) * 100).toFixed(1)}%
           </span>
         ) : null}
-        {v.uncertain ? <span className="text-xs text-text-muted">May apply: the installed version is unknown</span> : null}
+        {v.uncertain ? <span className="text-xs text-text-muted">May apply: {uncertainReason(v)}</span> : null}
       </div>
       {v.summary ? <p className="m-0 line-clamp-3 text-sm">{v.summary}</p> : null}
       <p className="m-0 text-xs text-text-muted">

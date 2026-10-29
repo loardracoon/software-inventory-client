@@ -8,7 +8,7 @@ type Functions = Database["public"]["Functions"];
 
 export type TitleVulnRow = Functions["title_vulns"]["Returns"][number];
 export type VulnEventRow = Database["public"]["Views"]["v_vuln_events"]["Row"];
-export type VulnFilter = "" | "any" | "kev" | "critical" | "high";
+export type VulnFilter = "" | "any" | "kev" | "critical" | "high" | "possible";
 
 export const VULN_FILTERS: { value: VulnFilter; label: string }[] = [
   { value: "", label: "Any" },
@@ -16,6 +16,7 @@ export const VULN_FILTERS: { value: VulnFilter; label: string }[] = [
   { value: "high", label: "Critical or high" },
   { value: "critical", label: "Critical" },
   { value: "kev", label: "Known exploited (KEV)" },
+  { value: "possible", label: "May apply (no version to compare)" },
 ];
 
 export const vulnFromParam = (v: string | null): VulnFilter => (VULN_FILTERS.some((f) => f.value === v) ? (v as VulnFilter) : "");
@@ -28,6 +29,8 @@ export type VulnOverview = {
   titles: number;
   kev_installations: number;
   kev_computers: number;
+  possible: number;
+  possible_titles: number;
   cached: number;
   synced_at: string | null;
   evaluated_at: string | null;

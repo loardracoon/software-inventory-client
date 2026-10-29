@@ -147,8 +147,13 @@ export function AttentionIcons({ categories = [], vulns, scope }: { categories?:
         icon={ShieldQuestionMark}
         count={vulns.possible}
         tone="muted"
-        label={`May apply: ${plural(vulns.possible, "CVE")} (installed version unknown)`}
-        details={<CveList items={top.filter((v) => v.uncertain)} total={vulns.possible} />}
+        label={`May apply: ${plural(vulns.possible, "CVE")} (no version to compare)`}
+        details={
+          <>
+            <span className="text-xs text-text-muted">The installed version is unknown, or the CVE data names no affected version.</span>
+            <CveList items={top.filter((v) => v.uncertain)} total={vulns.possible} />
+          </>
+        }
       />
     ),
   ].filter(Boolean);

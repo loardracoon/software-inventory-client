@@ -19,7 +19,7 @@ vi.mock("@/features/inventory/api", async () => (await import("@/test/inventory-
 vi.mock("@/features/dictionary/api", async () => (await import("@/test/inventory-mock")).dictionaryApiMock());
 vi.mock("@/features/vulns/api", async (original) => ({
   ...(await original<typeof import("@/features/vulns/api")>()),
-  fetchVulnOverview: vi.fn(async () => ({ vulns: 0, critical: 0, high: 0, kev: 0, titles: 0, kev_installations: 0, kev_computers: 0, cached: 0, synced_at: null, evaluated_at: null })),
+  fetchVulnOverview: vi.fn(async () => ({ vulns: 0, critical: 0, high: 0, kev: 0, titles: 0, kev_installations: 0, kev_computers: 0, possible: 0, possible_titles: 0, cached: 0, synced_at: null, evaluated_at: null })),
   fetchTitleVulns: vi.fn(async () => []),
   fetchVulnEvents: vi.fn(async () => ({ rows: [], rowCount: 0 })),
 }));
@@ -228,7 +228,7 @@ describe("Software", () => {
     expect(await screen.findByRole("button", { name: "Known exploited (CISA KEV): 1 CVE" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "2 high CVEs in the installed versions" })).toHaveTextContent("2");
     expect(screen.getByRole("button", { name: "3 low CVEs in the installed versions" })).toHaveTextContent("3");
-    expect(screen.getByRole("button", { name: "May apply: 1 CVE (installed version unknown)" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "May apply: 1 CVE (no version to compare)" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /medium CVE/ })).toBeNull();
     await userEvent.setup().hover(screen.getByRole("button", { name: "2 high CVEs in the installed versions" }));
     expect((await screen.findAllByText("CVE-2025-0411", {}, { timeout: 4000 })).length).toBeGreaterThan(0);
@@ -382,12 +382,15 @@ describe("Overview", () => {
 
   it("shows the known vulnerabilities card with links to the filtered Software list", async () => {
     vi.mocked(api.fetchOverviewStats).mockResolvedValue({ computers: 3, computers_by_platform: {}, coverage_pct: null, titles: 1, extension_installs: 0, distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0 });
-    vi.mocked(vulns.fetchVulnOverview).mockResolvedValue({ vulns: 4, critical: 1, high: 2, kev: 1, titles: 2, kev_installations: 3, kev_computers: 2, cached: 40, synced_at: null, evaluated_at: null });
+    vi.mocked(vulns.fetchVulnOverview).mockResolvedValue({ vulns: 4, critical: 1, high: 2, kev: 1, titles: 2, kev_installations: 3, kev_computers: 2, possible: 9, possible_titles: 1, cached: 40, synced_at: null, evaluated_at: null });
     renderAt("/", "/", <OverviewPage />);
 
     expect(await screen.findByRole("link", { name: /Known exploited CVEs/ })).toHaveAttribute("href", "/software?vuln=kev");
     expect(screen.getByText("3 installations on 2 computers")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Critical CVEs/ })).toHaveAttribute("href", "/software?vuln=critical");
+    // CVEs without a version to compare are counted apart, so the card does not read as "nothing found".
+    expect(screen.getByRole("link", { name: /CVEs that may apply/ })).toHaveAttribute("href", "/software?vuln=possible");
+    expect(screen.getByText("1 title · no version to compare")).toBeInTheDocument();
   });
 });
 

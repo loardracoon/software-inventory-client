@@ -37,7 +37,7 @@ export function VulnOverviewCard({ tenantId }: { tenantId: string | null }) {
         </p>
       ) : null}
       {v && v.cached > 0 ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <Stat
             to="/software?vuln=kev"
             value={v.kev}
@@ -48,6 +48,12 @@ export function VulnOverviewCard({ tenantId }: { tenantId: string | null }) {
           <Stat to="/software?vuln=critical" value={v.critical} label="Critical CVEs" alert />
           <Stat to="/software?vuln=high" value={v.high} label="High CVEs" />
           <Stat to="/software?vuln=any" value={v.titles} label="Affected titles" detail={`${formatNumber(v.vulns)} CVEs in total`} />
+          <Stat
+            to="/software?vuln=possible"
+            value={v.possible}
+            label="CVEs that may apply"
+            detail={`${formatNumber(v.possible_titles)} title${v.possible_titles === 1 ? "" : "s"} · no version to compare`}
+          />
         </div>
       ) : null}
     </Card>
