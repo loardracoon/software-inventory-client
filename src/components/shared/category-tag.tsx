@@ -37,10 +37,12 @@ type CategoryTagProps = {
   // null = no dictionary match yet.
   category: CategoryRef | null;
   origin?: CategoryOrigin;
+  // false where an Attention column shows it as an icon.
+  showAttention?: boolean;
 };
 
 // Level 1 small and muted above level 2; attention badge for Review and Not allowed only.
-export function CategoryTag({ category, origin }: CategoryTagProps) {
+export function CategoryTag({ category, origin, showAttention = true }: CategoryTagProps) {
   return (
     <div className="flex min-w-0 flex-col items-start gap-1">
       {category ? (
@@ -48,7 +50,7 @@ export function CategoryTag({ category, origin }: CategoryTagProps) {
           <span className="text-xs text-text-muted">{category.level1}</span>
           <span className="flex flex-wrap items-center gap-2 text-sm text-text-strong">
             {category.level2}
-            <AttentionBadge level={category.attention} />
+            {showAttention ? <AttentionBadge level={category.attention} /> : null}
           </span>
         </>
       ) : (

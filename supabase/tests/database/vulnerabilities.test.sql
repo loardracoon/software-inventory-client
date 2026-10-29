@@ -8,7 +8,7 @@ truncate public.tenants, public.software_titles, public.audit_log, public.dictio
 delete from public.profiles;
 delete from public.maintenance_state;
 
-select plan(31);
+select plan(34);
 
 -- Fixtures: 7-Zip 23.01 (affected), 26.05 (fixed) and one without a version in tenant A; 7-Zip in B ----
 insert into auth.users (id, email) values
@@ -112,8 +112,17 @@ select is((select full_run from public.policy_due_tenants() where tenant_id = '1
 
 -- 4. Screens and RLS --------------------------------------------------------------------------------------------
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
-select results_eq($$select vulns::int, vulns_kev::int, vulns_possible::int, max_cvss from public.search_titles(p_query := '7-zip', p_vuln := 'kev')$$,
-  $$values (1, 1, 1, 7.0::numeric)$$, 'Software: one product row with its CVE counts, under the KEV filter');
+select results_eq($$select vulns::int, vulns_kev::int, vulns_high::int, vulns_medium::int, vulns_low::int, vulns_possible::int, max_cvss
+  from public.search_titles(p_query := '7-zip', p_vuln := 'kev')$$,
+  $$values (1, 1, 1, 0, 0, 0, 7.0::numeric)$$, 'Software: one product row with its CVE counts by severity; a CVE certain on one version is not "may apply"');
+select is((select vuln_top from public.search_titles(p_query := '7-zip')),
+  '[{"id": "CVE-2025-0411", "kev": true, "score": 7.0, "severity": "HIGH", "uncertain": false}]'::jsonb, 'Software: the top CVEs for the tooltip');
+select results_eq($$select hostname, vulns - 'top', jsonb_array_length(vulns -> 'top') from public.v_computer_list order by hostname$$,
+  $$values ('PC1', '{"critical": 0, "high": 1, "medium": 0, "low": 0, "kev": 1, "possible": 0}'::jsonb, 1),
+           ('PC2', '{"critical": 0, "high": 0, "medium": 0, "low": 0, "kev": 0, "possible": 0}'::jsonb, 0),
+           ('PC3', '{"critical": 0, "high": 0, "medium": 0, "low": 0, "kev": 0, "possible": 1}'::jsonb, 1)$$,
+  'Computers: CVE counts per computer for the attention icons');
+select is((select vulns -> 'top' -> 0 ->> 'title' from public.v_computer_list where hostname = 'PC1'), '7-Zip 23.01 (x64)', 'the computer tooltip names the title');
 select is((select count(*)::int from public.search_titles(p_vuln := 'critical')), 0, 'the critical filter leaves out products without a critical CVE');
 select results_eq($$select vuln_id, versions, fixed_in, uncertain, computers::int from public.title_vulns('30000000-0000-0000-0000-000000000002')$$,
   $$values ('CVE-2025-0411', array['', '23.01'], '24.09', false, 2)$$, 'the title page lists the CVE of every spelling with the affected versions');

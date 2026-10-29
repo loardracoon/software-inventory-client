@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Monitor } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AttentionBadge } from "@/components/shared/category-tag";
+import { AttentionIcons, type AttentionCategory, type VulnCounts } from "@/components/shared/attention-icons";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Field, FilterChip, NativeSelect } from "@/components/shared/filters";
 import { PageHeader } from "@/components/shared/page-header";
@@ -15,8 +15,6 @@ import { useTenant } from "@/features/tenants/tenant-context";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { label, PLATFORM_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
-
-type AttentionItem = { slug: string; level1: string; level2: string; attention: "info" | "review" | "not_allowed" };
 
 const COLUMNS: ServerColumnDef<ComputerRow>[] = [
   {
@@ -68,21 +66,13 @@ const COLUMNS: ServerColumnDef<ComputerRow>[] = [
     accessorKey: "attention",
     header: "Attention",
     enableSorting: false,
-    cell: ({ row }) => {
-      const items = (row.original.attention as unknown as AttentionItem[]) ?? [];
-      if (items.length === 0) return <span className="text-text-muted">—</span>;
-      return (
-        <ul className="m-0 flex list-none flex-col gap-1 p-0">
-          {items.slice(0, 3).map((item) => (
-            <li key={item.slug} className="flex flex-wrap items-center gap-2 text-xs">
-              <AttentionBadge level={item.attention} />
-              <span>{item.level2}</span>
-            </li>
-          ))}
-          {items.length > 3 ? <li className="text-xs text-text-muted">+{items.length - 3} more</li> : null}
-        </ul>
-      );
-    },
+    cell: ({ row }) => (
+      <AttentionIcons
+        scope="computer"
+        categories={(row.original.attention as unknown as AttentionCategory[]) ?? []}
+        vulns={row.original.vulns as unknown as VulnCounts | null}
+      />
+    ),
   },
 ];
 

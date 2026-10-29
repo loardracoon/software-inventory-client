@@ -1,25 +1,8 @@
-import { useSyncExternalStore, type ReactElement } from "react";
+import type { ReactElement } from "react";
 import type { PolicyClass } from "@policy";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Hint } from "@/components/shared/hint";
 import { cn } from "@/lib/utils";
 import { CLASS_INFO } from "./classes";
-
-// Touch screens have no hover: there the class information opens on tap (Popover) instead.
-const NO_HOVER = "(hover: none)";
-function subscribe(onChange: () => void) {
-  if (typeof window === "undefined" || !window.matchMedia) return () => {};
-  const media = window.matchMedia(NO_HOVER);
-  media.addEventListener?.("change", onChange);
-  return () => media.removeEventListener?.("change", onChange);
-}
-function useNoHover(): boolean {
-  return useSyncExternalStore(
-    subscribe,
-    () => (typeof window !== "undefined" && window.matchMedia ? window.matchMedia(NO_HOVER).matches : false),
-    () => false,
-  );
-}
 
 export function ClassInfoContent({ cls }: { cls: PolicyClass }) {
   const info = CLASS_INFO[cls];
@@ -35,27 +18,12 @@ export function ClassInfoContent({ cls }: { cls: PolicyClass }) {
   );
 }
 
-// Wraps a focusable element (button or link) with the class information: on hover and keyboard
-// focus (Tooltip), or on tap on touch screens (Popover; links keep their navigation).
+// The class information on hover, keyboard focus or tap.
 export function ClassHint({ cls, children, link = false }: { cls: PolicyClass; children: ReactElement; link?: boolean }) {
-  const noHover = useNoHover();
-  if (noHover && !link) {
-    return (
-      <Popover>
-        <PopoverTrigger asChild>{children}</PopoverTrigger>
-        <PopoverContent>
-          <ClassInfoContent cls={cls} />
-        </PopoverContent>
-      </Popover>
-    );
-  }
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{children}</TooltipTrigger>
-      <TooltipContent>
-        <ClassInfoContent cls={cls} />
-      </TooltipContent>
-    </Tooltip>
+    <Hint content={<ClassInfoContent cls={cls} />} link={link}>
+      {children}
+    </Hint>
   );
 }
 

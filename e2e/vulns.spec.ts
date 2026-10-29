@@ -19,8 +19,11 @@ test("Software filters known exploited CVEs and the title page lists them per ve
   const table = page.getByRole("table", { name: "Software titles" });
   const row = table.getByRole("row").filter({ hasText: "Adobe Acrobat" });
   await expect(row).toBeVisible();
-  await expect(row.getByText("Known exploited")).toBeVisible();
-  await expect(row.getByText("1 CVE")).toBeVisible();
+  // Attention icons with counters; the tooltip lists the CVEs.
+  const kev = row.getByRole("button", { name: "Known exploited (CISA KEV): 1 CVE" });
+  await expect(kev).toHaveText("1");
+  await kev.hover();
+  await expect(page.getByRole("tooltip")).toContainText("CVE-2099-0003");
   await expect(table.getByRole("row").filter({ hasText: "7-Zip" })).toHaveCount(0);
 
   await row.getByRole("link", { name: "Adobe Acrobat" }).click();

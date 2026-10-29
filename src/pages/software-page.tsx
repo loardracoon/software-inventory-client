@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AttentionIcons, type VulnCounts } from "@/components/shared/attention-icons";
 import { CategoryTag, categoryFromRow } from "@/components/shared/category-tag";
 import { toCategoryOrigin } from "@/components/shared/change-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -20,7 +21,6 @@ import { ClassBadge } from "@/features/policy/class-badge";
 import { CLASS_INFO, CLASS_ORDER, classFromParam } from "@/features/policy/classes";
 import { SaveSearchButton } from "@/features/saved-searches/save-search-button";
 import { VULN_FILTERS, vulnFromParam } from "@/features/vulns/api";
-import { VulnSummary } from "@/features/vulns/vuln-badges";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { endOfDayIso, formatDate, formatNumber } from "@/lib/format";
 import { KIND_LABEL, label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
@@ -69,7 +69,7 @@ function columns(canContribute: boolean, requested: Set<string>, reclassify: (ro
       enableSorting: false,
       cell: ({ row }) => (
         <div className="flex flex-col items-start gap-1">
-          <CategoryTag category={categoryFromRow(row.original)} origin={toCategoryOrigin(row.original.origin, row.original.method, row.original.confidence)} />
+          <CategoryTag category={categoryFromRow(row.original)} origin={toCategoryOrigin(row.original.origin, row.original.method, row.original.confidence)} showAttention={false} />
           {row.original.requested || requested.has(row.original.title_id) ? (
             <Badge color="info" soft>
               <MessageSquareWarning aria-hidden="true" />
@@ -98,18 +98,23 @@ function columns(canContribute: boolean, requested: Set<string>, reclassify: (ro
       ),
     },
     {
+      // Sorts by known vulnerabilities (known exploited first, then the highest CVSS).
       id: "vulns",
-      header: "Vulnerabilities",
-      cell: ({ row }) => (
-        <VulnSummary
-          vulns={row.original.vulns}
-          kev={row.original.vulns_kev}
-          critical={row.original.vulns_critical}
-          high={row.original.vulns_high}
-          possible={row.original.vulns_possible}
-          maxCvss={row.original.max_cvss}
-        />
-      ),
+      header: "Attention",
+      cell: ({ row }) => {
+        const r = row.original;
+        const category = categoryFromRow(r);
+        const vulns: VulnCounts = {
+          critical: r.vulns_critical,
+          high: r.vulns_high,
+          medium: r.vulns_medium,
+          low: r.vulns_low,
+          kev: r.vulns_kev,
+          possible: r.vulns_possible,
+          top: (r.vuln_top as unknown as VulnCounts["top"]) ?? [],
+        };
+        return <AttentionIcons scope="title" categories={category ? [category] : []} vulns={vulns} />;
+      },
     },
     { accessorKey: "computers", header: "Computers", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "versions", header: "Versions", cell: ({ getValue }) => formatNumber(getValue() as number) },

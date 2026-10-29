@@ -72,7 +72,16 @@ const computer = {
   programs: 120,
   extensions: 14,
   packages: 3,
-  attention: [{ slug: "remote-access/remote-desktop-and-support", level1: "Remote access", level2: "Remote desktop and support", attention: "review" }],
+  attention: [{ slug: "remote-access/remote-desktop-and-support", level1: "Remote access", level2: "Remote desktop and support", attention: "review", titles: ["AnyDesk"] }],
+  vulns: {
+    critical: 1,
+    high: 0,
+    medium: 2,
+    low: 0,
+    kev: 1,
+    possible: 0,
+    top: [{ id: "CVE-2099-0001", severity: "CRITICAL", score: 9.8, kev: true, uncertain: false, title: "AnyDesk" }],
+  },
   attention_slugs: ["remote-access/remote-desktop-and-support"],
   attention_level1_slugs: ["remote-access"],
 } as unknown as api.ComputerRow;
@@ -91,7 +100,13 @@ describe("Computers", () => {
     const row = (await screen.findByRole("link", { name: "LAB-WIN-01" })).closest("tr")!;
     expect(within(row).getByText("Hidden")).toBeInTheDocument();
     expect(within(row).getByText("Query error")).toBeInTheDocument();
-    expect(within(row).getByText("Remote desktop and support")).toBeInTheDocument();
+    // Attention points are icons with a counter; the details are in the tooltip.
+    expect(within(row).getByRole("button", { name: "Known exploited (CISA KEV): 1 CVE" })).toHaveTextContent("1");
+    expect(within(row).getByRole("button", { name: "2 medium CVEs installed on this computer" })).toHaveTextContent("2");
+    expect(within(row).queryByRole("button", { name: /high CVE/ })).toBeNull();
+    await user.hover(within(row).getByRole("button", { name: "Review: 1 category" }));
+    expect((await screen.findAllByText("Remote access / Remote desktop and support", {}, { timeout: 4000 })).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("AnyDesk").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("tab", { name: "Query errors" }));
     await waitFor(() => expect(lastFilters(api.fetchComputers).status).toBe("error"));
@@ -199,7 +214,10 @@ describe("Software", () => {
           vulns_critical: 0,
           vulns_high: 2,
           vulns_possible: 1,
+          vulns_medium: 0,
+          vulns_low: 3,
           max_cvss: 7.8,
+          vuln_top: [{ id: "CVE-2025-0411", severity: "HIGH", score: 7.0, kev: true, uncertain: false }],
           total_count: 1,
         },
       ] as never,
@@ -207,10 +225,13 @@ describe("Software", () => {
     });
     renderAt("/software?vuln=kev", "/software", <SoftwarePage />);
 
-    expect(await screen.findByText("Known exploited")).toBeInTheDocument();
-    expect(screen.getByText("2 CVEs")).toBeInTheDocument();
-    expect(screen.getByText("2 high")).toBeInTheDocument();
-    expect(screen.getByText("1 may apply (version unknown)")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Known exploited (CISA KEV): 1 CVE" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "2 high CVEs in the installed versions" })).toHaveTextContent("2");
+    expect(screen.getByRole("button", { name: "3 low CVEs in the installed versions" })).toHaveTextContent("3");
+    expect(screen.getByRole("button", { name: "May apply: 1 CVE (installed version unknown)" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /medium CVE/ })).toBeNull();
+    await userEvent.setup().hover(screen.getByRole("button", { name: "2 high CVEs in the installed versions" }));
+    expect((await screen.findAllByText("CVE-2025-0411", {}, { timeout: 4000 })).length).toBeGreaterThan(0);
     expect(lastFilters(api.searchTitles).vuln).toBe("kev");
     expect(screen.getByLabelText("Vulnerabilities")).toHaveValue("kev");
   });
