@@ -1,0 +1,12 @@
+# Caddy in front of the gateway. SITE_ADDRESS (from .env):
+#   inventory.example.com  → HTTPS with a Let's Encrypt certificate (ports 80 and 443 open to the internet)
+#   http://:80             → plain HTTP, for a lab or a laptop (published on HTTP_PORT)
+# Caddy sets X-Forwarded-For to the client address and ignores the value a client sends.
+{
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode gzip
+	reverse_proxy kong:8000
+}

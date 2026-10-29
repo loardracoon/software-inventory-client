@@ -40,6 +40,49 @@ After changing `supabase/config.toml`, `supabase/functions/.env` or adding an Ed
 | `npm run mock:hub` | 54998 | Dictionary Hub client API | In Settings › Dictionary hub, save `http://host.docker.internal:54998` with the key `mock-hub-client-key-0123456789`. |
 | `npm run mock:alerts` | 54997 | Alert webhook and the Resend API | Webhook `http://host.docker.internal:54997/webhook/x`, plus `RESEND_API_URL=http://host.docker.internal:54997/emails` in the functions env. |
 
+## Deploy on one host (Docker Compose) — recommended
+
+The simplest way to run the app on a server or a lab VM: one script installs everything in `deploy/compose` with the images CI publishes (no build, no GitHub login: the images are public).
+
+| | One host (this section) | K3S (`deploy/k3s/README.md`) | Supabase Cloud (below) |
+| --- | --- | --- | --- |
+| Effort | one command | Kubernetes, Argo CD, secrets by hand | CLI steps, Vault SQL, a web host |
+| Updates | `update.sh` or a timer | automatic (GitOps) | by hand |
+| Good for | a team, a demo, a lab | a cluster that already runs Argo CD | a managed database |
+
+Needs: a Linux host with Docker Engine and Docker Compose 2.24 or later, `openssl` and `curl`; 2 vCPU and 4 GB RAM; for HTTPS, a DNS name that points at the host and ports 80 and 443 open.
+
+```bash
+git clone https://github.com/loardracoon/software-inventory-client.git
+cd software-inventory-client/deploy/compose
+sudo ./install.sh --domain inventory.example.com --auto-update     # HTTPS (Let's Encrypt), updates every 15 min, daily backup
+# or, for a lab or a laptop:  ./install.sh --http-port 8080 --host <name or IP>
+# real email for the sign-in links:  --smtp-host smtp.example.com --smtp-port 465 --smtp-user ... --smtp-pass ... --smtp-from ...
+```
+
+What `install.sh` does (it is safe to run again; it keeps the secrets it made):
+
+1. Checks Docker, Compose, `openssl` and `curl`.
+2. Writes `.env` (chmod 600): new random database password, JWT secret, collector secret and Mailpit password; the anon and service keys signed with that secret; the address; the image tag CI deployed on `main`.
+3. Pulls the images, starts Postgres, sets the role passwords and the JWT secret, applies every migration, starts the services and waits until they are healthy.
+4. Turns on the scheduled jobs (the Vault secrets `collector_url` and `collector_secret`).
+5. With `--auto-update`: installs the systemd timers `endpoint-inventory-update` (every 15 minutes) and `endpoint-inventory-backup` (daily, 03:15).
+6. Checks the app through Caddy and prints the next steps: open the address and sign in with your email (**the first account becomes the admin**; without SMTP the link is in Mailpit at `/mail/`, user `mail`, password `MAIL_PASSWORD` in `.env`), then add the Sophos Central credential and the Dictionary Hub in Settings.
+
+What runs: `db` (Postgres with pg_cron and Vault), `auth`, `rest`, `functions`, `kong` (the console and API gateway, the same image as K3S), `mailpit`, and `caddy`, the only published service (HTTPS with Let's Encrypt for a domain, plain HTTP for `--http-port`; it also gives the gateway the client address for the rate limits).
+
+| File in `deploy/compose` | What it is |
+| --- | --- |
+| `docker-compose.yml`, `Caddyfile` | The services; Caddy in front |
+| `.env` | Secrets and settings written by `install.sh` (never commit; `.gitignore` keeps it out) |
+| `rate-limits.env` | Rate limits (Rate limits and abuse protection, below) |
+| `install.sh` | First install, and repairs (run it again) |
+| `update.sh` | `git pull`, then the image tag CI wrote into `deploy/k3s/app/stack.yaml`: pulls the images, applies new migrations, recreates what changed. `--tag <sha>` pins a build |
+| `backup.sh` | `backups/inventory-<time>.dump` (as `supabase_admin`, so Auth, Vault and the jobs are included); keeps the newest 14 (`KEEP=n`) |
+| `restore.sh <file>` | Stops the app services, restores the dump, starts them again (asks first; `--yes` to skip) |
+
+Day to day: `docker compose ps`, `docker compose logs -f kong functions`, change a setting in `.env` or `rate-limits.env` then `docker compose up -d`. Copy `backups/` off the host: a dump holds all the data, and its Vault secrets only open in the install that made it (keep `.env` and the `db-data` volume with it). Plain HTTP (`--http-port`) sends sign-in links and sessions without encryption: use it only on a trusted network.
+
 ## Deploying to a Supabase project
 
 ```bash
@@ -130,7 +173,7 @@ The Scans page shows, per tenant: runs this minute (limit 10), runs today (limit
 
 ### Rate limits and abuse protection
 
-All limits are in one file: **`deploy/k3s/app/rate-limits.env`**. Kustomize turns it into the ConfigMap `rate-limits` (`deploy/k3s/app/kustomization.yaml`), which the gateway, Auth and the Edge Functions load; its name carries a hash of the content, so a change pushed to `main` rolls those pods through Argo CD. Values for a team of up to ~50 users behind one office address:
+All limits are in one file per deployment: **`deploy/k3s/app/rate-limits.env`** on K3S, **`deploy/compose/rate-limits.env`** on one host (Docker Compose loads it into the same three services; after a change, `docker compose up -d`). Kustomize turns it into the ConfigMap `rate-limits` (`deploy/k3s/app/kustomization.yaml`), which the gateway, Auth and the Edge Functions load; its name carries a hash of the content, so a change pushed to `main` rolls those pods through Argo CD. Values for a team of up to ~50 users behind one office address:
 
 | Setting | Recommended | What it limits |
 | --- | --- | --- |

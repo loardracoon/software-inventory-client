@@ -1,0 +1,4 @@
+.env
+.env.bak
+mail.htpasswd
+backups/

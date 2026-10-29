@@ -1,0 +1,153 @@
+# Endpoint Inventory on one host with Docker Compose: self-hosted Supabase (Postgres, Auth, PostgREST, Edge
+# Functions), the console and its gateway (the same images K3S runs), Mailpit, and Caddy in front (HTTPS with
+# Let's Encrypt when SITE_ADDRESS is a domain name, plain HTTP for a lab). install.sh writes .env (chmod 600)
+# and starts everything; update.sh follows main; backup.sh dumps the database. README › Deploy on one host.
+name: endpoint-inventory-app
+
+x-jwt: &jwt
+  JWT_SECRET: ${JWT_SECRET}
+
+x-rate-limits: &rate-limits
+  # Rate limits and abuse protection (README › Rate limits); optional: without it the image defaults apply.
+  env_file: [{ path: ./rate-limits.env, required: false }]
+
+services:
+  db:
+    image: public.ecr.aws/supabase/postgres:17.11.0.006
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf", "-c", "log_min_messages=fatal"]
+    restart: unless-stopped
+    environment:
+      <<: *jwt
+      POSTGRES_HOST: /var/run/postgresql
+      PGPORT: "5432"
+      POSTGRES_PORT: "5432"
+      PGDATABASE: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      JWT_EXP: "3600"
+    volumes: [db-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  auth:
+    <<: *rate-limits
+    image: public.ecr.aws/supabase/gotrue:v2.197.0
+    restart: unless-stopped
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: "9999"
+      API_EXTERNAL_URL: ${PUBLIC_URL}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/postgres
+      GOTRUE_SITE_URL: ${PUBLIC_URL}
+      GOTRUE_URI_ALLOW_LIST: ${PUBLIC_URL}/**
+      # Sign-ups on: Auth refuses every email without an access rule (trigger before_auth_user_created); the
+      # first account of a new install becomes the admin.
+      GOTRUE_DISABLE_SIGNUP: "false"
+      GOTRUE_JWT_ADMIN_ROLES: service_role
+      GOTRUE_JWT_AUD: authenticated
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_JWT_EXP: "3600"
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_EXTERNAL_PHONE_ENABLED: "false"
+      GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED: "false"
+      GOTRUE_MAILER_AUTOCONFIRM: "false"
+      # Without SMTP settings the emails go to Mailpit (read them at /mail/).
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-mailpit}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-1025}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_FROM:-inventory@example.com}
+      GOTRUE_SMTP_SENDER_NAME: Endpoint Inventory
+      GOTRUE_MAILER_SUBJECTS_MAGIC_LINK: Your Endpoint Inventory sign-in link
+      GOTRUE_MAILER_SUBJECTS_INVITE: You have access to Endpoint Inventory
+      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
+      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
+
+  rest:
+    image: public.ecr.aws/supabase/postgrest:v16.5
+    restart: unless-stopped
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/postgres
+      PGRST_DB_SCHEMAS: public,graphql_public
+      PGRST_DB_EXTRA_SEARCH_PATH: public,extensions
+      PGRST_DB_MAX_ROWS: "1000"
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
+      PGRST_APP_SETTINGS_JWT_EXP: "3600"
+
+  functions:
+    <<: *rate-limits
+    image: ghcr.io/loardracoon/software-inventory-client-functions:${APP_TAG}
+    restart: unless-stopped
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      <<: *jwt
+      SUPABASE_URL: http://kong:8000
+      NO_VERIFY_JWT: sync-computers,probe-capabilities,collector,hub-sync,alerts
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_DB_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+      COLLECTOR_SECRET: ${COLLECTOR_SECRET}
+      SOPHOS_LES_URL: ${SOPHOS_LES_URL:-https://api.taegis.sophos.com/graphql}
+
+  # Front end + API gateway (same image as on K3S). Database jobs call it as http://kong:8000.
+  kong:
+    <<: *rate-limits
+    image: ghcr.io/loardracoon/software-inventory-client-web:${APP_TAG}
+    restart: unless-stopped
+    # nginx resolves its upstreams at start: restart it whenever one of them is recreated (new IP).
+    depends_on:
+      auth: { condition: service_started, restart: true }
+      rest: { condition: service_started, restart: true }
+      functions: { condition: service_started, restart: true }
+      mailpit: { condition: service_started, restart: true }
+    environment:
+      SUPABASE_URL: origin
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+    volumes: ["./mail.htpasswd:/etc/nginx/auth/htpasswd:ro"]
+
+  mailpit:
+    image: public.ecr.aws/supabase/mailpit:v1.31.3
+    restart: unless-stopped
+    environment:
+      MP_WEBROOT: /mail/
+      MP_MAX_MESSAGES: "500"
+
+  # The only published service. It adds X-Forwarded-For, which the gateway needs for its per-address limits.
+  caddy:
+    image: caddy:2.8.4-alpine
+    restart: unless-stopped
+    depends_on: [kong]
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  migrate:
+    image: ghcr.io/loardracoon/software-inventory-client-migrate:${APP_TAG}
+    profiles: [tools]
+    depends_on: { db: { condition: service_healthy } }
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/postgres
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
