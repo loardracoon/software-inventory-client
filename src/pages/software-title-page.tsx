@@ -23,6 +23,8 @@ import { ExportButton } from "@/features/dictionary/export-button";
 import { TitleClassificationActions, TitleRequestsCard } from "@/features/dictionary/title-classification";
 import { CHANGE_COLUMNS_WITH_COMPUTER } from "@/features/inventory/change-columns";
 import { useTenant } from "@/features/tenants/tenant-context";
+import { TitleVulnsCard } from "@/features/vulns/title-vulns-card";
+import { VulnSummary } from "@/features/vulns/vuln-badges";
 import { formatDate, formatNumber } from "@/lib/format";
 import { KIND_LABEL, label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
@@ -44,6 +46,12 @@ const COMPUTER_COLUMNS: ServerColumnDef<InstallationRow>[] = [
     cell: ({ row }) => (row.original.user_masked ? <span className="text-text-muted">Hidden</span> : (row.original.username ?? "—")),
   },
   { accessorKey: "version", header: "Version" },
+  {
+    id: "vulns",
+    header: "Vulnerabilities",
+    enableSorting: false,
+    cell: ({ row }) => <VulnSummary vulns={row.original.vulns ?? 0} kev={row.original.vulns_kev ?? 0} possible={row.original.vulns_possible ?? 0} maxCvss={row.original.max_cvss} />,
+  },
   { accessorKey: "valid_from", header: "In inventory since", cell: ({ getValue }) => formatDate(getValue() as string) },
   { accessorKey: "path", header: "Path", enableSorting: false, cell: ({ getValue }) => <span className="font-mono text-xs">{(getValue() as string | null) ?? "—"}</span> },
 ];
@@ -124,6 +132,7 @@ export function SoftwareTitlePage() {
           </ul>
         </Card>
       </div>
+      <TitleVulnsCard titleId={titleId} tenantId={selectedTenantId} />
       <TitleRequestsCard titleId={titleId} refreshKey={revision} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="m-0 text-xl">Computers</h2>

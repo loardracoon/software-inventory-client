@@ -1,6 +1,8 @@
 // Dictionary Hub sync, run by the hub-sync Edge Function (Settings › Sync now) and by the collector
 // tick when due (every 6 hours, after a failure with backoff, or when new titles wait to be shared):
 //   1 pull   GET dictionary-changes since last_seq, one apply_dictionary_changes transaction per page
+//   1b vulns GET vulnerability-changes since vuln_last_seq, one apply_vulnerability_changes per page
+//            (Phase 10b; a Hub without the feed or a feed error does not fail the sync)
 //   2 push   unsent hub_submissions to titles-submit, only when sharing is on
 //   3 status GET reclassification-requests for the open requests
 // The cache keeps classifying while the hub is unreachable; hub_sync_finished records the backoff.
@@ -27,6 +29,11 @@ export type HubSyncSummary = {
   lastSeq: number;
   submitted: number;
   requestsUpdated: number;
+  vulnPages: number;
+  vulnUpserted: number;
+  vulnRemoved: number;
+  vulnLastSeq: number | null;
+  vulnError?: string;
 };
 
 // Settings (Vault) first; the HUB_URL / HUB_CLIENT_KEY secrets are a fallback. null = not configured.
@@ -56,6 +63,33 @@ export async function hubSyncDue(admin: SupabaseClient): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
+async function pullVulnerabilities(admin: SupabaseClient, state: HubState, summary: HubSyncSummary, logs: LogBuffer, timeLeft: () => number) {
+  try {
+    const { data, error } = await admin.from("hub_connection").select("vuln_last_seq").eq("id", 1).maybeSingle();
+    if (error) throw new Error(`Could not read the vulnerability sequence: ${error.message}`);
+    let seq = Number(data?.vuln_last_seq ?? 0);
+    for (let more = true; more && summary.vulnPages < MAX_PAGES && timeLeft() > MIN_TIME_LEFT_MS; ) {
+      const page = await state.hub.vulnerabilityChanges(seq);
+      if (!page) {
+        logs.add("info", "The Dictionary Hub has no vulnerability feed yet");
+        return;
+      }
+      const { data: counts, error: applyError } = await admin.rpc("apply_vulnerability_changes", { p_items: page.items, p_next_seq: page.next_seq });
+      if (applyError) throw new Error(`Could not apply vulnerability changes: ${applyError.message}`);
+      const c = counts as { upserted: number; removed: number };
+      summary.vulnPages++;
+      summary.vulnUpserted += c.upserted;
+      summary.vulnRemoved += c.removed;
+      seq = Math.max(seq, page.next_seq);
+      more = page.has_more && page.next_seq > 0;
+    }
+    summary.vulnLastSeq = seq;
+  } catch (error) {
+    summary.vulnError = errorMessage(error);
+    logs.add("warn", `Vulnerability sync failed: ${summary.vulnError}`);
+  }
+}
+
 export async function runHubSync(admin: SupabaseClient, state: HubState, logs: LogBuffer, timeLeft: () => number): Promise<HubSyncSummary> {
   const summary: HubSyncSummary = {
     ok: true,
@@ -67,6 +101,10 @@ export async function runHubSync(admin: SupabaseClient, state: HubState, logs: L
     lastSeq: state.lastSeq,
     submitted: 0,
     requestsUpdated: 0,
+    vulnPages: 0,
+    vulnUpserted: 0,
+    vulnRemoved: 0,
+    vulnLastSeq: null,
   };
   try {
     // 1 pull
@@ -88,6 +126,9 @@ export async function runHubSync(admin: SupabaseClient, state: HubState, logs: L
       more = page.has_more && page.next_seq > 0;
     }
     if (summary.skipped > 0) logs.add("warn", `${summary.skipped} dictionary rows skipped (unknown category or method)`);
+
+    // 1b vulnerabilities
+    await pullVulnerabilities(admin, state, summary, logs, timeLeft);
 
     // 2 push: metadata only (hub.ts copies the six allowed fields)
     while (state.share && timeLeft() > MIN_TIME_LEFT_MS) {

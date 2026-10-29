@@ -2,8 +2,9 @@
 // of the Edge Functions (never used in production). Run: npm run mock:hub, then in Settings › Dictionary
 // hub save the URL http://host.docker.internal:54998 and the key mock-hub-client-key-0123456789.
 // Test routes (POST): /__publish {entry} adds or changes an entry; /__deprecate {kind, source, match_key};
-// /__decide {id, status, admin_note}; /__down {on: true|false} answers 503 to everything.
-// GET /__state shows the entries, submissions and requests.
+// /__decide {id, status, admin_note}; /__down {on: true|false} answers 503 to everything;
+// /__vuln {item} adds or changes a vulnerability feed item (phase H7: product_key, vuln_id, ranges...).
+// GET /__state shows the entries, submissions, requests and vulnerabilities.
 import http from "node:http";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -68,6 +69,21 @@ publish({ kind: "extension", source: "chrome", match_key: "inomeogfingihgjfjlpep
 publish({ kind: "extension", source: "edge", match_key: "bfogiafebfohielmmehodmfbbebbbpei", canonical_name: "Keeper Password Manager", vendor: "Keeper Security", category_slug: "security-and-identity/password-managers", method: "jev_auto", confidence: 0.97 });
 publish({ kind: "ide_extension", source: "vscode", match_key: "ms-python.python", canonical_name: "Python", vendor: "Microsoft", category_slug: "developer-tools/ide-extensions", method: "rule" });
 
+// Vulnerability feed (phase H7). Mock IDs, not real CVEs. AnyDesk 8.0.9 (Sophos mock) is affected by the
+// first (known exploited) and not by the second (fixed before 8.0); Adobe Acrobat 23.008 of
+// e2e/fixtures/policy-seed.sql is affected by the third and 25.001 is not.
+const vulns = [];
+const vulnSet = (item) => {
+  const i = vulns.findIndex((v) => v.product_key === item.product_key && v.vuln_id === item.vuln_id);
+  const next = { removed: false, aliases: [], cwe: [], references: [], ranges: [], ...(i >= 0 ? vulns[i] : {}), ...item, seq: ++seq };
+  if (i >= 0) vulns[i] = next;
+  else vulns.push(next);
+  return next;
+};
+vulnSet({ product_key: "program|anydesk software|anydesk", vuln_id: "CVE-2099-0001", summary: "Mock vulnerability (known exploited) for end-to-end tests.", severity: "CRITICAL", cvss_version: "3.1", cvss_score: 9.8, kev_added: "2026-01-15", kev_due: "2026-02-05", epss: 0.42, epss_percentile: 0.97, ranges: [{ version_start: "8.0", start_inclusive: true, version_end: "8.1.0", end_inclusive: false, exact_version: null, source: "nvd" }] });
+vulnSet({ product_key: "program|anydesk software|anydesk", vuln_id: "CVE-2099-0002", summary: "Mock vulnerability fixed before 8.0.", severity: "MEDIUM", cvss_version: "3.1", cvss_score: 5.4, epss: 0.01, ranges: [{ version_start: null, start_inclusive: null, version_end: "7.1.0", end_inclusive: false, exact_version: null, source: "nvd" }] });
+vulnSet({ product_key: "program|adobe|adobe acrobat", vuln_id: "CVE-2099-0003", summary: "Mock vulnerability (known exploited) in old Adobe Acrobat versions.", severity: "HIGH", cvss_version: "3.1", cvss_score: 7.8, kev_added: "2026-03-10", kev_due: "2026-03-31", epss: 0.12, epss_percentile: 0.95, ranges: [{ version_start: null, start_inclusive: null, version_end: "24.0", end_inclusive: false, exact_version: null, source: "nvd" }] });
+
 const submissions = [];
 const requests = [];
 let down = false;
@@ -99,7 +115,8 @@ http
     const body = req.method === "POST" ? await readBody(req) : null;
 
     // Test routes ---------------------------------------------------------------------------------
-    if (route === "GET /__state") return send(res, 200, { seq, down, counts, entries, submissions, requests });
+    if (route === "GET /__state") return send(res, 200, { seq, down, counts, entries, submissions, requests, vulns });
+    if (route === "POST /__vuln") return send(res, 200, vulnSet(body));
     if (route === "POST /__publish") return send(res, 200, publish(body));
     if (route === "POST /__deprecate") return send(res, 200, publish({ ...body, status: "deprecated" }));
     if (route === "POST /__down") {
@@ -130,6 +147,14 @@ http
         next_seq: page.length ? page[page.length - 1].row.seq : since,
         has_more: changed.length > limit,
       });
+    }
+
+    if (route === "GET /vulnerability-changes") {
+      const since = Number(url.searchParams.get("since") ?? 0);
+      const limit = Math.min(Number(url.searchParams.get("limit") ?? 500), 1000);
+      const changed = vulns.filter((v) => v.seq > since).sort((a, b) => a.seq - b.seq);
+      const page = changed.slice(0, limit);
+      return send(res, 200, { items: page, next_seq: page.length ? page[page.length - 1].seq : since, has_more: changed.length > limit });
     }
 
     if (route === "POST /titles-submit") {

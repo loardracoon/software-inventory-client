@@ -33,6 +33,15 @@ describe("HubClient", () => {
     expect(JSON.stringify(logs)).not.toContain(KEY);
   });
 
+  it("reads a page of vulnerability changes; a Hub without the feed (404) gives null", async () => {
+    const item = { product_key: "program|igor pavlov|7-zip", vuln_id: "CVE-2025-0411", removed: false, ranges: [{ version_start: null, start_inclusive: null, version_end: "24.09", end_inclusive: false, exact_version: null }] };
+    const { client, calls } = hub(() => json({ items: [item], next_seq: 9, has_more: false }));
+    expect(await client.vulnerabilityChanges(3)).toEqual({ items: [item], next_seq: 9, has_more: false });
+    expect(calls[0].url.toString()).toBe("https://hub.example.com/functions/v1/vulnerability-changes?since=3&limit=1000");
+    const old = hub(() => json({ error: "Not found" }, 404));
+    expect(await old.client.vulnerabilityChanges(0)).toBeNull();
+  });
+
   it("sends only the six title fields, 500 per call, descriptions cut at 1,000 characters", async () => {
     const { client, calls } = hub(() => json({ ok: true }));
     const rows = Array.from({ length: 1201 }, (_, i) => ({

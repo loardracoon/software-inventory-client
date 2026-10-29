@@ -35,6 +35,7 @@ import { endOfDayIso, formatDate, formatDateTime } from "@/lib/format";
 import { label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
 import { CHANGE_COLUMNS } from "@/features/inventory/change-columns";
+import { VulnSummary } from "@/features/vulns/vuln-badges";
 
 // Memory in binary units (16 GB = 16 GiB, as the OS shows it); disks in decimal units, as vendors sell them.
 const bytes = (value: unknown, binary = false) => {
@@ -51,6 +52,14 @@ const policyCell: ServerColumnDef<InstallationRow> = {
   header: "Policy",
   enableSorting: false,
   cell: ({ row }) => <ClassBadge cls={row.original.policy_class} size="sm" />,
+};
+
+// Known vulnerabilities of this installation's (title, version) today (Phase 10b).
+const vulnCell: ServerColumnDef<InstallationRow> = {
+  id: "vulns",
+  header: "Vulnerabilities",
+  enableSorting: false,
+  cell: ({ row }) => <VulnSummary vulns={row.original.vulns ?? 0} kev={row.original.vulns_kev ?? 0} possible={row.original.vulns_possible ?? 0} maxCvss={row.original.max_cvss} />,
 };
 
 const categoryCell: ServerColumnDef<InstallationRow> = {
@@ -96,6 +105,7 @@ const EXTENSION_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   { accessorKey: "version", header: "Version" },
   categoryCell,
   policyCell,
+  vulnCell,
   {
     id: "signals",
     header: "Signals",
@@ -127,6 +137,7 @@ const PROGRAM_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   { accessorKey: "version", header: "Version" },
   categoryCell,
   policyCell,
+  vulnCell,
   {
     accessorKey: "valid_from",
     header: "In inventory since",
@@ -145,6 +156,7 @@ const PACKAGE_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   { accessorKey: "path", header: "Path", enableSorting: false, cell: ({ getValue }) => <span className="font-mono text-xs">{(getValue() as string | null) ?? "—"}</span> },
   categoryCell,
   policyCell,
+  vulnCell,
 ];
 
 export function ComputerDetailPage() {

@@ -171,9 +171,11 @@ export type SoftwareFilters = {
   asOf: string | null;
   // Policy classes (Phase 9); a title counts under the most restrictive class of its installed versions.
   policy: Database["public"]["Enums"]["policy_class"][];
+  // Known vulnerabilities (Phase 10b): any | kev | critical | high (critical or high); "" = no filter.
+  vuln?: string;
 };
 
-const TITLE_SORT = new Set(["computers", "versions", "first_seen", "canonical_name"]);
+const TITLE_SORT = new Set(["computers", "versions", "first_seen", "canonical_name", "vulns"]);
 
 export async function searchTitles(filters: SoftwareFilters, request: PageRequest): Promise<Page<TitleRow>> {
   const sort = request.sorting[0];
@@ -190,6 +192,7 @@ export async function searchTitles(filters: SoftwareFilters, request: PageReques
       ...(filters.versionBelow.trim() ? { p_version_below: filters.versionBelow.trim() } : {}),
       ...(filters.asOf ? { p_as_of: filters.asOf } : {}),
       ...(filters.policy.length ? { p_policy: filters.policy } : {}),
+      ...(filters.vuln ? { p_vuln: filters.vuln } : {}),
       p_sort: sort && TITLE_SORT.has(sort.id) ? sort.id : "computers",
       p_desc: sort ? sort.desc : true,
       p_limit: request.pageSize,

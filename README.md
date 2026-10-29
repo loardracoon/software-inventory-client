@@ -159,7 +159,7 @@ SAML SSO needs a Supabase project on the Pro plan and cannot run on the local st
 | `npm run test:db` | pgTAP files in `supabase/tests/database/`. Each one truncates the app tables inside its own transaction and rolls back, so it is safe on a database with data. |
 | `npm run functions:check` | `deno check` of every Edge Function, in Docker. |
 | `npm run lint` / `npm run build` | ESLint; type check and production build. |
-| `npm run test:e2e` | Playwright: every route renders for a signed-in admin with no console errors (`e2e/smoke.spec.ts`), and the application policy flow (`e2e/policy.spec.ts`). |
+| `npm run test:e2e` | Playwright: every route renders for a signed-in admin with no console errors (`e2e/smoke.spec.ts`), the application policy flow (`e2e/policy.spec.ts`) and the known vulnerabilities screens (`e2e/vulns.spec.ts`, read only, after a sync from the mock Hub). |
 
 `test:e2e` needs a stack with data whose `site_url` is the app under test. The default is an isolated second stack:
 
@@ -169,6 +169,6 @@ SAML SSO needs a Supabase project on the Pro plan and cannot run on the local st
 4. Fill it with the mocks.
 5. Serve the app for it: `VITE_SUPABASE_URL=http://127.0.0.1:55321 VITE_SUPABASE_ANON_KEY=<its anon key> npx vite --port 5174`.
 
-`e2e/policy.spec.ts` expects an empty stack loaded with `e2e/fixtures/policy-seed.sql` and no policy; it writes, reorders and publishes rules there.
+`e2e/policy.spec.ts` expects an empty stack loaded with `e2e/fixtures/policy-seed.sql` and no policy; it writes, reorders and publishes rules there. `e2e/vulns.spec.ts` expects the same stack after Settings › Dictionary Hub › Sync now from the mock Hub (`npm run mock:hub`), whose mock CVE affects Adobe Acrobat 23.008.
 
 Override the defaults with `E2E_BASE_URL`, `E2E_SUPABASE_URL`, `E2E_MAILPIT_URL` and `E2E_EMAIL`. Before the first run, install the browser with `npx playwright install chromium`.

@@ -123,6 +123,36 @@ describe("version operators", () => {
   });
 });
 
+describe("vulnerability fields (Phase 10b)", () => {
+  const vulnerable = { ...acrobat, max_cvss: 9.8, kev: true, max_epss: 0.94 };
+  it("compare the highest CVSS and EPSS as numbers; none reads as 0", () => {
+    expect(t({ field: "cvss", operator: "gte", value: "9" }, vulnerable)).toBe(true);
+    expect(t({ field: "cvss", operator: "gte", value: "9" })).toBe(false);
+    expect(t({ field: "cvss", operator: "equals", value: "0" })).toBe(true);
+    expect(t({ field: "cvss", operator: "between", value: "7", value2: "10" }, vulnerable)).toBe(true);
+    expect(t({ field: "epss", operator: "gt", value: "0.1" }, vulnerable)).toBe(true);
+    expect(t({ field: "epss", operator: "lt", value: "abc" }, vulnerable)).toBe(false);
+  });
+
+  it("known exploited is yes or no", () => {
+    expect(t({ field: "kev", operator: "equals", value: "true" }, vulnerable)).toBe(true);
+    expect(t({ field: "kev", operator: "equals", value: "true" })).toBe(false);
+    expect(t({ field: "kev", operator: "not_equals", value: "true" })).toBe(true);
+    expect(t({ field: "kev", operator: "equals", value: "false" })).toBe(true);
+  });
+
+  it("validate the number range and the yes/no value", () => {
+    expect(validateCondition({ field: "cvss", operator: "gte", value: "11" })).toMatch(/0 to 10/);
+    expect(validateCondition({ field: "epss", operator: "gte", value: "50" })).toMatch(/0 to 1/);
+    expect(validateCondition({ field: "cvss", operator: "between", value: "9", value2: "7" })).toMatch(/lower number first/);
+    expect(validateCondition({ field: "cvss", operator: "contains", value: "9" })).toMatch(/does not apply/);
+    expect(validateCondition({ field: "kev", operator: "equals", value: "maybe" })).toMatch(/yes or no/);
+    expect(validateCondition({ field: "kev", operator: "equals", value: "true" })).toBeNull();
+    expect(validateCondition({ field: "cvss", operator: "gte", value: "7.5" })).toBeNull();
+    expect(conditionText({ field: "kev", operator: "equals", value: "true" })).toBe("Known exploited (CISA KEV) is yes");
+  });
+});
+
 describe("rules", () => {
   it("AND needs every condition, OR needs one", () => {
     const conds: PolicyCondition[] = [

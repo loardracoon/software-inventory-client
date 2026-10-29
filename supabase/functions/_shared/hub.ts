@@ -41,6 +41,43 @@ export type HubEntry = {
 
 export type DictionaryPage = { entries: HubEntry[]; categories: HubCategory[]; next_seq: number; has_more: boolean };
 
+// One (product, CVE) pair of the vulnerability feed (phase H7), or removed = true. The client matches
+// its own installed versions against ranges; nothing about computers goes to the Hub.
+export type HubVulnRange = {
+  version_start: string | null;
+  start_inclusive: boolean | null;
+  version_end: string | null;
+  end_inclusive: boolean | null;
+  exact_version: string | null;
+  source?: string;
+};
+
+export type HubVulnerability = {
+  product_id?: string;
+  product_key: string | null;
+  vuln_id: string;
+  removed: boolean;
+  aliases?: string[];
+  published?: string | null;
+  modified?: string | null;
+  summary?: string | null;
+  cvss_version?: string | null;
+  cvss_score?: number | null;
+  severity?: string | null;
+  cvss_vector?: string | null;
+  cwe?: string[];
+  references?: string[];
+  kev_added?: string | null;
+  kev_due?: string | null;
+  kev_ransomware?: string | null;
+  epss?: number | null;
+  epss_percentile?: number | null;
+  ranges?: HubVulnRange[];
+  seq?: number;
+};
+
+export type VulnerabilityPage = { items: HubVulnerability[]; next_seq: number; has_more: boolean };
+
 export type TitleSubmission = {
   kind: string;
   source: string;
@@ -94,6 +131,19 @@ export class HubClient {
     const page = (await this.request("GET", `/dictionary-changes?since=${since}&limit=${limit}`)) as Partial<DictionaryPage>;
     if (typeof page?.next_seq !== "number") throw new HubError(200, "/dictionary-changes", "response has no next_seq");
     return { entries: page.entries ?? [], categories: page.categories ?? [], next_seq: page.next_seq, has_more: page.has_more === true };
+  }
+
+  // null = the Hub has no vulnerability feed (before phase H7).
+  async vulnerabilityChanges(since: number, limit = 1000): Promise<VulnerabilityPage | null> {
+    let page: Partial<VulnerabilityPage>;
+    try {
+      page = (await this.request("GET", `/vulnerability-changes?since=${since}&limit=${limit}`)) as Partial<VulnerabilityPage>;
+    } catch (error) {
+      if (error instanceof HubError && error.status === 404) return null;
+      throw error;
+    }
+    if (typeof page?.next_seq !== "number") throw new HubError(200, "/vulnerability-changes", "response has no next_seq");
+    return { items: page.items ?? [], next_seq: page.next_seq, has_more: page.has_more === true };
   }
 
   // Sends in batches of 500; returns how many titles were accepted.

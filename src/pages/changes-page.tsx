@@ -13,11 +13,13 @@ import { CHANGE_COLUMNS_WITH_COMPUTER } from "@/features/inventory/change-column
 import { fetchClassChanges, type ClassChangeFilters, type ClassChangeRow } from "@/features/policy/api";
 import { ClassBadge } from "@/features/policy/class-badge";
 import { useTenant } from "@/features/tenants/tenant-context";
+import { fetchVulnEvents, nvdUrl, type VulnEventFilters, type VulnEventRow } from "@/features/vulns/api";
+import { KevBadge, SeverityBadge } from "@/features/vulns/vuln-badges";
 import { endOfDayIso, formatDateTime } from "@/lib/format";
 import { KIND_LABEL, label } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
 
-type Tab = ChangeFilters["change"] | "class";
+type Tab = ChangeFilters["change"] | "class" | "vuln";
 
 const TABS: { value: Tab; label: string }[] = [
   { value: "", label: "All" },
@@ -25,6 +27,41 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "updated", label: "Updated" },
   { value: "removed", label: "Removed" },
   { value: "class", label: "Class changed" },
+  { value: "vuln", label: "New CVE" },
+];
+
+// A known CVE that newly affects an installed (title, version) in a tenant (Phase 10b).
+const VULN_EVENT_COLUMNS: ServerColumnDef<VulnEventRow>[] = [
+  { accessorKey: "detected_at", header: "Detected", enableSorting: false, cell: ({ getValue }) => (getValue() ? formatDateTime(getValue() as string) : "—") },
+  {
+    accessorKey: "canonical_name",
+    header: "Title",
+    enableSorting: false,
+    cell: ({ row }) => (
+      <div className="flex flex-col gap-0.5">
+        <Link to={`/software/${row.original.title_id}`}>{row.original.canonical_name}</Link>
+        <span className="text-xs text-text-muted">{label(KIND_LABEL, row.original.kind)}</span>
+      </div>
+    ),
+  },
+  { accessorKey: "version", header: "Version", enableSorting: false, cell: ({ getValue }) => (getValue() as string | null) || "—" },
+  {
+    accessorKey: "vuln_id",
+    header: "CVE",
+    enableSorting: false,
+    cell: ({ row }) => (
+      <div className="flex flex-col items-start gap-1">
+        <a href={nvdUrl(row.original.vuln_id ?? "")} target="_blank" rel="noreferrer" className="font-mono text-sm">
+          {row.original.vuln_id}
+        </a>
+        <span className="flex flex-wrap gap-1">
+          <SeverityBadge severity={row.original.severity} score={row.original.cvss_score} />
+          {row.original.kev_added ? <KevBadge /> : null}
+        </span>
+      </div>
+    ),
+  },
+  { accessorKey: "summary", header: "Summary", enableSorting: false, cell: ({ getValue }) => <span className="line-clamp-2 text-sm">{(getValue() as string | null) ?? "—"}</span> },
 ];
 
 // Policy class changes are per (title, version) in a tenant, not per computer (Phase 9).
@@ -78,7 +115,7 @@ function startOfDayIso(date: string): string {
 export function ChangesPage() {
   const { selectedTenantId } = useTenant();
   const [tab, setTab] = useState<Tab>("");
-  const change: ChangeFilters["change"] = tab === "class" ? "" : tab;
+  const change: ChangeFilters["change"] = tab === "class" || tab === "vuln" ? "" : tab;
   const [kind, setKind] = useState<ChangeFilters["kind"]>("");
   const [category, setCategory] = useState("");
   const [from, setFrom] = useState("");
@@ -104,6 +141,11 @@ export function ChangesPage() {
     [selectedTenantId, kind, search, from, to],
   );
   const fetchClassPage = useCallback((request: ServerPageRequest<ClassChangeFilters>) => fetchClassChanges(request.filters, request), []);
+  const vulnFilters = useMemo<VulnEventFilters>(
+    () => ({ tenantId: selectedTenantId, kind, search, from: from ? startOfDayIso(from) : null, to: to ? endOfDayIso(to) : null }),
+    [selectedTenantId, kind, search, from, to],
+  );
+  const fetchVulnPage = useCallback((request: ServerPageRequest<VulnEventFilters>) => fetchVulnEvents(request.filters, request), []);
 
   return (
     <>
@@ -111,7 +153,7 @@ export function ChangesPage() {
         eyebrow="History"
         title="Changes"
         description="What was added, removed or updated, where and when. The first collection of each computer is a baseline and adds no events."
-        actions={tab === "class" ? undefined : <ExportButton dataset="changes" filters={filters} />}
+        actions={tab === "class" || tab === "vuln" ? undefined : <ExportButton dataset="changes" filters={filters} />}
       />
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList aria-label="Change type">
@@ -134,7 +176,7 @@ export function ChangesPage() {
             options={[{ value: "", label: "All kinds" }, ...Object.entries(KIND_LABEL).map(([value, l]) => ({ value, label: l }))]}
           />
         </Field>
-        {tab !== "class" ? (
+        {tab !== "class" && tab !== "vuln" ? (
           <Field label="Category" htmlFor="changes-category">
             <NativeSelect
               id="changes-category"
@@ -151,7 +193,16 @@ export function ChangesPage() {
           <DateInput id="changes-to" value={to} onChange={setTo} />
         </Field>
       </div>
-      {tab === "class" ? (
+      {tab === "vuln" ? (
+        <ServerDataTable
+          label="New CVEs"
+          columns={VULN_EVENT_COLUMNS}
+          fetchPage={fetchVulnPage}
+          filters={vulnFilters}
+          getRowId={(row) => String(row.id ?? "")}
+          empty={<EmptyState icon={History} title="No new CVEs" description="A CVE is listed here when the Dictionary Hub reports it for a version that is installed in this tenant." />}
+        />
+      ) : tab === "class" ? (
         <ServerDataTable
           label="Policy class changes"
           columns={CLASS_CHANGE_COLUMNS}

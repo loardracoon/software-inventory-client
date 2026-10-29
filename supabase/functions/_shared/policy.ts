@@ -4,7 +4,7 @@
 // except that the app evaluates each installed version instead of the title's newest version.
 
 export type PolicyClass = "core_system" | "sanctioned_app" | "tolerated_app" | "unsanctioned_app";
-export type PolicyField = "vendor" | "name" | "category" | "subcategory" | "version" | "external_id";
+export type PolicyField = "vendor" | "name" | "category" | "subcategory" | "version" | "external_id" | "cvss" | "kev" | "epss";
 export type PolicyOperator =
   "equals" | "not_equals" | "contains" | "not_contains" | "starts_with" | "ends_with" | "regex" | "in" | "not_in" | "gt" | "gte" | "lt" | "lte" | "between";
 export type RuleMatch = "all" | "any";
@@ -41,6 +41,11 @@ export type PolicyInput = {
   category_name?: string | null;
   subcategory_slug?: string | null;
   subcategory_name?: string | null;
+  // Known vulnerabilities of this installed version (Phase 10b, certain matches only): highest CVSS
+  // score (0 = none), any CVE in the CISA KEV catalog, highest EPSS probability (0 to 1).
+  max_cvss?: number | null;
+  kev?: boolean | null;
+  max_epss?: number | null;
 };
 
 export type Evaluation = {
@@ -70,7 +75,7 @@ export const POLICY_CLASSES: PolicyClass[] = ["core_system", "sanctioned_app", "
 export const TITLE_KINDS: TitleKind[] = ["program", "extension", "ide_extension", "package"];
 export const REGEX_MAX_LENGTH = 200;
 
-export type FieldType = "text" | "category" | "version";
+export type FieldType = "text" | "category" | "version" | "number" | "boolean";
 export const FIELD_TYPE: Record<PolicyField, FieldType> = {
   vendor: "text",
   name: "text",
@@ -78,12 +83,20 @@ export const FIELD_TYPE: Record<PolicyField, FieldType> = {
   category: "category",
   subcategory: "category",
   version: "version",
+  cvss: "number",
+  kev: "boolean",
+  epss: "number",
 };
+
+// Allowed values of the number fields.
+export const NUMBER_RANGE: Partial<Record<PolicyField, [number, number]>> = { cvss: [0, 10], epss: [0, 1] };
 
 export const OPERATORS_BY_TYPE: Record<FieldType, PolicyOperator[]> = {
   text: ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "regex", "in", "not_in"],
   category: ["equals", "not_equals", "in", "not_in"],
   version: ["equals", "not_equals", "gt", "gte", "lt", "lte", "between", "regex"],
+  number: ["gte", "gt", "lte", "lt", "equals", "not_equals", "between"],
+  boolean: ["equals", "not_equals"],
 };
 
 export const FIELD_LABEL: Record<PolicyField, string> = {
@@ -93,6 +106,9 @@ export const FIELD_LABEL: Record<PolicyField, string> = {
   subcategory: "Subcategory",
   version: "Version",
   external_id: "Extension or package ID",
+  cvss: "Highest CVSS score",
+  kev: "Known exploited (CISA KEV)",
+  epss: "Highest EPSS probability",
 };
 
 export const OPERATOR_LABEL: Record<PolicyOperator, string> = {
@@ -179,8 +195,19 @@ export function fieldValue(input: PolicyInput, field: PolicyField): string {
       return input.version ?? "";
     case "external_id":
       return input.external_id ?? "";
+    case "cvss":
+      return String(input.max_cvss ?? 0);
+    case "kev":
+      return input.kev ? "true" : "false";
+    case "epss":
+      return String(input.max_epss ?? 0);
   }
 }
+
+// "true" / "yes" / "1" are true; anything else is false.
+export const booleanValue = (v: string | null | undefined): boolean => ["true", "yes", "1"].includes((v ?? "").trim().toLowerCase());
+
+const numberValue = (v: string | null | undefined): number => (v == null || v.trim() === "" ? Number.NaN : Number(v));
 
 function fieldSlug(input: PolicyInput, field: PolicyField): string {
   if (field === "category") return input.category_slug ?? "";
@@ -197,6 +224,35 @@ export function testCondition(c: PolicyCondition, input: PolicyInput): boolean {
   }
 
   const type = FIELD_TYPE[c.field];
+  if (type === "boolean") {
+    const same = booleanValue(raw) === booleanValue(c.value);
+    return c.operator === "equals" ? same : c.operator === "not_equals" ? !same : false;
+  }
+  if (type === "number") {
+    const x = Number(raw);
+    const v = numberValue(c.value);
+    if (Number.isNaN(v)) return false;
+    switch (c.operator) {
+      case "equals":
+        return x === v;
+      case "not_equals":
+        return x !== v;
+      case "gt":
+        return x > v;
+      case "gte":
+        return x >= v;
+      case "lt":
+        return x < v;
+      case "lte":
+        return x <= v;
+      case "between": {
+        const w = numberValue(c.value2);
+        return !Number.isNaN(w) && x >= v && x <= w;
+      }
+      default:
+        return false;
+    }
+  }
   if (type === "version") {
     if (!raw) return false;
     const cmp = compareVersions(raw, c.value || "0");
@@ -314,6 +370,7 @@ export function conditionText(c: PolicyCondition, categoryName: (slug: string) =
   const show = (v: string) => (FIELD_TYPE[c.field] === "category" ? categoryName(v) : v);
   if (c.operator === "in" || c.operator === "not_in") return `${field} ${OPERATOR_LABEL[c.operator]} ${conditionList(c).map(show).join(", ")}`;
   if (c.operator === "between") return `${field} between ${c.value || "?"} and ${c.value2 || "?"}`;
+  if (FIELD_TYPE[c.field] === "boolean") return `${field} ${OPERATOR_LABEL[c.operator]} ${booleanValue(c.value) ? "yes" : "no"}`;
   return `${field} ${OPERATOR_LABEL[c.operator]} ${c.value ? show(c.value) : "?"}${c.case_sensitive && FIELD_TYPE[c.field] === "text" ? " (case-sensitive)" : ""}`;
 }
 
@@ -339,6 +396,18 @@ export function validateCondition(c: PolicyCondition): string | null {
     } catch {
       return "Invalid regular expression";
     }
+    return null;
+  }
+  if (type === "boolean") return ["true", "false"].includes((c.value ?? "").trim().toLowerCase()) ? null : "Select yes or no";
+  if (type === "number") {
+    const [lo, hi] = NUMBER_RANGE[c.field] ?? [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+    const values = c.operator === "between" ? [c.value, c.value2] : [c.value];
+    for (const v of values) {
+      const n = numberValue(v);
+      if (Number.isNaN(n)) return c.operator === "between" ? "Enter both numbers" : "Enter a number";
+      if (n < lo || n > hi) return `Enter a number from ${lo} to ${hi}`;
+    }
+    if (c.operator === "between" && numberValue(c.value) > numberValue(c.value2)) return "Put the lower number first";
     return null;
   }
   if (c.operator === "in" || c.operator === "not_in") return conditionList(c).length ? null : "Enter at least one value";

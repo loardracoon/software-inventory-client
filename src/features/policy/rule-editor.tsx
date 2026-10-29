@@ -10,6 +10,7 @@ import {
   validateCondition,
   validateRule,
   type PolicyClass,
+  type FieldType,
   type PolicyCondition,
   type PolicyField,
   type PolicyOperator,
@@ -32,7 +33,7 @@ import { previewRule } from "./preview";
 
 type Category = { slug: string; name: string; parent_slug: string | null; level: number | null };
 
-const OPERATOR_TEXT: Record<"text" | "category" | "version", Partial<Record<PolicyOperator, string>>> = {
+const OPERATOR_TEXT: Record<FieldType, Partial<Record<PolicyOperator, string>>> = {
   text: {
     equals: "is (exact match)",
     not_equals: "is not",
@@ -46,7 +47,11 @@ const OPERATOR_TEXT: Record<"text" | "category" | "version", Partial<Record<Poli
   },
   category: { equals: "is", not_equals: "is not", in: "is one of", not_in: "is not one of" },
   version: { equals: "=", not_equals: "≠", gt: ">", gte: "≥", lt: "<", lte: "≤", between: "between", regex: "matches regex" },
+  number: { gte: "≥", gt: ">", lte: "≤", lt: "<", equals: "=", not_equals: "≠", between: "between" },
+  boolean: { equals: "is", not_equals: "is not" },
 };
+
+const NUMBER_HINT: Partial<Record<PolicyField, string>> = { cvss: "0 to 10, e.g. 9", epss: "0 to 1, e.g. 0.1" };
 
 const CONTROL =
   "h-10 w-full min-w-0 rounded-sm border-[1.5px] border-input bg-surface-raised px-3 text-[15px] text-text-body focus-visible:border-action focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none";
@@ -104,7 +109,7 @@ function ConditionRow({ c, n, categories, onChange, onRemove, canRemove, disable
 
   function setField(field: PolicyField) {
     const ops = OPERATORS_BY_TYPE[FIELD_TYPE[field]];
-    onChange({ field, operator: ops.includes(c.operator) ? c.operator : ops[0], value: "", value2: null, values: null, case_sensitive: false });
+    onChange({ field, operator: ops.includes(c.operator) ? c.operator : ops[0], value: FIELD_TYPE[field] === "boolean" ? "true" : "", value2: null, values: null, case_sensitive: false });
   }
 
   return (
@@ -181,7 +186,19 @@ function ConditionRow({ c, n, categories, onChange, onRemove, canRemove, disable
           </div>
         ) : null}
 
-        {type !== "category" ? (
+        {type === "boolean" ? (
+          <div className="flex min-w-[140px] flex-[2_1_220px] flex-col gap-1">
+            <label htmlFor={`${id}-value`} className="sr-only">
+              Value of condition {n}
+            </label>
+            <select id={`${id}-value`} className={CONTROL} value={c.value === "false" ? "false" : "true"} disabled={disabled} onChange={(e) => onChange({ ...c, value: e.target.value })}>
+              <option value="true">Yes</option>
+              <option value="false">No</option>
+            </select>
+          </div>
+        ) : null}
+
+        {type !== "category" && type !== "boolean" ? (
           <div className="flex min-w-[180px] flex-[2_1_220px] items-end gap-2">
             <div className="flex min-w-0 flex-1 flex-col gap-1">
               <label htmlFor={`${id}-value`} className="sr-only">
@@ -189,12 +206,13 @@ function ConditionRow({ c, n, categories, onChange, onRemove, canRemove, disable
               </label>
               <input
                 id={`${id}-value`}
-                className={cn(CONTROL, (c.operator === "regex" || type === "version") && "font-mono text-[13px]", error && (c.value ?? "") !== "" && "border-text-critical")}
+                className={cn(CONTROL, (c.operator === "regex" || type === "version" || type === "number") && "font-mono text-[13px]", error && (c.value ?? "") !== "" && "border-text-critical")}
+                inputMode={type === "number" ? "decimal" : undefined}
                 value={c.value ?? ""}
                 disabled={disabled}
                 spellCheck={false}
                 placeholder={
-                  c.operator === "in" || c.operator === "not_in" ? "Comma-separated values" : c.operator === "regex" ? "^(AnyDesk|TeamViewer)$" : type === "version" ? "e.g. 24.0" : "Value"
+                  c.operator === "in" || c.operator === "not_in" ? "Comma-separated values" : c.operator === "regex" ? "^(AnyDesk|TeamViewer)$" : type === "version" ? "e.g. 24.0" : type === "number" ? (NUMBER_HINT[c.field] ?? "Number") : "Value"
                 }
                 onChange={(e) => onChange({ ...c, value: e.target.value })}
               />
@@ -204,7 +222,7 @@ function ConditionRow({ c, n, categories, onChange, onRemove, canRemove, disable
                 <span className="pb-2.5 text-sm text-text-muted">and</span>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <label htmlFor={`${id}-value2`} className="sr-only">
-                    Upper version of condition {n}
+                    Upper {type === "number" ? "number" : "version"} of condition {n}
                   </label>
                   <input
                     id={`${id}-value2`}

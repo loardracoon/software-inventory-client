@@ -19,6 +19,8 @@ import { fetchCategories, fetchNeedsAttention, searchTitles, type AttentionLevel
 import { ClassBadge } from "@/features/policy/class-badge";
 import { CLASS_INFO, CLASS_ORDER, classFromParam } from "@/features/policy/classes";
 import { SaveSearchButton } from "@/features/saved-searches/save-search-button";
+import { VULN_FILTERS, vulnFromParam } from "@/features/vulns/api";
+import { VulnSummary } from "@/features/vulns/vuln-badges";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { endOfDayIso, formatDate, formatNumber } from "@/lib/format";
 import { KIND_LABEL, label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
@@ -95,6 +97,20 @@ function columns(canContribute: boolean, requested: Set<string>, reclassify: (ro
         </div>
       ),
     },
+    {
+      id: "vulns",
+      header: "Vulnerabilities",
+      cell: ({ row }) => (
+        <VulnSummary
+          vulns={row.original.vulns}
+          kev={row.original.vulns_kev}
+          critical={row.original.vulns_critical}
+          high={row.original.vulns_high}
+          possible={row.original.vulns_possible}
+          maxCvss={row.original.max_cvss}
+        />
+      ),
+    },
     { accessorKey: "computers", header: "Computers", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "versions", header: "Versions", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "latest_version", header: "Newest", enableSorting: false, cell: ({ getValue }) => (getValue() as string | null) ?? "—" },
@@ -146,6 +162,7 @@ export function SoftwarePage() {
   const versionBelow = params.get("below") ?? "";
   const installedOn = params.get("on") ?? "";
   const policy = classFromParam(params.get("policy"));
+  const vuln = vulnFromParam(params.get("vuln"));
   const [requested, setRequested] = useState<Set<string>>(new Set());
   const [reclassifying, setReclassifying] = useState<ReclassifyTarget | null>(null);
 
@@ -196,8 +213,9 @@ export function SoftwarePage() {
       versionBelow,
       asOf: installedOn ? endOfDayIso(installedOn) : null,
       policy: policy ? [policy] : [],
+      vuln,
     }),
-    [selectedTenantId, query, kind, category, attention, source, platform, user, versionBelow, installedOn, policy],
+    [selectedTenantId, query, kind, category, attention, source, platform, user, versionBelow, installedOn, policy, vuln],
   );
 
   const fetchPage = useCallback(async (request: ServerPageRequest<SoftwareFilters>) => {
@@ -263,6 +281,9 @@ export function SoftwarePage() {
             onChange={(v) => setParam("policy", v)}
             options={[{ value: "", label: "All classes" }, ...CLASS_ORDER.map((c) => ({ value: CLASS_INFO[c].machineId, label: CLASS_INFO[c].label }))]}
           />
+        </Field>
+        <Field label="Vulnerabilities" htmlFor="software-vuln">
+          <NativeSelect id="software-vuln" value={vuln} onChange={(v) => setParam("vuln", v)} options={VULN_FILTERS} />
         </Field>
         <Field label="Platform" htmlFor="software-platform">
           <NativeSelect

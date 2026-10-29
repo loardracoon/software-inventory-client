@@ -7,6 +7,7 @@ import { TenantProvider } from "@/features/tenants/tenant-provider";
 import * as dictionary from "@/features/dictionary/api";
 import { ReclassifyDialog, validateReclassification } from "@/features/dictionary/reclassify-dialog";
 import * as api from "@/features/inventory/api";
+import * as vulns from "@/features/vulns/api";
 import { ChangesPage } from "./changes-page";
 import { ComputerDetailPage } from "./computer-detail-page";
 import { ComputersPage } from "./computers-page";
@@ -16,6 +17,12 @@ import { SoftwarePage } from "./software-page";
 
 vi.mock("@/features/inventory/api", async () => (await import("@/test/inventory-mock")).inventoryApiMock());
 vi.mock("@/features/dictionary/api", async () => (await import("@/test/inventory-mock")).dictionaryApiMock());
+vi.mock("@/features/vulns/api", async (original) => ({
+  ...(await original<typeof import("@/features/vulns/api")>()),
+  fetchVulnOverview: vi.fn(async () => ({ vulns: 0, critical: 0, high: 0, kev: 0, titles: 0, kev_installations: 0, kev_computers: 0, cached: 0, synced_at: null, evaluated_at: null })),
+  fetchTitleVulns: vi.fn(async () => []),
+  fetchVulnEvents: vi.fn(async () => ({ rows: [], rowCount: 0 })),
+}));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
 const TENANT = { id: "t1", name: "Lab" };
@@ -174,6 +181,40 @@ describe("Software", () => {
     expect(screen.getByLabelText("Policy class")).toHaveValue("unsanctioned-app");
   });
 
+  it("filters by known vulnerabilities from the URL and shows the CVE counts", async () => {
+    vi.mocked(api.searchTitles).mockResolvedValue({
+      rows: [
+        {
+          title_id: "x7",
+          kind: "program",
+          source: "programs",
+          canonical_name: "7-Zip",
+          vendor: "Igor Pavlov",
+          origin: "unclassified",
+          computers: 3,
+          versions: 2,
+          spellings: 2,
+          vulns: 2,
+          vulns_kev: 1,
+          vulns_critical: 0,
+          vulns_high: 2,
+          vulns_possible: 1,
+          max_cvss: 7.8,
+          total_count: 1,
+        },
+      ] as never,
+      rowCount: 1,
+    });
+    renderAt("/software?vuln=kev", "/software", <SoftwarePage />);
+
+    expect(await screen.findByText("Known exploited")).toBeInTheDocument();
+    expect(screen.getByText("2 CVEs")).toBeInTheDocument();
+    expect(screen.getByText("2 high")).toBeInTheDocument();
+    expect(screen.getByText("1 may apply (version unknown)")).toBeInTheDocument();
+    expect(lastFilters(api.searchTitles).vuln).toBe("kev");
+    expect(screen.getByLabelText("Vulnerabilities")).toHaveValue("kev");
+  });
+
   it("reads every filter from the URL (saved searches are links)", async () => {
     vi.mocked(api.fetchCategories).mockResolvedValue([
       { slug: "remote-access", name: "Remote access", parent_slug: null, level: 1 },
@@ -317,6 +358,16 @@ describe("Overview", () => {
     expect(screen.getByText("Not allowed")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: /per week for the last 12 weeks/ })).toBeInTheDocument();
   });
+
+  it("shows the known vulnerabilities card with links to the filtered Software list", async () => {
+    vi.mocked(api.fetchOverviewStats).mockResolvedValue({ computers: 3, computers_by_platform: {}, coverage_pct: null, titles: 1, extension_installs: 0, distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0 });
+    vi.mocked(vulns.fetchVulnOverview).mockResolvedValue({ vulns: 4, critical: 1, high: 2, kev: 1, titles: 2, kev_installations: 3, kev_computers: 2, cached: 40, synced_at: null, evaluated_at: null });
+    renderAt("/", "/", <OverviewPage />);
+
+    expect(await screen.findByRole("link", { name: /Known exploited CVEs/ })).toHaveAttribute("href", "/software?vuln=kev");
+    expect(screen.getByText("3 installations on 2 computers")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Critical CVEs/ })).toHaveAttribute("href", "/software?vuln=critical");
+  });
 });
 
 describe("Changes", () => {
@@ -327,6 +378,19 @@ describe("Changes", () => {
     await waitFor(() => expect(lastFilters(api.fetchChanges).change).toBe("removed"));
     await user.type(screen.getByLabelText("From"), "2026-10-01");
     await waitFor(() => expect(lastFilters(api.fetchChanges).from).toBe("2026-10-01T02:59:59.000Z"));
+  });
+
+  it("lists new CVEs that affect installed software", async () => {
+    const user = userEvent.setup();
+    vi.mocked(vulns.fetchVulnEvents).mockResolvedValue({
+      rows: [{ id: 1, tenant_id: "t1", title_id: "x7", kind: "program", canonical_name: "7-Zip", vendor: "Igor Pavlov", version: "23.01", vuln_id: "CVE-2025-0411", severity: "HIGH", cvss_score: 7, kev_added: "2025-02-06", epss: 0.5, summary: "Mark-of-the-Web bypass", detected_at: "2026-10-28T12:00:00Z" }],
+      rowCount: 1,
+    });
+    renderAt("/changes", "/changes", <ChangesPage />);
+    await user.click(await screen.findByRole("tab", { name: "New CVE" }));
+    expect(await screen.findByRole("link", { name: "CVE-2025-0411" })).toHaveAttribute("href", "https://nvd.nist.gov/vuln/detail/CVE-2025-0411");
+    expect(screen.getByText("High 7.0")).toBeInTheDocument();
+    expect(screen.getByText("Known exploited")).toBeInTheDocument();
   });
 });
 

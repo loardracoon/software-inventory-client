@@ -24,6 +24,7 @@ import { label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
 import { CycleCard } from "@/features/inventory/cycle-card";
 import { PolicyCard } from "@/features/policy/policy-card";
+import { VulnOverviewCard } from "@/features/vulns/vuln-overview-card";
 
 export function OverviewPage() {
   const { selectedTenantId } = useTenant();
@@ -82,6 +83,7 @@ export function OverviewPage() {
       </div>
 
       {s && s.computers > 0 ? <PolicyCard tenantId={selectedTenantId} /> : null}
+      {s && s.computers > 0 ? <VulnOverviewCard tenantId={selectedTenantId} /> : null}
 
       {s && s.computers === 0 ? (
         <EmptyState
