@@ -8,7 +8,7 @@ truncate public.tenants, public.software_titles, public.audit_log, public.dictio
 delete from public.profiles;
 delete from public.maintenance_state;
 
-select plan(46);
+select plan(47);
 
 -- Fixtures: 7-Zip 23.01 (affected), 26.05 (fixed) and one without a version in tenant A; 7-Zip in B ----
 insert into auth.users (id, email) values
@@ -165,6 +165,14 @@ select results_eq($q$select platforms, computers::int from public.title_vulns('3
   $q$values (array['macos'], 0)$q$, 'the title page shows the OS and counts only computers with it');
 select is((select vulns::int from public.v_installation_details where hostname = 'PC1'), 0, 'a Windows installation does not count a macOS-only match');
 select is((select (vulns ->> 'high')::int from public.v_computer_list where hostname = 'PC1'), 0, 'nor does the Windows computer');
+reset role;
+insert into public.title_version_policy (tenant_id, title_id, version, policy_version, class)
+values ('10000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', '23.01', 1, 'unsanctioned_app');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select results_eq($q$select version, computers::int, policy_class::text, (vulns ->> 'high')::int, (vulns ->> 'possible')::int
+  from public.title_versions('30000000-0000-0000-0000-000000000001') order by version nulls first$q$,
+  $q$values (null::text, 1, null::text, 0, 0), ('23.01', 1, 'unsanctioned_app', 0, 0), ('26.05', 1, null, 0, 1)$q$,
+  'the title page lists each version with its class and CVE counts (a macOS-only match does not count on Windows)');
 reset role;
 
 -- 7. OS of the shared titles ----------------------------------------------------------------------------------

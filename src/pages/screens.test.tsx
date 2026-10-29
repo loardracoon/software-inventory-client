@@ -14,6 +14,7 @@ import { ComputersPage } from "./computers-page";
 import { OverviewPage } from "./overview-page";
 import { ScansPage } from "./scans-page";
 import { SoftwarePage } from "./software-page";
+import { SoftwareTitlePage } from "./software-title-page";
 
 vi.mock("@/features/inventory/api", async () => (await import("@/test/inventory-mock")).inventoryApiMock());
 vi.mock("@/features/dictionary/api", async () => (await import("@/test/inventory-mock")).dictionaryApiMock());
@@ -265,6 +266,29 @@ describe("Software", () => {
     expect(await screen.findByRole("heading", { level: 1, name: "Software" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Export CSV" })).not.toBeInTheDocument();
     vi.mocked(dictionary.useCanContribute).mockReturnValue(true);
+  });
+});
+
+describe("Software title", () => {
+  it("shows each installed version with its policy class and CVE icons", async () => {
+    vi.mocked(api.fetchTitle).mockResolvedValue({
+      title: { id: "x7", kind: "program", source: "programs", canonical_name: "7-Zip", vendor: "Igor Pavlov", external_id: null, first_seen_at: "2026-10-01T00:00:00Z" },
+      classification: null,
+      spellings: [],
+    } as never);
+    vi.mocked(api.fetchTitleVersions).mockResolvedValue([
+      { version: "26.05", computers: 2, policy_class: "sanctioned_app", vulns: { critical: 0, high: 0, medium: 0, low: 0, kev: 0, possible: 0, top: [] } },
+      { version: "23.01", computers: 1, policy_class: "unsanctioned_app", vulns: { critical: 0, high: 1, medium: 0, low: 0, kev: 1, possible: 0, top: [{ id: "CVE-2025-0411", severity: "HIGH", score: 7, kev: true, uncertain: false }] } },
+    ] as never);
+    renderAt("/software/x7", "/software/:titleId", <SoftwareTitlePage />);
+
+    const list = await screen.findByRole("list", { name: "Computers per version" });
+    const old = within(list).getByText("23.01").closest("li")!;
+    expect(within(old).getByRole("button", { name: "Unsanctioned" })).toBeInTheDocument();
+    expect(within(old).getByRole("button", { name: "Known exploited (CISA KEV): 1 CVE" })).toBeInTheDocument();
+    const current = within(list).getByText("26.05").closest("li")!;
+    expect(within(current).getByRole("button", { name: "Sanctioned" })).toBeInTheDocument();
+    expect(within(current).queryByRole("button", { name: /CVE/ })).toBeNull();
   });
 });
 

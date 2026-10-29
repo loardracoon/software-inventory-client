@@ -20,6 +20,7 @@ import {
   PREVIEW_CAP,
   publishPolicy,
 } from "@/features/policy/api";
+import { ImportPolicyButton } from "@/features/policy/import-policy-button";
 import { classifyAll, matchCounts } from "@/features/policy/preview";
 import { RulesTable } from "@/features/policy/rules-table";
 import { ClassSummary, DraftBar, OverdueBanner } from "@/features/policy/summary";
@@ -139,6 +140,7 @@ export function PoliciesPage() {
             <Button variant="secondary" size="sm" disabled={!doc} onClick={exportPolicy}>
               Export policy
             </Button>
+            {canEdit && tenantId ? <ImportPolicyButton tenantId={tenantId} hasDraft={Boolean(state.data?.draft)} onImported={reload} /> : null}
             {canEdit ? (
               <Button asChild size="sm">
                 <Link to={`/policies/rules/new?position=${(doc?.rules.length ?? 0) + 1}`}>New rule</Link>

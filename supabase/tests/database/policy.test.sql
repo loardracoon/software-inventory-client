@@ -10,7 +10,7 @@ truncate public.tenants, public.software_titles, public.sophos_connection, publi
 delete from public.profiles;
 delete from public.maintenance_state;
 
-select plan(45);
+select plan(52);
 
 -- Fixtures ----------------------------------------------------------------------------------------
 insert into auth.users (id, email) values
@@ -182,6 +182,31 @@ select results_eq($$select (o ->> 'unsanctioned_installations')::int, (o ->> 'un
     jsonb_array_length(o -> 'exceptions')
   from public.policy_overview('10000000-0000-0000-0000-00000000000a') o$$,
   $$values (2, 2, 1, 1)$$, 'overview: unsanctioned footprint, default titles and the exception due soon');
+reset role;
+
+-- Import (replaces the draft, never the published policy) ----------------------------------------
+select set_config('t.import', '{"version": 7, "default_class": "tolerated_app", "rules": [
+  {"position": 2, "name": "Second", "class": "sanctioned_app", "match": "all", "kinds": ["program"], "enabled": true, "owner": "IT",
+   "conditions": [{"field": "vendor", "operator": "equals", "value": "Adobe"}]},
+  {"position": 1, "name": "First", "class": "unsanctioned_app", "match": "any", "kinds": ["program", "extension"], "enabled": true, "lineage_id": "00000000-0000-0000-0000-000000000099",
+   "conditions": [{"field": "kev", "operator": "equals", "value": "true"}, {"field": "name", "operator": "contains", "value": "torrent"}]}]}', true);
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select throws_ok($q$select public.policy_import('10000000-0000-0000-0000-00000000000a', current_setting('t.import')::jsonb)$q$, '42501', null, 'a viewer cannot import');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select set_config('t.published', (select count(*) from public.policy_rules r join public.policies p on p.id = r.policy_id
+  where p.tenant_id = '10000000-0000-0000-0000-00000000000a' and p.status = 'published')::text, true);
+select is(public.policy_import('10000000-0000-0000-0000-00000000000a', current_setting('t.import')::jsonb), 2, 'an admin imports two rules');
+select results_eq($q$select r.position, r.name, r.class::text, p.default_class::text from public.policy_rules r join public.policies p on p.id = r.policy_id
+  where p.tenant_id = '10000000-0000-0000-0000-00000000000a' and p.status = 'draft' order by r.position$q$,
+  $q$values (1, 'First', 'unsanctioned_app', 'tolerated_app'), (2, 'Second', 'sanctioned_app', 'tolerated_app')$q$,
+  'the draft has the file''s rules in its order and its default class, with new lineages');
+select is((select count(*)::text from public.policy_rules r join public.policies p on p.id = r.policy_id
+  where p.tenant_id = '10000000-0000-0000-0000-00000000000a' and p.status = 'published'), current_setting('t.published'), 'the published policy does not change');
+select throws_ok($q$select public.policy_import('10000000-0000-0000-0000-00000000000a', '{"rules": [{"name": "Bad", "class": "nope", "kinds": ["program"], "conditions": [{"field": "name", "operator": "equals", "value": "x"}]}]}')$q$,
+  '22P02', null, 'a bad rule stops the import');
+select is((select count(*)::int from public.policy_rules r join public.policies p on p.id = r.policy_id
+  where p.tenant_id = '10000000-0000-0000-0000-00000000000a' and p.status = 'draft'), 2, 'and changes nothing');
+select throws_ok($q$select public.policy_import('10000000-0000-0000-0000-00000000000a', '{"name": "x"}')$q$, '22023', null, 'a file without rules is refused');
 reset role;
 
 select finish();

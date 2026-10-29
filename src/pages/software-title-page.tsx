@@ -23,6 +23,8 @@ import { ExportButton } from "@/features/dictionary/export-button";
 import { TitleClassificationActions, TitleRequestsCard } from "@/features/dictionary/title-classification";
 import { CHANGE_COLUMNS_WITH_COMPUTER } from "@/features/inventory/change-columns";
 import { useTenant } from "@/features/tenants/tenant-context";
+import { AttentionIcons, type VulnCounts } from "@/components/shared/attention-icons";
+import { ClassBadge } from "@/features/policy/class-badge";
 import { TitleVulnsCard } from "@/features/vulns/title-vulns-card";
 import { VulnSummary } from "@/features/vulns/vuln-badges";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -55,6 +57,11 @@ const COMPUTER_COLUMNS: ServerColumnDef<InstallationRow>[] = [
   { accessorKey: "valid_from", header: "In inventory since", cell: ({ getValue }) => formatDate(getValue() as string) },
   { accessorKey: "path", header: "Path", enableSorting: false, cell: ({ getValue }) => <span className="font-mono text-xs">{(getValue() as string | null) ?? "—"}</span> },
 ];
+
+const hasVulns = (v: unknown) => {
+  const c = v as Partial<VulnCounts> | null;
+  return !!c && (c.critical ?? 0) + (c.high ?? 0) + (c.medium ?? 0) + (c.low ?? 0) + (c.possible ?? 0) > 0;
+};
 
 export function SoftwareTitlePage() {
   const { titleId = "" } = useParams();
@@ -117,16 +124,25 @@ export function SoftwareTitlePage() {
         </Card>
         <Card className="gap-4 px-6">
           <Eyebrow>Version distribution</Eyebrow>
+          <p className="m-0 text-xs text-text-muted">Computers per installed version, with the policy class and known vulnerabilities of each version.</p>
           {versions.loading ? <Skeleton className="h-20 w-full" /> : null}
           {versions.data && versions.data.length === 0 ? <p className="m-0 text-sm text-text-muted">Not installed on any active computer.</p> : null}
           <ul className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Computers per version">
             {(versions.data ?? []).map((v) => (
-              <li key={v.version ?? "none"} className="grid grid-cols-[minmax(6rem,auto)_1fr_auto] items-center gap-3 text-sm">
-                <span className="font-mono">{v.version ?? "—"}</span>
-                <span className="h-2.5 rounded-full bg-surface-subtle">
-                  <span className="block h-full rounded-full bg-action" style={{ width: `${(100 * v.computers) / max}%` }} />
+              <li key={v.version ?? "none"} className="flex flex-col gap-1.5 text-sm">
+                <span className="grid grid-cols-[minmax(6rem,auto)_1fr_auto] items-center gap-3">
+                  <span className="font-mono">{v.version ?? "—"}</span>
+                  <span className="h-2.5 rounded-full bg-surface-subtle">
+                    <span className="block h-full rounded-full bg-action" style={{ width: `${(100 * v.computers) / max}%` }} />
+                  </span>
+                  <span className="text-text-muted">{formatNumber(v.computers)}</span>
                 </span>
-                <span className="text-text-muted">{formatNumber(v.computers)}</span>
+                {v.policy_class || hasVulns(v.vulns) ? (
+                  <span className="flex flex-wrap items-center gap-2">
+                    {v.policy_class ? <ClassBadge cls={v.policy_class} size="sm" /> : null}
+                    {hasVulns(v.vulns) ? <AttentionIcons scope="title" vulns={v.vulns as unknown as VulnCounts} /> : null}
+                  </span>
+                ) : null}
               </li>
             ))}
           </ul>

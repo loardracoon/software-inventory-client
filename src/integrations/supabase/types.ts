@@ -2256,6 +2256,9 @@ isOneToOne: false
 "policy_get":
 { Args: { "p_tenant_id": string }; Returns: Json
                            },
+"policy_import":
+{ Args: { "p_policy": Json,"p_tenant_id": string }; Returns: number
+                           },
 "policy_json":
 { Args: { "p_policy_id": string }; Returns: Json
                            },
@@ -2371,7 +2374,7 @@ isOneToOne: false
                            },
 "title_versions":
 { Args: { "p_tenant_id"?: string,"p_title_id": string }; Returns: {
-              "computers": number,"version": string
+              "computers": number,"policy_class": Database["public"]['Enums']["policy_class"],"version": string,"vulns": Json
             }[]
                            },
 "title_vulns":

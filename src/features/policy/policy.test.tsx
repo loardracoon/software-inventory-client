@@ -9,12 +9,17 @@ import { PoliciesPage } from "@/pages/policies-page";
 import * as policyApi from "./api";
 import type { PolicyDoc, PolicyRuleRow, PolicyState, PreviewInput } from "./api";
 import { ClassBadge } from "./class-badge";
+import * as importApi from "./import-policy";
 import { PolicyCard } from "./policy-card";
 import { matchCounts, classifyAll, previewRule } from "./preview";
 import { TitleTester } from "./title-tester";
 
 vi.mock("@/features/inventory/api", async () => (await import("@/test/inventory-mock")).inventoryApiMock());
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() } }));
+vi.mock("./import-policy", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./import-policy")>()),
+  importPolicy: vi.fn(async () => 1),
+}));
 vi.mock("./api", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./api")>();
   return {
@@ -202,10 +207,31 @@ describe("Policies page", () => {
     expect(screen.getByRole("button", { name: "Publish" })).toBeInTheDocument();
   });
 
+  it("imports an exported policy into the draft after confirmation, and explains a bad file", async () => {
+    const user = userEvent.setup();
+    renderPolicies({ published: doc([adobe, oldAdobe]), draft: null, versions: [], can_edit: true });
+    await rulesTable();
+    const upload = (name: string, content: unknown) =>
+      user.upload(screen.getByLabelText("Policy file to import"), new File([JSON.stringify(content)], name, { type: "application/json" }));
+
+    await upload("bad.json", { rules: [{ name: "X", class: "blocked", kinds: ["program"], conditions: [{ field: "name", operator: "equals", value: "x" }] }] });
+    expect(await screen.findByText("This file cannot be imported")).toBeInTheDocument();
+    expect(screen.getByText('Rule 1 "X": unknown class "blocked"')).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    expect(importApi.importPolicy).not.toHaveBeenCalled();
+
+    await upload("policy.json", { version: 4, default_class: "tolerated_app", rules: [{ position: 1, name: "Remote tools", class: "unsanctioned_app", match: "any", kinds: ["program"], enabled: true, conditions: [{ field: "name", operator: "contains", value: "anydesk" }] }] });
+    expect(await screen.findByText("Import 1 rule into the draft?")).toBeInTheDocument();
+    expect(screen.getByText("Default class: Tolerated")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Replace the draft" }));
+    await waitFor(() => expect(importApi.importPolicy).toHaveBeenCalledWith("t1", expect.objectContaining({ version: 4, default_class: "tolerated_app" })));
+  });
+
   it("viewers get no edit controls", async () => {
     renderPolicies({ published: doc([adobe, oldAdobe]), draft: null, versions: [], can_edit: false });
     expect(await within(await rulesTable()).findByRole("link", { name: "Adobe suite" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "New rule" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Import policy" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Reorder rule/ })).not.toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Rule 1 Adobe suite enabled" })).toBeDisabled();
   });
