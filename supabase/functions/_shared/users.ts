@@ -36,7 +36,7 @@ export function parseInvite(body: unknown): Invite {
 }
 
 // Invitations and sign-in links one admin may send per hour (each one is an email): RL_INVITES_PER_HOUR in
-// rate-limits.env (README › Rate limits). Counted from the audit log, which records every send.
+// rate-limits.env (docs/operations.md › Rate limits). Counted from the audit log, which records every send.
 export const INVITE_ACTIONS = ["invite user", "send sign-in link"];
 export function invitesPerHour(value: string | undefined): number {
   const n = Number.parseInt(value ?? "", 10);

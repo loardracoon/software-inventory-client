@@ -1,14 +1,14 @@
 # Endpoint Inventory on one host with Docker Compose: self-hosted Supabase (Postgres, Auth, PostgREST, Edge
 # Functions), the console and its gateway (the same images K3S runs), Mailpit, and Caddy in front (HTTPS with
 # Let's Encrypt when SITE_ADDRESS is a domain name, plain HTTP for a lab). install.sh writes .env (chmod 600)
-# and starts everything; update.sh follows main; backup.sh dumps the database. README › Deploy on one host.
+# and starts everything; update.sh follows main; backup.sh dumps the database. docs/operations.md › Deploy on one host.
 name: endpoint-inventory-app
 
 x-jwt: &jwt
   JWT_SECRET: ${JWT_SECRET}
 
 x-rate-limits: &rate-limits
-  # Rate limits and abuse protection (README › Rate limits); optional: without it the image defaults apply.
+  # Rate limits and abuse protection (docs/operations.md › Rate limits); optional: without it the image defaults apply.
   env_file: [{ path: ./rate-limits.env, required: false }]
 
 services:

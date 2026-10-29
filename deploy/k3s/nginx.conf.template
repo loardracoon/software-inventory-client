@@ -2,7 +2,7 @@
 # the built front end plus the Supabase APIs on the same host, and Mailpit (magic links) behind basic auth.
 #
 # Template: the nginx image fills ${RL_*} from the environment at start (web.Dockerfile sets the defaults; the
-# deployment overrides them from rate-limits.env). README › Rate limits explains each value.
+# deployment overrides them from rate-limits.env). docs/operations.md › Rate limits explains each value.
 
 map $http_upgrade $connection_upgrade {
   default upgrade;

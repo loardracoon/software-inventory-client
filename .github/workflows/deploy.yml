@@ -41,7 +41,7 @@ jobs:
           npm run lint
           npm test
 
-      # The one-host install (deploy/compose, README › Deploy on one host) must stay valid: Compose syntax
+      # The one-host install (deploy/compose, docs/operations.md › Deploy on one host) must stay valid: Compose syntax
       # with placeholder values, and the scripts (ShellCheck is on the runner image).
       - name: Check the one-host install
         working-directory: deploy/compose

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Keeps this host on the build CI deploys on main (README › Deploy on one host). When this folder is a git
+# Keeps this host on the build CI deploys on main (docs/operations.md › Deploy on one host). When this folder is a git
 # checkout, it first pulls main (so changes to docker-compose.yml, the Caddyfile and rate-limits.env arrive
 # too); then it reads the image tag CI wrote into deploy/k3s/app/stack.yaml and, when it changed, pulls the
 # images, applies new migrations and recreates what changed. Run by endpoint-inventory-update.timer

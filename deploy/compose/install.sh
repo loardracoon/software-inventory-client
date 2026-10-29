@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command install of Endpoint Inventory on one host (README › Deploy on one host).
+# One-command install of Endpoint Inventory on one host (docs/operations.md › Deploy on one host).
 #
 #   ./install.sh --domain inventory.example.com      HTTPS with Let's Encrypt (ports 80 and 443 reach this host)
 #   ./install.sh --http-port 8080                    plain HTTP on http://<this host>:8080 (lab or laptop)

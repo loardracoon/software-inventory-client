@@ -1,7 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 // Smoke tests against a running app and a Supabase stack with data: by default the isolated end-to-end
-// stack (API 55321, Mailpit 55324) and the app served for it on 5174. See README › Tests.
+// stack (API 55321, Mailpit 55324) and the app served for it on 5174. See docs/operations.md › Tests.
 export default defineConfig({
   testDir: "e2e",
   globalSetup: "./e2e/global-setup.ts",
