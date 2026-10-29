@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorLine } from "@/components/shared/error-line";
 import { Eyebrow } from "@/components/shared/eyebrow";
 import { formatDate, formatNumber } from "@/lib/format";
+import { PLATFORM_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
 import { fetchTitleVulns, nvdUrl, type TitleVulnRow } from "./api";
 import { KevBadge, SeverityBadge } from "./vuln-badges";
@@ -34,6 +35,7 @@ function VulnItem({ v }: { v: TitleVulnRow }) {
             EPSS {(Number(v.epss) * 100).toFixed(1)}%
           </span>
         ) : null}
+        {v.platforms?.length ? <span className="text-xs text-text-muted">{v.platforms.map((p) => PLATFORM_LABEL[p] ?? p).join(", ")} only</span> : null}
         {v.uncertain ? <span className="text-xs text-text-muted">May apply: {uncertainReason(v)}</span> : null}
       </div>
       {v.summary ? <p className="m-0 line-clamp-3 text-sm">{v.summary}</p> : null}

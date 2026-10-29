@@ -33,8 +33,8 @@ describe("runVulnEvaluation", () => {
     expect(calls.map((c) => c.fn)).toEqual(["vuln_due_tenants", "vuln_eval_inputs", "vuln_product_ranges", "vuln_store_matches", "vuln_finish_eval"]);
     const store = calls[3].args;
     expect(store.p_matches).toEqual([
-      { title_id: "a", version: "23.01", product_key: SEVEN, vuln_id: "CVE-2025-0411", uncertain: false, fixed_in: "24.09" },
-      { title_id: "b", version: "", product_key: SEVEN, vuln_id: "CVE-2025-0411", uncertain: true, fixed_in: "24.09" },
+      { title_id: "a", version: "23.01", product_key: SEVEN, vuln_id: "CVE-2025-0411", uncertain: false, fixed_in: "24.09", platforms: null },
+      { title_id: "b", version: "", product_key: SEVEN, vuln_id: "CVE-2025-0411", uncertain: true, fixed_in: "24.09", platforms: null },
     ]);
     // The same run id stores and finishes.
     expect(calls[4].args).toEqual({ p_tenant_id: "t1", p_run_id: store.p_run_id, p_changed: true });
@@ -59,5 +59,22 @@ describe("runVulnEvaluation", () => {
 describe("matchPairs", () => {
   it("skips products without CVEs", () => {
     expect(matchPairs([{ title_id: "x", version: "1", product_key: "program|x|y" }], new Map())).toEqual([]);
+  });
+
+  it("applies a range with an OS only on computers with that OS", () => {
+    const KEY = "extension|x|ext";
+    const vulns = new Map([
+      [KEY, [
+        { product_key: KEY, vuln_id: "CVE-MAC", ranges: [{ version_end: "2.0", end_inclusive: false, platforms: ["macos"] }] },
+        { product_key: KEY, vuln_id: "CVE-ALL", ranges: [{ version_end: "2.0", end_inclusive: false }] },
+        { product_key: KEY, vuln_id: "CVE-SPLIT", ranges: [{ version_end: "2.0", end_inclusive: false, platforms: ["windows"] }, { exact_version: "1.5", platforms: ["macos"] }] },
+      ]],
+    ]);
+    const on = (platforms: string[]) =>
+      matchPairs([{ title_id: "t", version: "1.0", product_key: KEY, platforms }], vulns).map((m) => [m.vuln_id, m.platforms]);
+    // A Windows-only pair: the macOS CVE does not apply.
+    expect(on(["windows"])).toEqual([["CVE-ALL", null], ["CVE-SPLIT", null]]);
+    // The same version on Windows and macOS: the macOS CVE holds on macOS only; CVE-SPLIT on Windows only (1.0 is not 1.5).
+    expect(on(["macos", "windows"])).toEqual([["CVE-MAC", ["macos"]], ["CVE-ALL", null], ["CVE-SPLIT", ["windows"]]]);
   });
 });

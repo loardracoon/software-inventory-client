@@ -3,7 +3,8 @@
 //   1 pull   GET dictionary-changes since last_seq, one apply_dictionary_changes transaction per page
 //   1b vulns GET vulnerability-changes since vuln_last_seq, one apply_vulnerability_changes per page
 //            (Phase 10b; a Hub without the feed or a feed error does not fail the sync)
-//   2 push   unsent hub_submissions to titles-submit, only when sharing is on
+//   2 push   unsent hub_submissions to titles-submit with the OS families where each title is installed,
+//            and titles installed on an OS not sent yet; only when sharing is on
 //   3 status GET reclassification-requests for the open requests
 // The cache keeps classifying while the hub is unreachable; hub_sync_finished records the backoff.
 
@@ -130,22 +131,19 @@ export async function runHubSync(admin: SupabaseClient, state: HubState, logs: L
     // 1b vulnerabilities
     await pullVulnerabilities(admin, state, summary, logs, timeLeft);
 
-    // 2 push: metadata only (hub.ts copies the six allowed fields)
+    // 2 push: metadata and OS families only (hub.ts copies the allowed fields)
     while (state.share && timeLeft() > MIN_TIME_LEFT_MS) {
-      const { data, error } = await admin
-        .from("hub_submissions")
-        .select("id, kind, source, match_key, name, vendor, description")
-        .is("sent_at", null)
-        .order("first_seen")
-        .limit(SUBMIT_BATCH);
+      const { data, error } = await admin.rpc("hub_submissions_due", { p_limit: SUBMIT_BATCH });
       if (error) throw new Error(`Could not read hub submissions: ${error.message}`);
       const rows = (data ?? []) as (TitleSubmission & { id: string })[];
       if (rows.length === 0) break;
-      await state.hub.submitTitles(rows);
-      const { error: markError } = await admin
-        .from("hub_submissions")
-        .update({ sent_at: new Date().toISOString() })
-        .in("id", rows.map((r) => r.id));
+      const result = await state.hub.submitTitles(rows);
+      // The OS list counts as sent also when an older Hub refused it, so titles are not sent again at every
+      // sync; a title goes again when it appears on another OS.
+      if (!result.platforms) logs.add("warn", "The Dictionary Hub does not accept the OS of titles yet; titles were sent without it");
+      const { error: markError } = await admin.rpc("hub_submissions_sent", {
+        p_items: rows.map((r) => ({ id: r.id, platforms: r.platforms ?? [] })),
+      });
       if (markError) throw new Error(`Could not mark hub submissions as sent: ${markError.message}`);
       summary.submitted += rows.length;
       if (rows.length < SUBMIT_BATCH) break;

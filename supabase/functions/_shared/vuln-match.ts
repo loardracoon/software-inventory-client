@@ -14,7 +14,12 @@ export type VulnRange = {
   version_end?: string | null;
   end_inclusive?: boolean | null;
   exact_version?: string | null;
+  // Operating systems the range applies to (windows, macos, linux); absent, null or empty = every one.
+  platforms?: string[] | null;
 };
+
+// The ranges that apply on one OS.
+export const rangesFor = (ranges: VulnRange[], platform: string): VulnRange[] => ranges.filter((r) => !r.platforms?.length || r.platforms.includes(platform));
 
 export type VersionMatch = { uncertain: boolean; fixed_in: string | null };
 

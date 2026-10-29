@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 
 const PORT = Number(process.argv[2] ?? 54998);
 const KEY = "mock-hub-client-key-0123456789";
-const SUBMIT_FIELDS = ["kind", "source", "match_key", "name", "vendor", "description"];
+const SUBMIT_FIELDS = ["kind", "source", "match_key", "name", "vendor", "description", "platforms"];
 
 // Deterministic UUIDs, so categories keep their ids between restarts.
 const uuid = (text) => {

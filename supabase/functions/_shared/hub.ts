@@ -1,7 +1,8 @@
 // Dictionary Hub client API (docs/phases/hub-H2-client-api.md). Bearer client key on every call;
 // 429 and 5xx are retried by http.ts. Runtime-neutral (Deno and Node) so Vitest can test it.
-// What leaves this app is limited here: titles carry only the six metadata fields, never hostnames,
-// users, tenant names or install counts.
+// What leaves this app is limited here: titles carry only the six metadata fields and the OS families
+// where they are installed (windows, macos, linux), never hostnames, users, tenant names, versions or
+// install counts.
 
 import { fetchWithRetry, type AttemptInfo, type FetchLike, type Sleep } from "./http.ts";
 import type { ApiCallLog } from "./sophos.ts";
@@ -85,7 +86,10 @@ export type TitleSubmission = {
   name: string;
   vendor: string | null;
   description: string | null;
+  platforms?: string[] | null;
 };
+
+export const PLATFORMS = ["windows", "macos", "linux"];
 
 export type RequestStatus = { id: string; status: string; admin_note: string | null };
 
@@ -100,8 +104,12 @@ export class HubError extends Error {
   }
 }
 
-// Copies only the allowed fields, whatever else the row carries.
-export function toSubmission(row: { kind: string; source: string; match_key: string; name: string; vendor?: string | null; description?: string | null }): TitleSubmission {
+// Copies only the allowed fields, whatever else the row carries. platforms keeps only OS family names.
+export function toSubmission(
+  row: { kind: string; source: string; match_key: string; name: string; vendor?: string | null; description?: string | null; platforms?: string[] | null },
+  withPlatforms = true,
+): TitleSubmission {
+  const platforms = [...new Set((row.platforms ?? []).filter((p) => PLATFORMS.includes(p)))].sort();
   return {
     kind: row.kind,
     source: row.source,
@@ -109,6 +117,7 @@ export function toSubmission(row: { kind: string; source: string; match_key: str
     name: row.name,
     vendor: row.vendor ?? null,
     description: row.description ? row.description.slice(0, DESCRIPTION_MAX) : null,
+    ...(withPlatforms && platforms.length ? { platforms } : {}),
   };
 }
 
@@ -146,15 +155,23 @@ export class HubClient {
     return { items: page.items ?? [], next_seq: page.next_seq, has_more: page.has_more === true };
   }
 
-  // Sends in batches of 500; returns how many titles were accepted.
-  async submitTitles(titles: TitleSubmission[]): Promise<number> {
+  // Sends in batches of 500; returns how many titles were accepted and whether the OS families went with
+  // them. A Hub from before the platforms field refuses it (HTTP 400): the batch goes again without it.
+  async submitTitles(titles: TitleSubmission[]): Promise<{ sent: number; platforms: boolean }> {
     let sent = 0;
+    let platforms = true;
     for (let i = 0; i < titles.length; i += SUBMIT_BATCH) {
-      const batch = titles.slice(i, i + SUBMIT_BATCH).map(toSubmission);
-      await this.request("POST", "/titles-submit", { titles: batch });
-      sent += batch.length;
+      const rows = titles.slice(i, i + SUBMIT_BATCH);
+      try {
+        await this.request("POST", "/titles-submit", { titles: rows.map((t) => toSubmission(t, platforms)) });
+      } catch (error) {
+        if (!platforms || !(error instanceof HubError) || error.status !== 400 || !/platforms/.test(error.message)) throw error;
+        platforms = false;
+        await this.request("POST", "/titles-submit", { titles: rows.map((t) => toSubmission(t, false)) });
+      }
+      sent += rows.length;
     }
-    return sent;
+    return { sent, platforms };
   }
 
   async createRequest(request: {

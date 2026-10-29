@@ -8,7 +8,7 @@ truncate public.tenants, public.software_titles, public.audit_log, public.dictio
 delete from public.profiles;
 delete from public.maintenance_state;
 
-select plan(38);
+select plan(46);
 
 -- Fixtures: 7-Zip 23.01 (affected), 26.05 (fixed) and one without a version in tenant A; 7-Zip in B ----
 insert into auth.users (id, email) values
@@ -151,6 +151,28 @@ reset role;
 select is(public.apply_vulnerability_changes('[{"product_key": "program|igor pavlov|7-zip", "vuln_id": "CVE-2025-0411", "removed": true, "seq": 7}]', 7) ->> 'removed', '1',
   'a removed item leaves the cache');
 select is((select count(*)::int from public.title_version_vulns where vuln_id = 'CVE-2025-0411'), 0, 'and its matches go with it');
+
+-- 6. Operating systems --------------------------------------------------------------------------------------------
+select results_eq($q$select version, platforms from public.vuln_eval_inputs('10000000-0000-0000-0000-00000000000a') where title_id = '30000000-0000-0000-0000-000000000001'$q$,
+  $q$values ('23.01', array['windows'])$q$, 'the matcher gets the OS of the computers of each pair');
+select public.apply_vulnerability_changes('[{"product_key": "program|igor pavlov|7-zip", "vuln_id": "CVE-2030-0002", "severity": "HIGH", "cvss_score": 8.0,
+  "ranges": [{"version_end": "24.0", "platforms": ["macos"]}], "seq": 9}]', 9);
+select is(public.vuln_store_matches('10000000-0000-0000-0000-00000000000a', 'e0000000-0000-0000-0000-000000000003',
+  '[{"title_id": "30000000-0000-0000-0000-000000000001", "version": "23.01", "product_key": "program|igor pavlov|7-zip", "vuln_id": "CVE-2030-0002", "uncertain": false, "platforms": ["macos"]}]') ->> 'stored', '1',
+  'a match keeps its OS');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select results_eq($q$select platforms, computers::int from public.title_vulns('30000000-0000-0000-0000-000000000001') where vuln_id = 'CVE-2030-0002'$q$,
+  $q$values (array['macos'], 0)$q$, 'the title page shows the OS and counts only computers with it');
+select is((select vulns::int from public.v_installation_details where hostname = 'PC1'), 0, 'a Windows installation does not count a macOS-only match');
+select is((select (vulns ->> 'high')::int from public.v_computer_list where hostname = 'PC1'), 0, 'nor does the Windows computer');
+reset role;
+
+-- 7. OS of the shared titles ----------------------------------------------------------------------------------
+insert into public.hub_submissions (kind, source, match_key, name, sent_at) values ('program', 'programs', '7-zip|igor pavlov', '7-Zip', now());
+select results_eq($q$select name, platforms from public.hub_submissions_due()$q$, $q$values ('7-Zip', array['windows'])$q$,
+  'a title sent before goes again with the OS families where it is installed');
+select is(public.hub_submissions_sent((select jsonb_agg(jsonb_build_object('id', id, 'platforms', platforms)) from public.hub_submissions_due())), 1, 'marked as sent');
+select is((select count(*)::int from public.hub_submissions_due()), 0, 'and not due again until it appears on another OS');
 
 select * from finish();
 rollback;

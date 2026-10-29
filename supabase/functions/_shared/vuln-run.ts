@@ -5,15 +5,17 @@
 // run did not store. A run that stops for time is not finished; the next one starts again.
 // Runtime-neutral: the database is any client with rpc(), so Vitest drives it with a fake.
 
-import { matchVersion, type VulnRange } from "./vuln-match.ts";
+import { matchVersion, rangesFor, type VersionMatch, type VulnRange } from "./vuln-match.ts";
 
 export type RpcClient = {
   rpc(fn: string, args?: Record<string, unknown>): PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }>;
 };
 
-type Pair = { title_id: string; version: string; product_key: string };
+// platforms: the OS of the computers where the pair is installed.
+type Pair = { title_id: string; version: string; product_key: string; platforms?: string[] | null };
 type ProductVuln = { product_key: string; vuln_id: string; ranges: VulnRange[] };
-export type VulnMatch = { title_id: string; version: string; product_key: string; vuln_id: string; uncertain: boolean; fixed_in: string | null };
+// platforms: the OS of the pair's computers the CVE affects; null = every computer of the pair.
+export type VulnMatch = { title_id: string; version: string; product_key: string; vuln_id: string; uncertain: boolean; fixed_in: string | null; platforms: string[] | null };
 
 export type VulnRunSummary = { tenants: number; pairs: number; matches: number; new: number; removed: number; alerts: number; complete: boolean; errors: string[] };
 
@@ -28,13 +30,29 @@ async function call<T>(db: RpcClient, fn: string, args: Record<string, unknown>)
   return data as T;
 }
 
-// The matches of one page of pairs.
+// The matches of one page of pairs. A range with an OS applies only on that OS, so each OS of the pair
+// is matched with its own ranges; the match keeps the OS where it holds (null when it holds on all).
 export function matchPairs(pairs: Pair[], vulnsByProduct: Map<string, ProductVuln[]>): VulnMatch[] {
   const out: VulnMatch[] = [];
   for (const p of pairs) {
+    const platforms = p.platforms?.length ? p.platforms : null;
     for (const v of vulnsByProduct.get(p.product_key) ?? []) {
-      const m = matchVersion(p.version, v.ranges ?? []);
-      if (m) out.push({ title_id: p.title_id, version: p.version, product_key: p.product_key, vuln_id: v.vuln_id, uncertain: m.uncertain, fixed_in: m.fixed_in });
+      const ranges = v.ranges ?? [];
+      let best: VersionMatch | null = null;
+      let on: string[] | null = null;
+      if (!platforms || ranges.every((r) => !r.platforms?.length)) {
+        best = matchVersion(p.version, ranges);
+      } else {
+        on = [];
+        for (const os of platforms) {
+          const m = matchVersion(p.version, rangesFor(ranges, os));
+          if (!m) continue;
+          on.push(os);
+          if (!best || (best.uncertain && !m.uncertain)) best = m;
+        }
+        if (on.length === platforms.length) on = null;
+      }
+      if (best) out.push({ title_id: p.title_id, version: p.version, product_key: p.product_key, vuln_id: v.vuln_id, uncertain: best.uncertain, fixed_in: best.fixed_in, platforms: on });
     }
   }
   return out;

@@ -53,7 +53,7 @@ describe("HubClient", () => {
       computers: 3,
       description: i === 0 ? "x".repeat(1500) : null,
     }));
-    expect(await client.submitTitles(rows)).toBe(1201);
+    expect(await client.submitTitles(rows)).toEqual({ sent: 1201, platforms: true });
     const bodies = calls.map((c) => JSON.parse(String(c.init.body)) as { titles: Record<string, unknown>[] });
     expect(bodies.map((b) => b.titles.length)).toEqual([500, 500, 201]);
     for (const b of bodies) for (const t of b.titles) expect(Object.keys(t).sort()).toEqual(["description", "kind", "match_key", "name", "source", "vendor"]);
@@ -90,5 +90,18 @@ describe("HubClient", () => {
   it("toSubmission drops anything that is not metadata", () => {
     const row = { ...title(1), hostname: "W1", username: "alice" } as TitleSubmission & Record<string, unknown>;
     expect(toSubmission(row)).toEqual(title(1));
+  });
+
+  it("sends the OS families of a title (known names only) and, for an older Hub, the batch again without them", async () => {
+    expect(toSubmission({ ...title(1), platforms: ["windows", "macos", "windows", "Windows 11 Pro"] })).toEqual({ ...title(1), platforms: ["macos", "windows"] });
+    expect(toSubmission({ ...title(1), platforms: ["windows"] }, false)).toEqual(title(1));
+
+    const { client, calls } = hub((_url, init) => {
+      const body = JSON.parse(String(init.body)) as { titles: Record<string, unknown>[] };
+      return body.titles.some((t) => "platforms" in t) ? json({ error: "titles[0]: fields not allowed: platforms" }, 400) : json({ accepted: 1 });
+    });
+    expect(await client.submitTitles([{ ...title(1), platforms: ["linux"] }])).toEqual({ sent: 1, platforms: false });
+    expect(calls).toHaveLength(2);
+    expect(JSON.parse(String(calls[1].init.body)).titles[0]).not.toHaveProperty("platforms");
   });
 });
