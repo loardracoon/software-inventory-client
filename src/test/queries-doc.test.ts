@@ -1,16 +1,15 @@
 // docs/queries.md must say what the app really runs: every SQL of the query catalog (version 1 migration), the
 // capability probe, and the number of catalog rows. Change the document and the catalog together.
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { PROBE_QUERY } from "../../supabase/functions/_shared/capability-probe";
+// ?raw gives the file text (Vite), so this test needs no Node types.
+import migrationRaw from "../../supabase/migrations/20261026220000_query_catalog_v1.sql?raw";
+import docRaw from "../../docs/queries.md?raw";
 
-// Vitest runs from the project root.
-const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8").replace(/\r\n/g, "\n");
 const squash = (sql: string) => sql.replace(/\s+/g, " ").trim();
 
-const migration = read("supabase/migrations/20261026220000_query_catalog_v1.sql");
-const doc = read("docs/queries.md");
+const migration = migrationRaw.replace(/\r\n/g, "\n");
+const doc = docRaw.replace(/\r\n/g, "\n");
 
 // Rows of the catalog: ('domain', 'platform', 1, 'name', '{tables}', $q$ SQL $q$)
 const rows = [...migration.matchAll(/\('(\w+)', '(\w+)', 1, '([\w.]+)', '\{([^}]*)\}', \$q\$([\s\S]*?)\$q\$\)/g)].map((m) => ({
