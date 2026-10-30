@@ -80,7 +80,8 @@ flowchart LR
 ```
 
 - A **collector** runs every 5 minutes. It opens the weekly cycle, sends osquery queries to the computers in
-  batches, reads the results and turns them into versioned inventory.
+  batches, reads the results and turns them into versioned inventory. Every query, with its SQL, the columns it
+  returns and what the app does with them, is in **[docs/queries.md](docs/queries.md)**.
 - Only the server side (Edge Functions) talks to Sophos Central and to the Hub. The Sophos credential and the Hub
   key are kept encrypted in the database (Vault) and never reach the browser.
 - Built with React, TypeScript and Tailwind (Sophos Design System 2026 tokens) on self-hosted Supabase (Postgres 17,
@@ -289,6 +290,7 @@ when to change it, is in **[docs/rate-limits.md](docs/rate-limits.md)**.
 
 | Document | Content |
 | --- | --- |
+| [docs/queries.md](docs/queries.md) | Every osquery query the app sends (19 in the catalog): SQL, columns, what is collected and what is not, how the app uses the rows, versions, how to test one by hand |
 | [docs/rate-limits.md](docs/rate-limits.md) | Each rate-limit variable: what it does, the recommended number, when to change it, how to check |
 | [docs/operations.md](docs/operations.md) | Local setup, the deploy methods, cron jobs, secrets, key rotation, query versions, alerts, API budget, SSO plan, rate limits, tests |
 | [deploy/k3s/README.md](deploy/k3s/README.md) | Kubernetes (K3S) and Argo CD |

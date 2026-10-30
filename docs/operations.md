@@ -148,7 +148,7 @@ Keeping the same URL keeps the sync position (`last_seq`). A different URL start
 
 ### Add a query version
 
-Queries are rows in `query_catalog`, unique on (platform, name, version), and change only by migration.
+Queries are rows in `query_catalog`, unique on (platform, name, version), and change only by migration. Every query is explained in [queries.md](queries.md); the test `src/test/queries-doc.test.ts` fails when that document and the catalog differ, so update both.
 
 1. Write a migration that inserts the new version with a higher `version` (see `20261027030100_programs_query_v2.sql`).
 2. If normalization changes, branch on the query version in `supabase/functions/_shared/normalize.ts`. Keep the old version's output identical, and back that with a test that pins a stored `row_hash`.
