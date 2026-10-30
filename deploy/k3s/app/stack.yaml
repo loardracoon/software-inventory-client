@@ -44,7 +44,13 @@ spec:
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits: { memory: 1Gi }
-          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+            # The Vault key. Without this mount a new db container creates a new key and every Vault secret is lost.
+            - { name: pgsodium-key, mountPath: /etc/postgresql-custom/pgsodium_root.key, subPath: pgsodium_root.key, readOnly: true }
+      volumes:
+        - name: pgsodium-key
+          secret: { secretName: pgsodium-root-key, defaultMode: 0444 }
   volumeClaimTemplates:
     - metadata: { name: data }
       spec:

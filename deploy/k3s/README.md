@@ -56,8 +56,8 @@ below need this once.
    shred -u /tmp/pgsodium_root.key 2>/dev/null || rm -f /tmp/pgsodium_root.key
    ```
 
-3. Mount it in the `db` StatefulSet of `app/stack.yaml` (only after step 2: a missing Secret stops the pod), push,
-   and let Argo CD roll `db-0`:
+3. The mount is already in the `db` StatefulSet of `app/stack.yaml`, so create the Secret of step 2 **before** the first
+   sync (a missing Secret stops the pod). It looks like this:
 
    ```yaml
    # container postgres › volumeMounts:
