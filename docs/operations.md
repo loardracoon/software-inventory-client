@@ -172,6 +172,8 @@ The Scans page shows, per tenant: runs this minute (limit 10), runs today (limit
 
 ### Rate limits and abuse protection
 
+Every variable is explained in [rate-limits.md](rate-limits.md). The text below is a short version.
+
 All limits are in one file per deployment: **`deploy/k3s/app/rate-limits.env`** on K3S, **`deploy/compose/rate-limits.env`** on one host (Docker Compose loads it into the same three services; after a change, `docker compose up -d`). Kustomize turns it into the ConfigMap `rate-limits` (`deploy/k3s/app/kustomization.yaml`), which the gateway, Auth and the Edge Functions load; its name carries a hash of the content, so a change pushed to `main` rolls those pods through Argo CD. Values for a team of up to ~50 users behind one office address:
 
 | Setting | Recommended | What it limits |

@@ -261,14 +261,35 @@ Unsanctioned while newer versions are Sanctioned. A title shows its most restric
 - The Sophos credential, the Hub key and the alert channels are stored encrypted in the database (Vault), written
   by admins only, and shown afterwards only as a hint (`••••7777`). They never reach the browser or the repository.
 - Row-level security on every table; every change of settings, policy and users goes to the audit log.
-- Rate limits on the gateway, the sign-in and the email, in one file per deployment:
-  [docs/operations.md › Rate limits and abuse protection](docs/operations.md#rate-limits-and-abuse-protection).
+- Rate limits on the gateway, the sign-in and the email, in one file for each deployment
+  (`deploy/compose/rate-limits.env` and `deploy/k3s/app/rate-limits.env`). See
+  [Rate limits](#rate-limits) below and [docs/rate-limits.md](docs/rate-limits.md).
 - Plain HTTP (`--http-port`) is for trusted networks only; use `--domain` for anything else.
+
+## Rate limits
+
+These limits protect the app against too many requests and against guessing of sign-in links.
+
+| What | Variables (file `rate-limits.env`) | Recommended |
+| --- | --- | --- |
+| Sign-in links and code checks, for each address | `RL_AUTH_STRICT_RATE`, `RL_AUTH_STRICT_BURST` | `10r/m`, `10` |
+| Other Auth calls, for each address | `RL_AUTH_RATE`, `RL_AUTH_BURST` | `120r/m`, `60` |
+| Database API, for each address | `RL_REST_RATE`, `RL_REST_BURST` | `30r/s`, `120` |
+| Edge Functions, for each address | `RL_FUNCTIONS_RATE`, `RL_FUNCTIONS_BURST` | `10r/s`, `60` |
+| Open connections, for each address | `RL_CONN_PER_IP` | `60` |
+| Largest request body | `RL_BODY_AUTH`, `RL_BODY_REST`, `RL_BODY_FUNCTIONS` | `64k`, `2m`, `10m` |
+| Auth limits for each address (needs the header) | `GOTRUE_RATE_LIMIT_HEADER` and `_OTP`, `_VERIFY`, `_TOKEN_REFRESH` | `X-Real-IP`, `10`, `15`, `60` (in 5 minutes) |
+| Emails from Auth, for the whole app | `GOTRUE_RATE_LIMIT_EMAIL_SENT` | `60` for each hour |
+| Invitations for each admin | `RL_INVITES_PER_HOUR` | `20` for each hour |
+
+The numbers are for a team of up to about 50 users behind one office address. Every variable, with the reason and
+when to change it, is in **[docs/rate-limits.md](docs/rate-limits.md)**.
 
 ## More documentation
 
 | Document | Content |
 | --- | --- |
+| [docs/rate-limits.md](docs/rate-limits.md) | Each rate-limit variable: what it does, the recommended number, when to change it, how to check |
 | [docs/operations.md](docs/operations.md) | Local setup, the deploy methods, cron jobs, secrets, key rotation, query versions, alerts, API budget, SSO plan, rate limits, tests |
 | [deploy/k3s/README.md](deploy/k3s/README.md) | Kubernetes (K3S) and Argo CD |
 | [docs/spec.md](docs/spec.md) | The design document |
