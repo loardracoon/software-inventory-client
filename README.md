@@ -25,6 +25,7 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 - [Connect to a Dictionary Hub](#connect-to-a-dictionary-hub)
 - [Configure the application policy](#configure-the-application-policy)
 - [Users and access](#users-and-access)
+- [Data flow: what leaves this app](#data-flow-what-leaves-this-app)
 - [Security](#security)
 - [More documentation](#more-documentation)
 
@@ -256,6 +257,50 @@ Unsanctioned while newer versions are Sanctioned. A title shows its most restric
   reclassification requests, Scan now), **viewer** (reads; usernames on computers are hidden).
 - **Settings › Users and access**: add people by email with a role (they receive a one-click invitation), or allow
   a whole domain as viewer or operator. Unknown emails cannot create an account.
+
+## Data flow: what leaves this app
+
+This app makes outbound calls to **three kinds of destination**. Nothing else leaves it: there is no telemetry, no
+analytics and no call to an AI provider.
+
+| Destination | When | What is sent | What comes back |
+| --- | --- | --- | --- |
+| **Sophos Central** (Sophos APIs) | Always (this is the collection) | The Sophos credential (to get a token) and the osquery queries of [docs/queries.md](docs/queries.md) for the computers you manage | The query results. This data stays between Sophos Central and this app |
+| **A Dictionary Hub** | Only if you configure one in Settings | The fields in the table below | Categories, product grouping and CVE version ranges |
+| **Your alert channels** | Only if you add a webhook or email in Settings › Alerts | The alert message (for example "new unsanctioned software"), which can name computers and software | Nothing |
+
+The sign-in emails (magic links) and alert emails go through the email service you configure for the deployment.
+
+### Exactly what goes to the Hub
+
+| Call | Fields sent |
+| --- | --- |
+| Pull the dictionary and the CVE feed (`dictionary-changes`, `vulnerability-changes`) | The client key and a sequence number (`since`). No inventory data |
+| Share unknown titles (`titles-submit`), only when **Share unknown titles with the hub** is on | For each title the Hub does not know yet: `kind`, `source`, `match_key`, `name`, `vendor`, `description` (at most 1,000 characters) and the OS families where it is installed (`windows`, `macos`, `linux`) |
+| Reclassification request (`reclassification-requests`), only when a person clicks **Request reclassification** | `kind`, `source`, `match_key`, the suggested category, the reason (at most 500 characters) and an optional evidence URL |
+| Request status (`reclassification-requests?ids=`) | The IDs of your open requests |
+
+The Hub also sees the usual HTTP metadata of any web request (your server's IP address, the time) and the name and
+contact email you gave when the client key was created.
+
+**Never sent**: hostnames, usernames, tenant or customer names, serial numbers, IP addresses of computers, installed
+versions, install counts, the number of computers, policy rules and classes, hardware data, or the Sophos credential.
+The code that builds the payload copies only the fields above (`supabase/functions/_shared/hub.ts`, function
+`toSubmission`) and a unit test checks it. CVE matching is done here: the Hub sends version ranges and this app
+compares them with its own versions.
+
+Two details to know before you turn sharing on:
+
+- A title name is sent as the computer reports it. Older Windows names can contain a version
+  ("7-Zip 23.01 (x64)"); the current queries remove versions from new names. The `description` is free text from
+  the software's own metadata.
+- A software title that is **specific to your company** (an internal tool name) is also sent while sharing is on.
+  If that is not acceptable, turn **Share unknown titles with the hub** off: the app then only receives data and
+  sends nothing but the requests that a person starts.
+
+The Hub may send a title's metadata to an AI provider to classify it. That is described, with the list of supported
+engines, in the Hub's
+[Data flow and AI processing](https://github.com/loardracoon/software-inventory-hub#data-flow-and-ai-processing).
 
 ## Security
 
