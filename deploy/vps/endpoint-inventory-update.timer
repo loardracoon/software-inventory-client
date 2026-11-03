@@ -1,0 +1,10 @@
+[Unit]
+Description=Check GitHub for a new Endpoint Inventory build every 5 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

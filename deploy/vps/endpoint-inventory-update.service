@@ -1,0 +1,8 @@
+[Unit]
+Description=Update Endpoint Inventory to the build deployed from GitHub main
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/endpoint-inventory/update.sh
