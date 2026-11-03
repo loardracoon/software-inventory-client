@@ -26,6 +26,7 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 - [Configure the application policy](#configure-the-application-policy)
 - [Users and access](#users-and-access)
 - [Data flow: what leaves this app](#data-flow-what-leaves-this-app)
+- [Hosted test and demo environment](#hosted-test-and-demo-environment)
 - [Security](#security)
 - [More documentation](#more-documentation)
 
@@ -301,6 +302,24 @@ Two details to know before you turn sharing on:
 The Hub may send a title's metadata to an AI provider to classify it. That is described, with the list of supported
 engines, in the Hub's
 [Data flow and AI processing](https://github.com/loardracoon/software-inventory-hub#data-flow-and-ai-processing).
+
+## Hosted test and demo environment
+
+The author hosts one instance of each app **for tests and demos**:
+
+| App | Address |
+| --- | --- |
+| Endpoint Inventory (this repository) | <https://inventory.sophizo.com.br> |
+| Dictionary Hub | <https://mcs.sophizo.com.br> |
+
+- **Access:** anyone with a `@sophos.com` email can sign in (email link, no password) with **read-only** access
+  (viewer). Ask the author for more access.
+- **Hosting:** one VPS at **Hostinger in São Paulo, Brazil**. Both apps and their Postgres / Supabase backends are
+  self-hosted in Docker on that VPS (not Supabase Cloud), behind Cloudflare. There is no SLA.
+- **Use test or demo tenants only.** It is one shared instance, its Hub dictionary is shared by every connected
+  installation, and its Hub may send title metadata to an AI provider (see
+  [Data flow](#data-flow-what-leaves-this-app)).
+- For customer or production data, run both apps on your own infrastructure ([Install](#install)).
 
 ## Security
 
