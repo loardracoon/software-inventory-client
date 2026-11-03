@@ -9,7 +9,7 @@ truncate public.tenants, public.software_titles, public.sophos_connection, publi
 delete from public.profiles;
 delete from vault.secrets where name = 'sophos_client_secret';
 
-select plan(17);
+select plan(25);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'admin@example.com'),
@@ -68,11 +68,32 @@ select is((select tenant_id from public.computers where sophos_endpoint_id = 'e1
 select throws_ok($$select public.apply_computer_sync('10000000-0000-0000-0000-00000000000a', 'null'::jsonb)$$,
   '22023', null, 'rejects a non-array payload');
 
+-- Online status: written by the full sync, refreshed by apply_computer_status, unknown when missing.
+select pg_temp.sync(jsonb_build_array(pg_temp.ep('e1', 'PC-1-renamed') || '{"online": true}', pg_temp.ep('e2', 'PC-2')));
+select results_eq($$select sophos_endpoint_id, online, online_checked_at is not null from public.computers
+  where tenant_id = '10000000-0000-0000-0000-00000000000a' order by 1$$,
+  $$values ('e1', true, true), ('e2', null::boolean, true)$$, 'the sync stores online, null when Central did not say');
+select is((select status_checked_at is not null from public.tenants where sophos_tenant_id = 'sophos-a'), true,
+  'the sync records the status check');
+update public.tenants set status_checked_at = null where sophos_tenant_id = 'sophos-a';
+select is(public.apply_computer_status('10000000-0000-0000-0000-00000000000a',
+    '[{"sophos_endpoint_id": "e1", "online": false, "last_seen_at": "2026-11-03T10:00:00Z"}, {"sophos_endpoint_id": "zz", "online": true}]'),
+  1, 'the status refresh updates known computers only');
+select results_eq($$select online, last_seen_at from public.computers where sophos_endpoint_id = 'e1'$$,
+  $$values (false, '2026-11-03T10:00:00Z'::timestamptz)$$, 'online and last seen change');
+select is((select count(*) from public.computers where sophos_endpoint_id = 'zz'), 0::bigint, 'the status refresh adds no computer');
+select is((select status_checked_at is not null from public.tenants where sophos_tenant_id = 'sophos-a'), true,
+  'the status refresh records its time');
+select is(public.apply_computer_status('10000000-0000-0000-0000-00000000000b', '[{"sophos_endpoint_id": "e1", "online": true}]'),
+  0, 'another tenant cannot change the status');
+
 -- Browser access.
 select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000c","role":"authenticated"}', true);
 set local role authenticated;
 select throws_ok($$select public.apply_computer_sync('10000000-0000-0000-0000-00000000000a', '[]'::jsonb)$$,
   '42501', null, 'browser users cannot run the sync function');
+select throws_ok($$select public.apply_computer_status('10000000-0000-0000-0000-00000000000a', '[]'::jsonb)$$,
+  '42501', null, 'browser users cannot run the status function');
 select results_eq('select name, active_computers, retired_computers from public.v_tenant_overview',
   $$values ('Tenant A', 2::bigint, 0::bigint)$$, 'viewer sees its tenant with counts only');
 reset role;

@@ -12,6 +12,7 @@ describe("mapEndpoint", () => {
         os: { platform: "windows", name: "Windows 11 Enterprise", majorVersion: 10, minorVersion: 0, build: 22631 },
         associatedPerson: { name: "Alice Doe", viaLogin: "CORP\\alice" },
         lastSeenAt: "2026-10-26T12:00:00Z",
+        online: true,
       }),
     ).toEqual({
       sophos_endpoint_id: "e1",
@@ -24,7 +25,9 @@ describe("mapEndpoint", () => {
       associated_user: "CORP\\alice",
       health: "good",
       last_seen_at: "2026-10-26T12:00:00Z",
+      online: true,
     });
+    expect(mapEndpoint({ id: "e1", os: { platform: "windows" }, online: false })?.online).toBe(false);
   });
 
   it("falls back for missing values", () => {
@@ -36,6 +39,7 @@ describe("mapEndpoint", () => {
       os_build: null,
       associated_user: "Bob",
       health: null,
+      online: null,
     });
   });
 

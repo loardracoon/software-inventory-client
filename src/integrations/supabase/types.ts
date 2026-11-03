@@ -1680,7 +1680,7 @@ isOneToOne: false
                   ]
                 },"v_computer_list": {
                   Row: {
-                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"cycle_status": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
+                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"cycle_status": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
                   }
                   ComputedFields: never
                   Relationships: [

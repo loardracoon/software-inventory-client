@@ -31,6 +31,7 @@ export type SophosEndpoint = {
   os?: { platform?: string; name?: string; majorVersion?: number | string; minorVersion?: number | string; build?: number | string };
   associatedPerson?: { name?: string; viaLogin?: string };
   lastSeenAt?: string;
+  online?: boolean;
 };
 
 export type ApiCallLog = {

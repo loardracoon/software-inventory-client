@@ -66,6 +66,8 @@ const computer = {
   user_masked: true,
   last_seen_at: "2026-10-26T12:00:00Z",
   last_collected_at: "2026-10-26T13:00:00Z",
+  online: true,
+  online_checked_at: "2026-10-26T13:05:00Z",
   retired_at: null,
   cycle_status: "error",
   next_attempt_at: null,
@@ -108,6 +110,10 @@ describe("Computers", () => {
     await user.hover(within(row).getByRole("button", { name: "Review: 1 category" }));
     expect((await screen.findAllByText("Remote access / Remote desktop and support", {}, { timeout: 4000 })).length).toBeGreaterThan(0);
     expect(screen.getAllByText("AnyDesk").length).toBeGreaterThan(0);
+    // Online status from Sophos Central, with the last seen time in the tooltip.
+    await user.hover(within(row).getByRole("button", { name: "Online" }));
+    expect((await screen.findAllByText("Online in Sophos Central", {}, { timeout: 4000 })).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Last seen Oct 26, 2026, 9:00 AM").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("tab", { name: "Query errors" }));
     await waitFor(() => expect(lastFilters(api.fetchComputers).status).toBe("error"));

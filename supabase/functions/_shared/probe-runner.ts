@@ -27,6 +27,7 @@ export type TenantRow = {
   name: string;
   data_region_host: string | null;
   last_synced_at: string | null;
+  status_checked_at: string | null;
   scan_settings: ScanSettingsRow | null;
 };
 
@@ -60,7 +61,7 @@ export function newProbeSummary(): ProbeSummary {
 export async function loadTenants(admin: SupabaseClient): Promise<Map<string, TenantRow>> {
   const { data, error } = await admin
     .from("tenants")
-    .select("id, sophos_tenant_id, name, data_region_host, last_synced_at, scan_settings(*)");
+    .select("id, sophos_tenant_id, name, data_region_host, last_synced_at, status_checked_at, scan_settings(*)");
   if (error) throw new Error(error.message);
   return new Map((data as unknown as TenantRow[]).map((t) => [t.id, t]));
 }

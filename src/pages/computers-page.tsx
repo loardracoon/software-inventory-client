@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router";
-import { Monitor } from "lucide-react";
+import { CircleDashed, Monitor, Wifi, WifiOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AttentionIcons, type AttentionCategory, type VulnCounts } from "@/components/shared/attention-icons";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Hint } from "@/components/shared/hint";
 import { Field, FilterChip, NativeSelect } from "@/components/shared/filters";
 import { PageHeader } from "@/components/shared/page-header";
 import { ExportButton } from "@/features/dictionary/export-button";
@@ -15,8 +16,36 @@ import { useTenant } from "@/features/tenants/tenant-context";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { label, PLATFORM_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
+import { cn } from "@/lib/utils";
+
+// Online in Sophos Central: green Wifi or grey WifiOff (the icon shape differs too, not only the colour);
+// last seen and the time of the check in the tooltip.
+function OnlineStatus({ row }: { row: ComputerRow }) {
+  const label = row.online === true ? "Online" : row.online === false ? "Offline" : "Status unknown";
+  const Icon = row.online === true ? Wifi : row.online === false ? WifiOff : CircleDashed;
+  return (
+    <Hint
+      content={
+        <span className="flex flex-col gap-1">
+          <span className="font-semibold text-text-strong">{label} in Sophos Central</span>
+          <span>Last seen {row.last_seen_at ? formatDateTime(row.last_seen_at) : "never"}</span>
+          {row.online_checked_at ? <span className="text-text-muted">Checked {formatDateTime(row.online_checked_at)}</span> : null}
+        </span>
+      }
+    >
+      <button
+        type="button"
+        aria-label={label}
+        className="inline-flex size-7 cursor-help items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
+      >
+        <Icon aria-hidden="true" className={cn("size-4", row.online === true ? "text-status-safe" : "text-text-muted")} />
+      </button>
+    </Hint>
+  );
+}
 
 const COLUMNS: ServerColumnDef<ComputerRow>[] = [
+  { accessorKey: "online", header: "Status", cell: ({ row }) => <OnlineStatus row={row.original} /> },
   {
     accessorKey: "hostname",
     header: "Computer",

@@ -5,7 +5,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { mapEndpoints, mapTenant } from "./computer-mapping.ts";
 import { errorMessage, type LogBuffer } from "./edge.ts";
-import type { SophosClient } from "./sophos.ts";
+import type { SophosClient, SophosTenant } from "./sophos.ts";
 
 export type TenantSyncResult = {
   tenantId: string;
@@ -88,4 +88,16 @@ export async function syncComputers(admin: SupabaseClient, sophos: SophosClient,
       .eq("id", 1);
     throw error;
   }
+}
+
+// Online status between full syncs (collector): one endpoint listing for the tenant; only online and
+// last_seen_at of known computers change (apply_computer_status). Returns the computers updated.
+export async function refreshComputerStatus(admin: SupabaseClient, sophos: SophosClient, tenantId: string, tenant: SophosTenant): Promise<number> {
+  const { rows } = mapEndpoints(await sophos.listEndpoints(tenant));
+  const { data, error } = await admin.rpc("apply_computer_status", {
+    p_tenant_id: tenantId,
+    p_endpoints: rows.map((r) => ({ sophos_endpoint_id: r.sophos_endpoint_id, online: r.online, last_seen_at: r.last_seen_at })),
+  });
+  if (error) throw new Error(error.message);
+  return (data as number) ?? 0;
 }

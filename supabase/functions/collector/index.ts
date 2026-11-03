@@ -3,6 +3,7 @@
 // the next tick continues where this one stopped. Every step logs to collector_logs.
 //   0 lease            one tick at a time
 //   1 sync_computers   when a tenant was not synced for 20 h, or before its cycle opens
+//   1b computer_status online flag and last seen from Sophos Central every 15 min (Computers › Status)
 //   2 open_cycles      weekly, in the tenant time zone (closing the previous cycle)
 //   3 add_new_computers
 //   4 probes           advance running probes; probe platforms never probed; refresh skipped tasks
@@ -20,7 +21,7 @@
 
 import { runAllowance, spendRun, type RunAllowance } from "../_shared/budget.ts";
 import { decideEndpoint, rowsByEndpoint, runName, runPastGrace } from "../_shared/collector-plan.ts";
-import { syncComputers } from "../_shared/computer-sync.ts";
+import { refreshComputerStatus, syncComputers } from "../_shared/computer-sync.ts";
 import { hubSyncDue, loadHub, runHubSync, type HubSyncSummary } from "../_shared/hub-sync.ts";
 import { ingestPending, type IngestSummary } from "../_shared/ingest.ts";
 import { runPolicyEvaluation, type PolicyRunSummary, type RpcClient } from "../_shared/policy-run.ts";
@@ -33,6 +34,7 @@ import { cycleStartAtOrBefore, nextCycleStart, nextOfflineCheck, nextRetryAt, wa
 const TICK_BUDGET_MS = 120_000;
 const LEASE_SECONDS = 180;
 const SYNC_EVERY_MS = 20 * 3600_000;
+const STATUS_EVERY_MS = 15 * 60_000;
 
 // "14:05" in the tenant time zone, for messages shown on the Computers and Scans pages.
 const localTime = (instant: Date, timeZone: string) => {
@@ -138,6 +140,20 @@ Deno.serve(async (req) => {
         }
       }
     }
+    // 1b. computer_status (a full sync above already wrote it: status_checked_at is fresh then)
+    if (step("computer_status")) {
+      for (const t of tenants.values()) {
+        const checked = t.status_checked_at ? Date.parse(t.status_checked_at) : 0;
+        if (!t.data_region_host || Date.now() - checked < STATUS_EVERY_MS) continue;
+        try {
+          const updated = await refreshComputerStatus(admin, sophos, t.id, sophosTenantOf(t));
+          logs.add("debug", `Online status of ${updated} computers in ${t.name}`, null, t.id);
+        } catch (error) {
+          problem(`Could not read the online status for ${t.name}: ${errorMessage(error)}`, t.id, "warn");
+        }
+      }
+    }
+
     const active = [...tenants.values()].filter((t) => t.scan_settings && t.data_region_host);
 
     // 2. open_cycles and 3. add_new_computers

@@ -89,7 +89,7 @@ export type ComputerFilters = {
   search: string;
 };
 
-const COMPUTER_SORT = new Set(["hostname", "associated_user", "last_collected_at", "cycle_status", "programs", "extensions", "packages", "platform"]);
+const COMPUTER_SORT = new Set(["online", "hostname", "associated_user", "last_collected_at", "cycle_status", "programs", "extensions", "packages", "platform"]);
 
 export async function fetchComputers(filters: ComputerFilters, request: PageRequest): Promise<Page<ComputerRow>> {
   const sort = request.sorting[0];

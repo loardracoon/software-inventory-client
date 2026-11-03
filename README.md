@@ -48,7 +48,7 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 | --- | --- |
 | Collection | Weekly collection cycle per tenant; only online computers are queried (offline ones are checked again later the same day); daily retries; **Scan now** for one computer; the Sophos API budget is respected (10 runs per minute, 1,000 per day, a reserve for retries) |
 | Overview | Fleet coverage, changes per week, categories that need attention, the application policy card, the known vulnerabilities card |
-| Computers | Status of each computer in the cycle, attention icons (Not allowed, Review, CVEs by severity), and per computer: programs, extensions, packages, hardware and the history at any date |
+| Computers | Online status from Sophos Central (green or grey icon, last seen on hover; refreshed every 15 minutes), status of each computer in the cycle, attention icons (Not allowed, Review, CVEs by severity), and per computer: programs, extensions, packages, hardware and the history at any date |
 | Software | One row per product (spellings with a version in the name are grouped), filters by category, attention, policy class, vulnerabilities, platform, source, user, version and date; saved searches; CSV export |
 | Software title | Versions installed and on how many computers, the policy class and CVEs of each version, the computers, the change history, a reclassification request to the Hub |
 | Vulnerabilities | CVEs per installed version with severity, CVSS, known exploited (KEV), EPSS, "fixed in" version and the OS they apply to; "may apply" when a version cannot be compared |

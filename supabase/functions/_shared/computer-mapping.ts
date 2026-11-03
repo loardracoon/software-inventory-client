@@ -16,6 +16,8 @@ export type ComputerSyncRow = {
   associated_user: string | null;
   health: string | null;
   last_seen_at: string | null;
+  // Sophos Central "online"; null when the response does not carry it.
+  online: boolean | null;
 };
 
 export function mapPlatform(value: string | undefined): Platform | null {
@@ -50,6 +52,7 @@ export function mapEndpoint(endpoint: SophosEndpoint): ComputerSyncRow | null {
     associated_user: endpoint.associatedPerson?.viaLogin || endpoint.associatedPerson?.name || null,
     health: endpoint.health?.overall ?? null,
     last_seen_at: endpoint.lastSeenAt ?? null,
+    online: typeof endpoint.online === "boolean" ? endpoint.online : null,
   };
 }
 
