@@ -338,7 +338,9 @@ when to change it, is in **[docs/rate-limits.md](docs/rate-limits.md)**.
 | [docs/queries.md](docs/queries.md) | Every osquery query the app sends (19 in the catalog): SQL, columns, what is collected and what is not, how the app uses the rows, versions, how to test one by hand |
 | [docs/rate-limits.md](docs/rate-limits.md) | Each rate-limit variable: what it does, the recommended number, when to change it, how to check |
 | [docs/operations.md](docs/operations.md) | Local setup, the deploy methods, cron jobs, secrets, key rotation, query versions, alerts, API budget, SSO plan, rate limits, tests |
+| [deploy/vps/README.md](deploy/vps/README.md) | The production host (VPS behind Cloudflare, next to Mailu and the Hub) |
 | [deploy/k3s/README.md](deploy/k3s/README.md) | Kubernetes (K3S) and Argo CD |
+| [scripts/demo/README.md](scripts/demo/README.md) | A local demo with fictional data and a read-only viewer, for videos and screenshots |
 | [docs/spec.md](docs/spec.md) | The design document |
 | [docs/phases/README.md](docs/phases/README.md) | Build history and follow-ups |
 | [CLAUDE.md](CLAUDE.md) | Code conventions and rules for contributors |
