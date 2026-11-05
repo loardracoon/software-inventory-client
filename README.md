@@ -26,7 +26,7 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 - [Configure the application policy](#configure-the-application-policy)
 - [Users and access](#users-and-access)
 - [Data flow: what leaves this app](#data-flow-what-leaves-this-app)
-- [Hosted test and demo environment](#hosted-test-and-demo-environment)
+- [Hosted instance](#hosted-instance)
 - [Security](#security)
 - [More documentation](#more-documentation)
 
@@ -303,9 +303,9 @@ The Hub may send a title's metadata to an AI provider to classify it. That is de
 engines, in the Hub's
 [Data flow and AI processing](https://github.com/loardracoon/software-inventory-hub#data-flow-and-ai-processing).
 
-## Hosted test and demo environment
+## Hosted instance
 
-The author hosts one instance of each app **for tests and demos**:
+The author runs one instance of each app, open to Sophos colleagues:
 
 | App | Address |
 | --- | --- |
@@ -313,13 +313,16 @@ The author hosts one instance of each app **for tests and demos**:
 | Dictionary Hub | <https://mcs.sophizo.com.br> |
 
 - **Access:** anyone with a `@sophos.com` email can sign in (email link, no password) with **read-only** access
-  (viewer). Ask the author for more access.
+  (viewer). Ask the author for more access or for a client key.
 - **Hosting:** one VPS at **Hostinger in São Paulo, Brazil**. Both apps and their Postgres / Supabase backends are
-  self-hosted in Docker on that VPS (not Supabase Cloud), behind Cloudflare. There is no SLA.
-- **Use test or demo tenants only.** It is one shared instance, its Hub dictionary is shared by every connected
-  installation, and its Hub may send title metadata to an AI provider (see
-  [Data flow](#data-flow-what-leaves-this-app)).
-- For customer or production data, run both apps on your own infrastructure ([Install](#install)).
+  self-hosted in Docker on that VPS (not Supabase Cloud), behind Cloudflare.
+- **No SLA is defined for <https://mcs.sophizo.com.br> or <https://inventory.sophizo.com.br>.** They are provided
+  as is, as a personal project: the author takes no responsibility for the data sent to or stored on them
+  (availability, loss or disclosure). Do not send data you are not allowed to share on these terms.
+- **Shared by design:** the Hub dictionary is shared, so a title classified on this Hub (its name, vendor and
+  description) is visible to every connected installation, and the Hub's AI engines send title metadata to the
+  provider set in **Engines & usage** (see [Data flow](#data-flow-what-leaves-this-app)).
+- To keep all data in your own environment, run both apps on your own infrastructure ([Install](#install)).
 
 ## Security
 
