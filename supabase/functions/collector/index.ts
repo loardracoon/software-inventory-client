@@ -11,6 +11,7 @@
 //                      now run, offline ones are checked again later the same day (no run spent)
 //   6 poll             per-endpoint status and results while they arrive; give up after the grace time
 //   6b ingest          raw results → snapshots → versioned inventory (Phase 5); title_summary refresh
+//   6e hub_enrollment  status of an open access request to the Sophizo Hub when due; approved → connected (10c)
 //   6c hub_sync        Dictionary Hub pull / share / request status when due (Phase 7, _shared/hub-sync.ts)
 //   6v vulns           CVE matches of the installed versions when CVE data, the dictionary or the
 //                      inventory changed (Phase 10b, _shared/vuln-run.ts); KEV alerts
@@ -22,6 +23,7 @@
 import { runAllowance, spendRun, type RunAllowance } from "../_shared/budget.ts";
 import { decideEndpoint, rowsByEndpoint, runName, runPastGrace } from "../_shared/collector-plan.ts";
 import { refreshComputerStatus, syncComputers } from "../_shared/computer-sync.ts";
+import { checkHubEnrollment, enrollmentCheckDue } from "../_shared/hub-enroll-run.ts";
 import { hubSyncDue, loadHub, runHubSync, type HubSyncSummary } from "../_shared/hub-sync.ts";
 import { ingestPending, type IngestSummary } from "../_shared/ingest.ts";
 import { runPolicyEvaluation, type PolicyRunSummary, type RpcClient } from "../_shared/policy-run.ts";
@@ -369,6 +371,18 @@ Deno.serve(async (req) => {
         if (summary.ingest.failed > 0) problem(`${summary.ingest.failed} raw result(s) could not be ingested`, null, "warn");
       } catch (error) {
         problem(`Ingest failed: ${errorMessage(error)}`);
+      }
+    }
+
+    // 6e. hub_enrollment (before the sync: an approval connects the Hub and syncs in this tick)
+    if (step("hub_enrollment")) {
+      try {
+        if (await enrollmentCheckDue(admin)) {
+          const status = await checkHubEnrollment(admin);
+          if (status && status !== "unverified" && status !== "pending") logs.add("info", `Access request to the Hub: ${status}`);
+        }
+      } catch (error) {
+        problem(`Access request check failed: ${errorMessage(error)}`, null, "warn");
       }
     }
 

@@ -22,13 +22,16 @@ import { Field } from "@/components/shared/filters";
 import { useAuth } from "@/features/auth/auth-context";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
-import { fetchHubStatus, removeHubConnection, saveHubConnection, setHubSharing, syncHub } from "./api";
+import { fetchHubEnrollment, fetchHubStatus, removeHubConnection, saveHubConnection, setHubSharing, syncHub } from "./api";
+import { HubAccess } from "./hub-access";
 
 // Settings › Dictionary hub: connection (key write-only, kept in Vault), sharing switch and sync state.
 export function HubCard() {
   const { profile } = useAuth();
   const isAdmin = profile?.role === "admin";
   const status = useLoad("hub-status", fetchHubStatus);
+  const enrollment = useLoad("hub-enrollment", fetchHubEnrollment);
+  const requestOpen = ["requesting", "unverified", "pending"].includes(enrollment.data?.status ?? "");
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState<"sync" | "share" | null>(null);
   const s = status.data;
@@ -153,7 +156,19 @@ export function HubCard() {
 
       {!isAdmin && s ? <p className="m-0 text-sm text-text-muted">Only admins can change the dictionary settings.</p> : null}
 
-      {isAdmin && s && (editing || !configured) ? (
+      {isAdmin && s && !configured ? (
+        <HubAccess
+          enrollment={enrollment.data ?? null}
+          onChanged={() => {
+            enrollment.reload();
+            status.reload();
+          }}
+        />
+      ) : null}
+
+      {isAdmin && s && !configured && !requestOpen ? <p className="m-0 text-sm font-semibold text-text-strong">Or connect another Hub with a key</p> : null}
+
+      {isAdmin && s && (editing || (!configured && !requestOpen)) ? (
         <HubForm
           replacing={configured}
           onCancel={configured ? () => setEditing(false) : undefined}

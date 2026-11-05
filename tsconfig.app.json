@@ -16,7 +16,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "paths": { "@/*": ["./src/*"], "@policy": ["./supabase/functions/_shared/policy.ts"] }
+    "paths": { "@/*": ["./src/*"], "@policy": ["./supabase/functions/_shared/policy.ts"], "@hub-consent": ["./supabase/functions/_shared/hub-consent.ts"] }
   },
   "include": ["src"]
 }

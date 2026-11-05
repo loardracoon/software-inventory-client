@@ -39,6 +39,23 @@ export async function setHubSharing(share: boolean): Promise<void> {
   orThrow(await db().rpc("set_hub_sharing", { p_share: share }));
 }
 
+// Access request to the Sophizo Hub (phase 10c): hub-enroll makes the key and keeps it in the Vault; the browser
+// only sees the request status.
+export type HubEnrollment = Database["public"]["Functions"]["get_hub_enrollment"]["Returns"][number];
+export type HubAccessForm = { name: string; organization: string; contact_email: string; reason: string; consent: boolean; consent_version: string };
+
+export async function fetchHubEnrollment(): Promise<HubEnrollment | null> {
+  return (orThrow(await db().rpc("get_hub_enrollment")) ?? [])[0] ?? null;
+}
+
+export function requestHubAccess(form: HubAccessForm): Promise<{ status: string }> {
+  return invokeFunction("hub-enroll", { action: "request", ...form });
+}
+
+export function hubAccessAction(action: "check" | "cancel" | "dismiss"): Promise<{ status: string | null }> {
+  return invokeFunction("hub-enroll", { action });
+}
+
 export function syncHub(): Promise<HubSyncResult> {
   return invokeFunction<HubSyncResult>("hub-sync");
 }

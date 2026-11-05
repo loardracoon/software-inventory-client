@@ -64,5 +64,8 @@ export function dictionaryApiMock() {
     removeHubConnection: vi.fn(async () => {}),
     setHubSharing: vi.fn(async () => {}),
     syncHub: vi.fn(async () => ({ ok: true })),
+    fetchHubEnrollment: vi.fn(async () => null),
+    requestHubAccess: vi.fn(async () => ({ status: "unverified" })),
+    hubAccessAction: vi.fn(async () => ({ status: "pending" })),
   };
 }

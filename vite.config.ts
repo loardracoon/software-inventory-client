@@ -15,6 +15,7 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url)),
       // The policy evaluator is shared with the Edge Functions, so the editor preview and the server agree.
       "@policy": fileURLToPath(new URL("./supabase/functions/_shared/policy.ts", import.meta.url)),
+      "@hub-consent": fileURLToPath(new URL("./supabase/functions/_shared/hub-consent.ts", import.meta.url)),
     },
   },
   server: {

@@ -333,14 +333,14 @@ isOneToOne: false
                   ]
                 },"computers": {
                   Row: {
-                    "associated_user": string | null,"created_at": string,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"os_build": string | null,"os_name": string | null,"os_version": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
+                    "associated_user": string | null,"created_at": string,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "associated_user"?: string | null,"created_at"?: string,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
+                    "associated_user"?: string | null,"created_at"?: string,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "associated_user"?: string | null,"created_at"?: string,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
+                    "associated_user"?: string | null,"created_at"?: string,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -455,6 +455,20 @@ isOneToOne: false
                   }
                   Update: {
                     "configured_at"?: string | null,"configured_by"?: string | null,"failures"?: number,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_attempt_at"?: string | null,"last_error"?: string | null,"last_seq"?: number,"next_attempt_at"?: string | null,"share_unknown_titles"?: boolean,"synced_at"?: string | null,"url"?: string | null,"vuln_last_seq"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"hub_enrollment": {
+                  Row: {
+                    "consent_version": string | null,"consented_at": string | null,"consented_by": string | null,"contact_email": string | null,"hub_url": string | null,"id": number,"key_hint": string | null,"key_secret_id": string | null,"last_checked_at": string | null,"last_error": string | null,"name": string | null,"next_check_at": string | null,"note": string | null,"organization": string | null,"reason": string | null,"requested_at": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "consent_version"?: string | null,"consented_at"?: string | null,"consented_by"?: string | null,"contact_email"?: string | null,"hub_url"?: string | null,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_checked_at"?: string | null,"last_error"?: string | null,"name"?: string | null,"next_check_at"?: string | null,"note"?: string | null,"organization"?: string | null,"reason"?: string | null,"requested_at"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "consent_version"?: string | null,"consented_at"?: string | null,"consented_by"?: string | null,"contact_email"?: string | null,"hub_url"?: string | null,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_checked_at"?: string | null,"last_error"?: string | null,"name"?: string | null,"next_check_at"?: string | null,"note"?: string | null,"organization"?: string | null,"reason"?: string | null,"requested_at"?: string | null,"status"?: string
                   }
                   Relationships: [
                     
@@ -1225,14 +1239,14 @@ isOneToOne: false
                   ]
                 },"tenants": {
                   Row: {
-                    "created_at": string,"data_region_host": string | null,"id": string,"id_type": string,"last_synced_at": string | null,"name": string,"sophos_tenant_id": string,"updated_at": string
+                    "created_at": string,"data_region_host": string | null,"id": string,"id_type": string,"last_synced_at": string | null,"name": string,"sophos_tenant_id": string,"status_checked_at": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"data_region_host"?: string | null,"id"?: string,"id_type": string,"last_synced_at"?: string | null,"name": string,"sophos_tenant_id": string,"updated_at"?: string
+                    "created_at"?: string,"data_region_host"?: string | null,"id"?: string,"id_type": string,"last_synced_at"?: string | null,"name": string,"sophos_tenant_id": string,"status_checked_at"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"data_region_host"?: string | null,"id"?: string,"id_type"?: string,"last_synced_at"?: string | null,"name"?: string,"sophos_tenant_id"?: string,"updated_at"?: string
+                    "created_at"?: string,"data_region_host"?: string | null,"id"?: string,"id_type"?: string,"last_synced_at"?: string | null,"name"?: string,"sophos_tenant_id"?: string,"status_checked_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -2031,6 +2045,9 @@ isOneToOne: false
 "add_new_computer_tasks":
 { Args: { "p_cycle_id": string }; Returns: number
                            },
+"apply_computer_status":
+{ Args: { "p_endpoints": Json,"p_tenant_id": string }; Returns: number
+                           },
 "apply_computer_sync":
 { Args: { "p_endpoints": Json,"p_tenant_id": string }; Returns: Json
                            },
@@ -2157,6 +2174,11 @@ isOneToOne: false
               "client_key": string,"last_seq": number,"share_unknown_titles": boolean,"url": string
             }[]
                            },
+"get_hub_enrollment":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "consent_version": string,"consented_at": string,"contact_email": string,"hub_url": string,"key_hint": string,"last_checked_at": string,"last_error": string,"name": string,"next_check_at": string,"note": string,"organization": string,"reason": string,"requested_at": string,"status": string
+            }[]
+                           },
 "get_hub_status":
 { Args: Record<PropertyKey, never>; Returns: {
               "configured": boolean,"configured_at": string,"delayed": boolean,"key_hint": string,"last_attempt_at": string,"last_error": string,"last_seq": number,"next_attempt_at": string,"pending_submissions": number,"share_unknown_titles": boolean,"synced_at": string,"url": string
@@ -2171,6 +2193,20 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "client_id": string,"client_secret": string
             }[]
+                           },
+"hub_enrollment_activate":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"hub_enrollment_key":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "hub_url": string,"key": string,"status": string
+            }[]
+                           },
+"hub_enrollment_start":
+{ Args: { "p": Json }; Returns: undefined
+                           },
+"hub_enrollment_update":
+{ Args: { "p_error": string,"p_next_check_at": string,"p_note": string,"p_status": string }; Returns: undefined
                            },
 "hub_submissions_due":
 { Args: { "p_limit"?: number }; Returns: {

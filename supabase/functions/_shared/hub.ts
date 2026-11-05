@@ -203,6 +203,8 @@ export class HubClient {
       url,
       {
         method,
+        // Never follow a redirect: the key goes to the Hub's own address only.
+        redirect: "error",
         headers: {
           Authorization: `Bearer ${this.options.key}`,
           Accept: "application/json",

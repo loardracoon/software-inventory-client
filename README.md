@@ -183,6 +183,29 @@ affected version ranges.
    above) and classifies them for everybody; off, nothing leaves this app and you only receive what the Hub already
    knows.
 
+### Option C: request access to the Sophizo Hub
+
+The author's Hub, <https://mcs.sophizo.com.br>, takes access requests from this app (no SLA; see
+[Hosted instance](#hosted-instance)).
+
+1. In this app (admin): **Settings › Dictionary hub › Request access to the Sophizo Hub**. Enter a name for the
+   installation, the organization, a contact email and an optional reason.
+2. Read and accept the consent: application information (the metadata of unknown titles) is sent to the Hub and
+   **processed by third-party AI models**. The button stays off until you agree; the version of the text you
+   agreed to is recorded here and at the Hub.
+3. This app makes its own client key, keeps it encrypted in the Vault and sends the Hub only its SHA-256 hash. The
+   key is **never in the request or in an email**, and nobody hands it over; afterwards it authenticates this app's
+   calls to the Hub over HTTPS, like any client key, and the Hub stores only its hash.
+4. The contact gets an email from the Hub and presses **Confirm** on the page it links to (within 24 hours).
+5. A Hub admin approves the request (or it is approved at once for some email domains). This app checks the status
+   by itself (every 5 minutes at first, then less often); once approved, the connection is saved and the first sync
+   runs. A rejection shows the admin's note. Requests without a decision end after 14 days; **Cancel request**
+   stops one at any time.
+
+While a request is open, the form to connect another Hub with a key is hidden; Options A and B stay available
+otherwise. Calls to a Hub never follow redirects, and a Hub URL typed by hand must use `https://` (plain `http://`
+only for local or in-cluster hosts).
+
 After that, the sync runs by itself (every 6 hours, sooner when new titles wait to be shared) and **Sync now** runs
 it at once. To disagree with a category, open the title and click **Request reclassification**; the Hub's curators
 answer and the status comes back with the next sync. To change the key: **Replace connection**. To stop:
@@ -280,6 +303,7 @@ The sign-in emails (magic links) and alert emails go through the email service y
 | Share unknown titles (`titles-submit`), only when **Share unknown titles with the hub** is on | For each title the Hub does not know yet: `kind`, `source`, `match_key`, `name`, `vendor`, `description` (at most 1,000 characters) and the OS families where it is installed (`windows`, `macos`, `linux`) |
 | Reclassification request (`reclassification-requests`), only when a person clicks **Request reclassification** | `kind`, `source`, `match_key`, the suggested category, the reason (at most 500 characters) and an optional evidence URL |
 | Request status (`reclassification-requests?ids=`) | The IDs of your open requests |
+| Access request to the Sophizo Hub (`client-enrollments`), only when an admin sends one ([Option C](#option-c-request-access-to-the-sophizo-hub)) | The installation name, organization, contact email and reason you enter, the SHA-256 hash and first 11 characters of the key this app made (never the key), the version of the consent text you agreed to, and the app version. The status checks send only the key as the bearer credential |
 
 The Hub also sees the usual HTTP metadata of any web request (your server's IP address, the time) and the name and
 contact email you gave when the client key was created.
