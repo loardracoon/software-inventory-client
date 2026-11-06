@@ -1,0 +1,34 @@
+#!/bin/sh
+# Blocks a commit that adds a secret (gitleaks, staged changes only, rules in .gitleaks.toml).
+# Install once per clone: sh scripts/install-git-hooks.sh   (it sets core.hooksPath to .githooks)
+# Uses the gitleaks program when it is installed, otherwise the pinned Docker image. If neither works the commit goes on with
+# a warning: CI scans every push as well. To skip once, knowing why: git commit --no-verify
+set -u
+GITLEAKS_IMAGE="zricethezav/gitleaks:v8.30.1"
+args="--pre-commit --staged --redact --no-banner --config .gitleaks.toml -v"
+
+root=$(git rev-parse --show-toplevel) || exit 0
+cd "$root" || exit 0
+
+if command -v gitleaks >/dev/null 2>&1; then
+  # shellcheck disable=SC2086
+  gitleaks git $args
+  status=$?
+elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  # Git Bash on Windows: a Windows path for the mount and no path conversion of /repo.
+  mount=$(pwd -W 2>/dev/null || pwd)
+  # shellcheck disable=SC2086
+  MSYS_NO_PATHCONV=1 docker run --rm -v "$mount:/repo" -w /repo "$GITLEAKS_IMAGE" git /repo $args
+  status=$?
+else
+  echo "pre-commit: gitleaks and Docker are not available, secret scan skipped (CI scans every push)" >&2
+  exit 0
+fi
+
+if [ "$status" -ne 0 ]; then
+  echo >&2
+  echo "pre-commit: a possible secret is in the staged changes (see above). Remove it, or, if it is a public or fake value," >&2
+  echo "add a narrow entry to .gitleaks.toml. Never commit a real secret: rotate it if it was ever pushed." >&2
+  exit 1
+fi
+exit 0
