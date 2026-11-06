@@ -27,3 +27,11 @@ Thumbs.db
 /e2e/.auth/
 /test-results/
 /playwright-report/
+
+# Secrets and private material never go in git (gitleaks also scans: .gitleaks.toml)
+*.pem
+*.key
+*.crt
+certs/
+.lgpd/
+.superpowers/
