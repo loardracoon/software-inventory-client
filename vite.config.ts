@@ -29,5 +29,7 @@ export default defineConfig({
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}", "supabase/functions/**/*.test.ts"],
     setupFiles: ["src/test/setup.ts"],
+    // Screens load lazy route chunks; with the whole suite in parallel the first render can pass the 5 s default.
+    testTimeout: 20_000,
   },
 });

@@ -260,7 +260,7 @@ describe("Software", () => {
         policy: [],
       }),
     );
-    expect(await screen.findByRole("option", { name: "Remote access + Proxy and tunnel" })).toBeInTheDocument();
+    expect(await screen.findByRole("combobox", { name: "Category" })).toHaveTextContent("Remote access + Proxy and tunnel");
     expect(screen.getByRole("tab", { name: "Browser extensions" })).toHaveAttribute("aria-selected", "true");
     expect(screen.getByRole("button", { name: "Export CSV" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save search" })).toBeInTheDocument();
@@ -314,8 +314,10 @@ describe("Request reclassification", () => {
     await user.click(screen.getByRole("button", { name: "Send request" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Choose a suggested category");
 
-    await screen.findByRole("option", { name: "Remote access / Remote desktop and support" });
-    await user.selectOptions(screen.getByLabelText("Suggested category"), "remote-access/remote-desktop-and-support");
+    // The category is chosen by typing in a searchable list.
+    await user.click(screen.getByRole("combobox", { name: "Suggested category" }));
+    await user.type(await screen.findByRole("searchbox", { name: "Search categories" }), "remote desk");
+    await user.click(await screen.findByRole("option", { name: "Remote access / Remote desktop and support" }));
     await user.click(screen.getByRole("button", { name: "Send request" }));
     expect(screen.getByRole("alert")).toHaveTextContent("Enter a reason");
 

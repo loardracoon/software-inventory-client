@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Eyebrow } from "@/components/shared/eyebrow";
+import { SearchSelect } from "@/components/shared/search-select";
 import { Field, NativeSelect } from "@/components/shared/filters";
 import { useAuth } from "@/features/auth/auth-context";
 import { fetchCategories } from "@/features/inventory/api";
@@ -213,7 +214,7 @@ function OverrideForm({
         <DialogDescription>{name}. Applies in this app only and wins over the hub dictionary. It is never sent to the hub.</DialogDescription>
       </DialogHeader>
       <Field label="Category" htmlFor="override-category">
-        <NativeSelect id="override-category" value={slug} onChange={setSlug} options={options} />
+        <SearchSelect id="override-category" value={slug} onChange={setSlug} options={options} placeholder="Search categories" />
       </Field>
       <Field label="Attention" htmlFor="override-attention">
         <NativeSelect id="override-attention" value={attention} onChange={setAttention} options={ATTENTION_OPTIONS} />

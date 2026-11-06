@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Field, NativeSelect } from "@/components/shared/filters";
+import { Field } from "@/components/shared/filters";
+import { SearchSelect } from "@/components/shared/search-select";
 import { fetchCategories } from "@/features/inventory/api";
 import { useLoad } from "@/lib/use-load";
 import { cn } from "@/lib/utils";
@@ -96,7 +97,7 @@ function ReclassifyForm({ target, onDone, onCancel }: { target: ReclassifyTarget
         <Input id="reclassify-current" readOnly value={target.currentCategory ?? "Unclassified"} />
       </Field>
       <Field label="Suggested category" htmlFor="reclassify-suggested">
-        <NativeSelect id="reclassify-suggested" value={suggested} onChange={setSuggested} options={options} />
+        <SearchSelect id="reclassify-suggested" value={suggested} onChange={setSuggested} options={options} placeholder="Search categories" />
       </Field>
       <Field label="Reason" htmlFor="reclassify-reason">
         <textarea

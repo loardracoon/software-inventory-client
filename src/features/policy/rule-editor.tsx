@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Eyebrow } from "@/components/shared/eyebrow";
+import { SearchSelect } from "@/components/shared/search-select";
 import { Field, NativeSelect } from "@/components/shared/filters";
 import { formatDate, formatDateTime, formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -151,14 +152,14 @@ function ConditionRow({ c, n, categories, onChange, onRemove, canRemove, disable
             <label htmlFor={`${id}-value`} className="sr-only">
               {c.field === "category" ? "Category" : "Subcategory"} of condition {n}
             </label>
-            <select id={`${id}-value`} className={CONTROL} value={c.value ?? ""} disabled={disabled} onChange={(e) => onChange({ ...c, value: e.target.value })}>
-              <option value="">Select…</option>
-              {options.map((k) => (
-                <option key={k.slug} value={k.slug}>
-                  {catLabel(k)}
-                </option>
-              ))}
-            </select>
+            <SearchSelect
+              id={`${id}-value`}
+              value={c.value ?? ""}
+              disabled={disabled}
+              onChange={(v) => onChange({ ...c, value: v })}
+              options={[{ value: "", label: "Select…" }, ...options.map((k) => ({ value: k.slug, label: catLabel(k) }))]}
+              placeholder="Search categories"
+            />
           </div>
         ) : null}
 
@@ -167,22 +168,14 @@ function ConditionRow({ c, n, categories, onChange, onRemove, canRemove, disable
             <label htmlFor={`${id}-value`} className="sr-only">
               Add a value to condition {n}
             </label>
-            <select
+            <SearchSelect
               id={`${id}-value`}
-              className={CONTROL}
               value=""
               disabled={disabled}
-              onChange={(e) => e.target.value && onChange({ ...c, value: null, values: [...list.filter((v) => v !== e.target.value), e.target.value] })}
-            >
-              <option value="">Add…</option>
-              {options
-                .filter((k) => !list.includes(k.slug))
-                .map((k) => (
-                  <option key={k.slug} value={k.slug}>
-                    {catLabel(k)}
-                  </option>
-                ))}
-            </select>
+              onChange={(v) => v && onChange({ ...c, value: null, values: [...list.filter((x) => x !== v), v] })}
+              options={[{ value: "", label: "Add…" }, ...options.filter((k) => !list.includes(k.slug)).map((k) => ({ value: k.slug, label: catLabel(k) }))]}
+              placeholder="Search categories"
+            />
           </div>
         ) : null}
 

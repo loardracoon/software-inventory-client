@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AttentionIcons, type VulnCounts } from "@/components/shared/attention-icons";
+import { SearchSelect } from "@/components/shared/search-select";
 import { CategoryTag, categoryFromRow } from "@/components/shared/category-tag";
 import { toCategoryOrigin } from "@/components/shared/change-badge";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -274,7 +275,7 @@ export function SoftwarePage() {
           />
         </Field>
         <Field label="Category" htmlFor="software-category">
-          <NativeSelect id="software-category" value={category} onChange={(v) => setParam("category", v)} options={categoryOptions} />
+          <SearchSelect id="software-category" value={category} onChange={(v) => setParam("category", v)} options={categoryOptions} placeholder="Search categories" />
         </Field>
         <Field label="Attention" htmlFor="software-attention">
           <NativeSelect id="software-attention" value={attention} onChange={(v) => setParam("attention", v)} options={ATTENTION_OPTIONS} />

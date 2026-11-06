@@ -58,7 +58,7 @@ describe("App routes", () => {
   ])("renders %s inside the shell", async (path, title) => {
     renderApp(path, "signed_in");
     // Lazy route chunks load slowly when the whole suite runs in parallel.
-    expect(await screen.findByRole("heading", { level: 1, name: title }, { timeout: 5000 })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: title }, { timeout: 15_000 })).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Main navigation" })).toBeInTheDocument();
   });
 
