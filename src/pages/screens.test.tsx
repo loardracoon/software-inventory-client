@@ -208,6 +208,11 @@ describe("parseCsv", () => {
     const text = "Hostname,Tenant,Owner,Department,Criticality,Scope tags,Endpoint ID\r\nW1,Lab,Alice,Finance,high,pci;iso,ep-1\r\n";
     expect(csvToImportRows(text)).toEqual([{ endpoint_id: "ep-1", hostname: "W1", owner: "Alice", department: "Finance", criticality: "high", scope_tags: "pci;iso" }]);
   });
+
+  it("removes the formula guard the export adds: '-ops imports as -ops, 'x stays 'x", () => {
+    const text = `Hostname,Owner,Department,Coverage\r\nW1,"'-ops",'x,never\r\n`;
+    expect(csvToImportRows(text)).toEqual([{ hostname: "W1", owner: "-ops", department: "'x" }]);
+  });
 });
 
 describe("Software", () => {

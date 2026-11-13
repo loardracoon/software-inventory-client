@@ -64,7 +64,9 @@ export function csvToImportRows(text: string): Record<string, string>[] {
   const names = (header ?? []).map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));
   if (!names.includes("endpoint_id") && !names.includes("hostname")) throw new Error("The CSV needs a header with endpoint_id or hostname");
   const use = COLUMNS.filter((c) => names.includes(c));
-  return body.map((cells) => Object.fromEntries(use.map((c) => [c, (cells[names.indexOf(c)] ?? "").trim()])));
+  // The export prefixes ' to a value starting with = + - @ (formula guard): remove exactly that one.
+  const value = (cell: string | undefined) => (cell ?? "").trim().replace(/^'(?=[=+\-@])/, "");
+  return body.map((cells) => Object.fromEntries(use.map((c) => [c, value(cells[names.indexOf(c)])])));
 }
 
 export type ContextValues = { owner: string | null; department: string | null; criticality: string | null; scope_tags: string[] };
