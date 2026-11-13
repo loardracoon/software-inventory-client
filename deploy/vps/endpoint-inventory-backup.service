@@ -1,0 +1,10 @@
+[Unit]
+Description=Back up the Endpoint Inventory database
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+# backup.env: OFFSITE_ENABLED, AGE_RECIPIENT, OFFSITE_S3, OFFSITE_FTP, OFFSITE_EMAIL_*, SMTP_*, KEEP (see backup.env.example).
+EnvironmentFile=-/opt/endpoint-inventory/backup.env
+ExecStart=/opt/endpoint-inventory/backup.sh

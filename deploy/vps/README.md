@@ -27,7 +27,7 @@ public address `https://mcs.sophizo.com.br`.
 
 ## Files
 
-- From this folder: `docker-compose.yml`, `tls.conf`, `rate-limits.env`, `update.sh`, the two systemd units;
+- From this folder: `docker-compose.yml`, `tls.conf`, `rate-limits.env`, `update.sh`, the systemd units, `backup.sh`, `offsite.sh`, `backup.env.example`;
   `mail.htpasswd` empty.
 - Never committed (chmod 600): `.env` (`PUBLIC_URL`, `APP_PORT`, `APP_TAG`, `POSTGRES_PASSWORD`, `JWT_SECRET`,
   `ANON_KEY`, `SERVICE_ROLE_KEY`, `COLLECTOR_SECRET`, `SOPHOS_LES_URL`, `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`),
