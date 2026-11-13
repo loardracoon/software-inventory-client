@@ -42,14 +42,15 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
   your computers. The match happens in this app; your versions never leave it.
 - **Policy**: your rules put every installed application into one of four classes: Core system, Sanctioned,
   Tolerated or Unsanctioned.
-
-**Optional Data Lake gap fill:** for Windows computers that Live Endpoint Search has never collected, an admin can turn on the Sophos Data Lake gap fill in Scans › Schedule. The app then reads the daily Data Lake snapshot (programs and Chrome and Edge extensions only) until Live Endpoint Search collects the computer for the first time. It is off by default and needs the Sophos XDR data lake on the tenant. See the [operations guide](docs/operations.md#data-lake-gap-fill).
+- **Data Lake gap fill (optional)**: Windows computers that Live Endpoint Search has never collected get their
+  programs and Chrome and Edge extensions from the daily Sophos Data Lake snapshot, until Live Endpoint Search
+  collects them. One source per computer: nothing is stored twice. Off by default; needs the Sophos XDR data lake.
 
 ## Main features
 
 | Area | Features |
 | --- | --- |
-| Collection | Weekly collection cycle per tenant; only online computers are queried (offline ones are checked again later the same day); daily retries; **Scan now** for one computer; the Sophos API budget is respected (10 runs per minute, 1,000 per day, a reserve for retries) |
+| Collection | Weekly collection cycle per tenant; only online computers are queried (offline ones are checked again later the same day); daily retries; **Scan now** for one computer; the Sophos API budget is respected (10 runs per minute, 1,000 per day, a reserve for retries); optional Data Lake gap fill for Windows computers that were never collected (daily snapshot, Scans › Schedule) |
 | Overview | Fleet coverage, changes per week, categories that need attention, the application policy card, the known vulnerabilities card |
 | Computers | Online status from Sophos Central (green or grey icon, last seen on hover; refreshed every 15 minutes), status of each computer in the cycle, attention icons (Not allowed, Review, CVEs by severity), and per computer: programs, extensions, packages, hardware and the history at any date |
 | Software | One row per product (spellings with a version in the name are grouped), filters by category, attention, policy class, vulnerabilities, platform, source, user, version and date; saved searches; CSV export |
@@ -67,6 +68,7 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 flowchart LR
   subgraph Sophos["Sophos Central"]
     API["Endpoint API and Live Endpoint Query"]
+    DL["Data Lake (optional, daily snapshot)"]
   end
   subgraph App["Endpoint Inventory (this repository)"]
     Console["Web console"]
@@ -78,6 +80,7 @@ flowchart LR
   end
   Console --> DB
   Functions -- "osquery queries" --> API
+  Functions -- "softwareinfo search (gap fill)" --> DL
   Functions --> DB
   Functions -- "titles of unknown software (metadata only)" --> Dictionary
   Dictionary -- "categories and CVE version ranges" --> Functions
@@ -86,6 +89,10 @@ flowchart LR
 - A **collector** runs every 5 minutes. It opens the weekly cycle, sends osquery queries to the computers in
   batches, reads the results and turns them into versioned inventory. Every query, with its SQL, the columns it
   returns and what the app does with them, is in **[docs/queries.md](docs/queries.md)**.
+- With the **Data Lake gap fill** on, the collector also reads the daily `softwareinfo` snapshot of Windows
+  computers that Live Endpoint Search has never collected (20 computers per search). Live Endpoint Search stays the
+  source of truth: at its first collection of a computer it replaces the Data Lake rows, with no change events.
+  Details: [docs/operations.md](docs/operations.md#data-lake-gap-fill) and [docs/queries.md](docs/queries.md).
 - Only the server side (Edge Functions) talks to Sophos Central and to the Hub. The Sophos credential and the Hub
   key are kept encrypted in the database (Vault) and never reach the browser.
 - Built with React, TypeScript and Tailwind (Sophos Design System 2026 tokens) on self-hosted Supabase (Postgres 17,
@@ -286,12 +293,13 @@ Unsanctioned while newer versions are Sanctioned. A title shows its most restric
 
 ## Data flow: what leaves this app
 
-This app makes outbound calls to **three kinds of destination**. Nothing else leaves it: there is no telemetry, no
+This app makes outbound calls to **four kinds of destination**. Nothing else leaves it: there is no telemetry, no
 analytics and no call to an AI provider.
 
 | Destination | When | What is sent | What comes back |
 | --- | --- | --- | --- |
 | **Sophos Central** (Sophos APIs) | Always (this is the collection) | The Sophos credential (to get a token) and the osquery queries of [docs/queries.md](docs/queries.md) for the computers you manage | The query results. This data stays between Sophos Central and this app |
+| **Sophos Data Lake** (Sophos Fusion search API) | Only with the Data Lake gap fill on (Scans › Schedule) | The same Sophos token and a `softwareinfo` search with the Sophos IDs of the computers to fill | The software rows of their daily snapshot. This data stays between Sophos and this app |
 | **A Dictionary Hub** | Only if you configure one in Settings | The fields in the table below | Categories, product grouping and CVE version ranges |
 | **Your alert channels** | Only if you add a webhook or email in Settings › Alerts | The alert message (for example "new unsanctioned software"), which can name computers and software | Nothing |
 
@@ -359,6 +367,9 @@ The author runs one instance of each app, open to Sophos colleagues:
   (`deploy/compose/rate-limits.env` and `deploy/k3s/app/rate-limits.env`). See
   [Rate limits](#rate-limits) below and [docs/rate-limits.md](docs/rate-limits.md).
 - Plain HTTP (`--http-port`) is for trusted networks only; use `--domain` for anything else.
+- Secret scanning: GitHub secret scanning and push protection are on, CI runs gitleaks over the whole history on
+  every push (`.github/workflows/secret-scan.yml`, rules in `.gitleaks.toml`), and a pre-commit hook scans the staged
+  changes. Turn the hook on once per clone: `sh scripts/install-git-hooks.sh`.
 
 ## Rate limits
 
@@ -383,9 +394,9 @@ when to change it, is in **[docs/rate-limits.md](docs/rate-limits.md)**.
 
 | Document | Content |
 | --- | --- |
-| [docs/queries.md](docs/queries.md) | Every osquery query the app sends (19 in the catalog): SQL, columns, what is collected and what is not, how the app uses the rows, versions, how to test one by hand |
+| [docs/queries.md](docs/queries.md) | Every osquery query the app sends (19 in the catalog): SQL, columns, what is collected and what is not, how the app uses the rows, versions, how to test one by hand; the Data Lake `softwareinfo` search and its field mapping |
 | [docs/rate-limits.md](docs/rate-limits.md) | Each rate-limit variable: what it does, the recommended number, when to change it, how to check |
-| [docs/operations.md](docs/operations.md) | Local setup, the deploy methods, cron jobs, secrets, key rotation, query versions, alerts, API budget, SSO plan, rate limits, tests |
+| [docs/operations.md](docs/operations.md) | Local setup, the deploy methods, cron jobs, secrets, key rotation, query versions, alerts, API budget, Data Lake gap fill, SSO plan, rate limits, tests |
 | [deploy/vps/README.md](deploy/vps/README.md) | The production host (VPS behind Cloudflare, next to Mailu and the Hub) |
 | [deploy/k3s/README.md](deploy/k3s/README.md) | Kubernetes (K3S) and Argo CD |
 | [scripts/demo/README.md](scripts/demo/README.md) | A local demo with fictional data and a read-only viewer, for videos and screenshots |
