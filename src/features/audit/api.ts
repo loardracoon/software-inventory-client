@@ -19,7 +19,7 @@ export const AUDIT_PAGE = 500;
 
 // Newest first; beforeId = keyset cursor for the next page.
 export async function fetchAuditLog(from: string, to: string, limit = AUDIT_PAGE, beforeId?: number): Promise<AuditRow[]> {
-  let query = db().rpc("export_audit_log", range(from, to));
+  let query = db().rpc("export_audit_log", range(from, to)).order("id", { ascending: false });
   if (beforeId !== undefined) query = query.lt("id", beforeId);
   return (orThrow(await query.limit(limit)) ?? []) as AuditRow[];
 }
