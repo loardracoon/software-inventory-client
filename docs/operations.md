@@ -166,6 +166,15 @@ Configure them in Settings › Alerts:
 
 Each condition is alerted once. Failed deliveries are retried for up to 5 attempts, and the last error shows in the card.
 
+### Troubleshooting a run
+
+Scans › Recent runs: click a run (or focus it and press Enter) to open its details. Per computer you see the task
+status and message, the number of rows and the stored size, whether the result was ingested (or the ingest error),
+and a table of the first 20 rows as stored in `raw_results` (osquery rows as returned; Data Lake rows already mapped
+to the client's columns). Only admins and operators see the rows, because they can hold user names and paths;
+viewers see the counts and sizes. The rows come from `public.run_detail(run_id)` and are kept 90 days
+(`purge_raw_results`).
+
 ### Data Lake gap fill
 
 Scans › Schedule has the switch **Fill gaps from the Sophos Data Lake** (admins only, off by default). When it is on, the collector step `data_lake` reads the daily Data Lake snapshot for Windows computers that Live Endpoint Search has never collected. It gets programs and Chrome and Edge extensions only. Each computer is read at most every 20 hours. Live Endpoint Search takes over at its first collection of a computer, with no change events. When the switch is turned off, the Data Lake rows stay as they are (the last snapshot) until Live Endpoint Search collects the computer. See [Data Lake (softwareinfo)](queries.md#data-lake-softwareinfo) for the query and the field mapping.

@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 import {
   rowPaginationFeature,
   rowSortingFeature,
@@ -39,6 +39,8 @@ type ServerDataTableProps<TData extends RowData, TFilters> = {
   initialSorting?: SortingState;
   pageSizeOptions?: number[];
   empty?: ReactNode;
+  // Makes rows clickable (mouse, Enter or Space), e.g. to open a details drawer.
+  onRowClick?: (row: TData) => void;
 };
 
 type Result<TData> = { key: string; rows: TData[]; rowCount: number; error: string | null };
@@ -56,6 +58,7 @@ export function ServerDataTable<TData extends RowData, TFilters>({
   initialSorting = NO_SORTING,
   pageSizeOptions = DEFAULT_PAGE_SIZES,
   empty,
+  onRowClick,
 }: ServerDataTableProps<TData, TFilters>) {
   const filtersKey = JSON.stringify(filters);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: pageSizeOptions[0] });
@@ -145,7 +148,22 @@ export function ServerDataTable<TData extends RowData, TFilters>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                {...(onRowClick
+                  ? {
+                      tabIndex: 0,
+                      className: "cursor-pointer focus-visible:outline-2 focus-visible:outline-ring",
+                      onClick: () => onRowClick(row.original),
+                      onKeyDown: (e: KeyboardEvent) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          onRowClick(row.original);
+                        }
+                      },
+                    }
+                  : {})}
+              >
                 {row.getAllCells().map((cell) => (
                   <TableCell key={cell.id}>
                     <table.FlexRender cell={cell} />

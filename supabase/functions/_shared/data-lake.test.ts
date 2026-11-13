@@ -161,10 +161,12 @@ describe("DataLakeClient", () => {
     await expect(setup(respond).dl.search("q", far)).rejects.toThrow(DataLakeOverLimitError);
   });
 
-  it("refuses a search over the threshold even when the totals match", async () => {
+  // Live, 2026-11-13: overThreshold was true on a search that returned 0 rows with totals 0, so it does not mean
+  // "rows were cut". Only the totals and the row cap decide.
+  it("accepts overThreshold when every row was read", async () => {
     const respond = (query: string, v: Record<string, unknown>) =>
       query.includes("search(urn") ? { data: { search: status("ALL", "COMPLETE", true) } } : happy(3)(query, v);
-    await expect(setup(respond).dl.search("q", far)).rejects.toThrow(DataLakeOverLimitError);
+    expect((await setup(respond).dl.search("q", far)).rows).toHaveLength(3);
   });
 
   it("stops at once on a failed search", async () => {

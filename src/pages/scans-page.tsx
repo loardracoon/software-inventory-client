@@ -18,6 +18,7 @@ import { asScanStatus, StatusBadge } from "@/components/shared/status-badge";
 import { useAuth } from "@/features/auth/auth-context";
 import { HubDelayedBanner } from "@/features/dictionary/hub-delayed-banner";
 import { BudgetCard } from "@/features/inventory/budget-card";
+import { RunDetailSheet } from "@/features/inventory/run-detail-sheet";
 import {
   fetchBudget,
   fetchCycleOverview,
@@ -111,6 +112,7 @@ export function ScansPage() {
   const runFetch = useCallback((r: ServerPageRequest<{ tenantId: string | null }>) => fetchRecentRuns(r.filters.tenantId, r), []);
   const filters = useMemo(() => ({ tenantId: selectedTenantId }), [selectedTenantId]);
   const settingsTenant = selectedTenantId ?? (tenants.length === 1 ? tenants[0].id : null);
+  const [runId, setRunId] = useState<string | null>(null);
 
   return (
     <>
@@ -153,9 +155,17 @@ export function ScansPage() {
           />
         </TabsContent>
         <TabsContent value="runs">
-          <ServerDataTable label="Recent runs" columns={RUN_COLUMNS} fetchPage={runFetch} filters={filters} getRowId={(r) => r.id ?? ""} />
+          <ServerDataTable
+            label="Recent runs"
+            columns={RUN_COLUMNS}
+            fetchPage={runFetch}
+            filters={filters}
+            getRowId={(r) => r.id ?? ""}
+            onRowClick={(r) => r.id && setRunId(r.id)}
+          />
         </TabsContent>
       </Tabs>
+      <RunDetailSheet runId={runId} onClose={() => setRunId(null)} />
 
       {settingsTenant ? (
         <ScheduleCard tenantId={settingsTenant} tenantName={tenants.find((t) => t.id === settingsTenant)?.name ?? ""} />

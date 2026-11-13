@@ -41,6 +41,7 @@ export function inventoryApiMock() {
     fetchBudget: vi.fn(async () => []),
     fetchRetryQueue: vi.fn(emptyPage),
     fetchRecentRuns: vi.fn(emptyPage),
+    fetchRunDetail: vi.fn(async () => null),
     fetchScanSettings: vi.fn(async () => null),
     saveScanSettings: vi.fn(async () => {}),
   };

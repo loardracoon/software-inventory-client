@@ -282,6 +282,31 @@ export async function fetchRecentRuns(tenantId: string | null, request: PageRequ
   return { rows: data ?? [], rowCount: count ?? 0 };
 }
 
+export type RunDetailComputer = {
+  computer_id: string;
+  hostname: string;
+  endpoint_id: string;
+  task_status: string | null;
+  last_error: string | null;
+  row_count: number | null;
+  bytes: number | null;
+  received_at: string | null;
+  ingested_at: string | null;
+  ingest_error: string | null;
+  // First 20 rows as stored (raw osquery rows, or Data Lake rows already mapped); null without preview rights.
+  rows: Record<string, unknown>[] | null;
+};
+export type RunDetail = {
+  run: { id: string; provider: string; domain: string; platform: string; query_name: string | null; query_version: number; status: string; cancelled: boolean; error: string | null; started_at: string; finished_at: string | null; endpoints: number };
+  preview_allowed: boolean;
+  computers: RunDetailComputer[];
+};
+
+// Scans › Recent runs drawer. null when the run is outside the caller's tenants.
+export async function fetchRunDetail(runId: string): Promise<RunDetail | null> {
+  return orThrow(await db().rpc("run_detail", { p_run_id: runId })) as unknown as RunDetail | null;
+}
+
 export type ScanSettings = Database["public"]["Tables"]["scan_settings"]["Row"];
 
 export async function fetchScanSettings(tenantId: string): Promise<ScanSettings | null> {
