@@ -139,7 +139,8 @@ grant execute on function public.set_computer_context(uuid[], text, text, text, 
 grant execute on function public.import_computer_context(uuid, jsonb) to authenticated;
 grant execute on function public.valid_scope_tags(text[]) to authenticated;
 
--- export_csv: the computers export adds Owner, Department, Criticality, Scope tags and takes the filters
+-- export_csv: the computers export adds Owner, Department, Criticality, Scope tags, Coverage, Inventoried at, Inventory source
+-- and Endpoint ID (last), and an empty date stays an empty field (concat_ws skips nulls, which moved the later columns); it takes the filters
 -- criticality, scope and owner (and coverage). Patched in place; each anchor must match exactly once.
 do $$
 declare
@@ -147,11 +148,12 @@ declare
 begin
   select pg_get_functiondef(p.oid) into v_def from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and p.proname = 'export_csv';
-  v_def := replace(v_def, 'Packages,Attention''', 'Packages,Attention,Owner,Department,Criticality,Scope tags,Endpoint ID''');
+  v_def := replace(v_def, 'Packages,Attention''', 'Packages,Attention,Owner,Department,Criticality,Scope tags,Coverage,Inventoried at,Inventory source,Endpoint ID''');
   v_def := replace(v_def, 'public.csv_field(array_to_string(c.attention_level1_slugs, '' ''))) as line',
     'public.csv_field(array_to_string(c.attention_level1_slugs, '' '')),
           public.csv_field(c.owner), public.csv_field(c.department), public.csv_field(c.criticality),
           public.csv_field(array_to_string(c.scope_tags, '';'')),
+          public.csv_field(c.coverage_status), coalesce(public.csv_time(c.inventoried_at), ''''), public.csv_field(c.inventory_source),
           public.csv_field((select x.sophos_endpoint_id from public.computers x where x.id = c.id))) as line');
   v_def := replace(v_def, '        and (nullif(f ->> ''category'', '''') is null or c.attention_level1_slugs @> array[f ->> ''category''])',
     '        and (nullif(f ->> ''category'', '''') is null or c.attention_level1_slugs @> array[f ->> ''category''])
@@ -159,7 +161,10 @@ begin
         and (nullif(f ->> ''criticality'', '''') is null or c.criticality = f ->> ''criticality'')
         and (nullif(f ->> ''scope'', '''') is null or c.scope_tags @> array[f ->> ''scope''])
         and (nullif(btrim(coalesce(f ->> ''owner'', '''')), '''') is null or c.owner ilike public.like_contains(btrim(f ->> ''owner'')))');
-  if v_def not like '%Scope tags%' or v_def not like '%c.scope_tags @>%' or v_def not like '%csv_field(c.owner)%' then
+  v_def := replace(v_def, 'public.csv_time(c.last_seen_at)', 'coalesce(public.csv_time(c.last_seen_at), '''')');
+  v_def := replace(v_def, 'public.csv_time(c.last_collected_at)', 'coalesce(public.csv_time(c.last_collected_at), '''')');
+  if v_def not like '%Inventory source,Endpoint ID%' or v_def not like '%coalesce(public.csv_time(c.last_collected_at)%'
+     or v_def not like '%Scope tags%' or v_def not like '%c.scope_tags @>%' or v_def not like '%csv_field(c.owner)%' then
     raise exception 'export_csv has changed: update this migration';
   end if;
   execute v_def;
@@ -190,11 +195,8 @@ select
         where sn.computer_id = c.id and sn.applied_at is not null and sn.query_name like 'dl.%'
           and sn.outcome is distinct from 'superseded')
   end as data_lake_snapshot_at,
-  case
-    when exists (select 1 from public.snapshots sn where sn.computer_id = c.id and sn.applied_at is not null and sn.query_name not like 'dl.%') then 'live_endpoint_search'
-    when exists (select 1 from public.installations i where i.computer_id = c.id and i.valid_to is null and i.query_name like 'dl.%') then 'data_lake'
-    else 'none'
-  end as inventory_source,
+  case when inv.inventoried_at is null then 'none' when inv.query_name like 'dl.%' then 'data_lake' else 'live_endpoint_search' end
+    as inventory_source,
   inv.inventoried_at,
   case when inv.inventoried_at is null then 'never'
        when inv.inventoried_at <= now() - make_interval(days => coalesce(ss.stale_after_days, 14)) then 'stale'
@@ -203,7 +205,9 @@ select
 from public.computers c
 join public.my_tenant_roles() r on r.tenant_id = c.tenant_id
 left join public.scan_settings ss on ss.tenant_id = c.tenant_id
-left join lateral (select max(sn.collected_at) as inventoried_at from public.snapshots sn where sn.computer_id = c.id and sn.applied_at is not null) inv on true
+-- The latest applied snapshot gives both the date and the source, so they always agree.
+left join lateral (select sn.collected_at as inventoried_at, sn.query_name from public.snapshots sn
+  where sn.computer_id = c.id and sn.applied_at is not null order by sn.collected_at desc limit 1) inv on true
 left join lateral (
   select
     case

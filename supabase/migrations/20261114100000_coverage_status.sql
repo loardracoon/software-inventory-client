@@ -1,4 +1,5 @@
 -- Audit evidence of coverage: which computers are inventoried (and from which source), stale or never inventoried.
+-- inventory_source is the source of the latest applied snapshot (the one that sets inventoried_at).
 alter table public.scan_settings
   add column stale_after_days integer not null default 14 check (stale_after_days between 1 and 365);
 
@@ -26,11 +27,8 @@ select
         where sn.computer_id = c.id and sn.applied_at is not null and sn.query_name like 'dl.%'
           and sn.outcome is distinct from 'superseded')
   end as data_lake_snapshot_at,
-  case
-    when exists (select 1 from public.snapshots sn where sn.computer_id = c.id and sn.applied_at is not null and sn.query_name not like 'dl.%') then 'live_endpoint_search'
-    when exists (select 1 from public.installations i where i.computer_id = c.id and i.valid_to is null and i.query_name like 'dl.%') then 'data_lake'
-    else 'none'
-  end as inventory_source,
+  case when inv.inventoried_at is null then 'none' when inv.query_name like 'dl.%' then 'data_lake' else 'live_endpoint_search' end
+    as inventory_source,
   inv.inventoried_at,
   case when inv.inventoried_at is null then 'never'
        when inv.inventoried_at <= now() - make_interval(days => coalesce(ss.stale_after_days, 14)) then 'stale'
@@ -38,7 +36,9 @@ select
 from public.computers c
 join public.my_tenant_roles() r on r.tenant_id = c.tenant_id
 left join public.scan_settings ss on ss.tenant_id = c.tenant_id
-left join lateral (select max(sn.collected_at) as inventoried_at from public.snapshots sn where sn.computer_id = c.id and sn.applied_at is not null) inv on true
+-- The latest applied snapshot gives both the date and the source, so they always agree.
+left join lateral (select sn.collected_at as inventoried_at, sn.query_name from public.snapshots sn
+  where sn.computer_id = c.id and sn.applied_at is not null order by sn.collected_at desc limit 1) inv on true
 left join lateral (
   select
     case

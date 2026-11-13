@@ -6,7 +6,7 @@ select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.software_titles, public.sophos_connection, public.audit_log cascade;
 delete from public.profiles;
 
-select plan(16);
+select plan(21);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
@@ -22,7 +22,8 @@ insert into public.tenant_members (user_id, tenant_id, role) values
 insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platform) values
   ('20000000-0000-0000-0000-0000000000a1', '10000000-0000-0000-0000-00000000000a', 'ep-w1', 'W1', 'windows'),
   ('20000000-0000-0000-0000-0000000000a2', '10000000-0000-0000-0000-00000000000a', 'ep-w2', 'W2', 'windows'),
-  ('20000000-0000-0000-0000-0000000000a3', '10000000-0000-0000-0000-00000000000a', 'ep-w3', 'W3', 'windows');
+  ('20000000-0000-0000-0000-0000000000a3', '10000000-0000-0000-0000-00000000000a', 'ep-w3', 'W3', 'windows'),
+  ('20000000-0000-0000-0000-0000000000b1', '10000000-0000-0000-0000-00000000000b', 'ep-b1', 'B1', 'windows');
 
 create function pg_temp.as_user(uid text) returns void language plpgsql as $$
 begin
@@ -34,7 +35,7 @@ end $$;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select is(public.set_computer_context('{20000000-0000-0000-0000-0000000000a1,20000000-0000-0000-0000-0000000000a2}',
   'Alice Example', 'Finance', 'high', '{pci,iso 27001}'), 2, 'operator sets the context of 2 computers');
-select results_eq($$select hostname, owner, department, criticality, scope_tags from public.v_computer_list order by hostname$$,
+select results_eq($$select hostname, owner, department, criticality, scope_tags from public.v_computer_list where hostname like 'W%' order by hostname$$,
   $$values ('W1', 'Alice Example', 'Finance', 'high', '{pci,"iso 27001"}'::text[]),
            ('W2', 'Alice Example', 'Finance', 'high', '{pci,"iso 27001"}'::text[]),
            ('W3', null, null, null, '{}'::text[])$$, 'values are stored and visible in v_computer_list');
@@ -77,11 +78,26 @@ select is((select count(*)::int from regexp_split_to_table(public.export_csv('co
 
 select is((select count(*)::int from regexp_split_to_table(public.export_csv('computers', '{"criticality":"low","scope":""}'), E'\r\n') l where l like '%"IT","low"%'), 1, 'export has the context columns and filters on criticality');
 
+select is(split_part(public.export_csv('computers', '{}'), chr(13), 1),
+  'Hostname,Tenant,Platform,OS,OS version,User,Last seen,Last collected,Cycle status,Programs,Extensions,Packages,Attention,'
+  || 'Owner,Department,Criticality,Scope tags,Coverage,Inventoried at,Inventory source,Endpoint ID', 'export header has the coverage columns');
+
 -- Viewer and operator of another tenant
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
 select throws_ok($$select public.set_computer_context('{20000000-0000-0000-0000-0000000000a1}', 'x', null, null, null)$$, '42501', null, 'viewer cannot set');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select throws_ok($$select public.set_computer_context('{20000000-0000-0000-0000-0000000000a1}', 'x', null, null, null)$$, '42501', null, 'operator of another tenant cannot set');
+select throws_ok($$select public.import_computer_context('10000000-0000-0000-0000-00000000000a', '[{"endpoint_id":"ep-w1","owner":"x"}]')$$,
+  '42501', null, 'operator of another tenant cannot import into it');
+-- (the first user, 0b, is a global admin; 0d is an operator of tenant B only)
+select throws_ok($$select public.set_computer_context('{20000000-0000-0000-0000-0000000000b1,20000000-0000-0000-0000-0000000000a1}', 'Mallory', null, null, null)$$,
+  '42501', null, 'a list with a computer of another tenant is refused');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select throws_ok($$select public.import_computer_context('10000000-0000-0000-0000-00000000000a', '[{"endpoint_id":"ep-w1","owner":"x"}]')$$,
+  '42501', null, 'viewer cannot import');
+select set_config('role', 'postgres', true);
+select results_eq($$select sophos_endpoint_id, owner from public.computers where sophos_endpoint_id in ('ep-w1', 'ep-b1') order by 1$$,
+  $$values ('ep-b1', null::text), ('ep-w1', 'Alice Example')$$, 'the refused calls changed nothing');
 
 select * from finish();
 rollback;

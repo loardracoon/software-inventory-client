@@ -6,7 +6,7 @@ select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.software_titles, public.sophos_connection, public.audit_log cascade;
 delete from public.profiles;
 
-select plan(8);
+select plan(10);
 
 insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000b', 'operator@example.com');
 insert into public.tenants (id, sophos_tenant_id, name, id_type) values
@@ -18,14 +18,17 @@ insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platf
   ('20000000-0000-0000-0000-0000000000a2', '10000000-0000-0000-0000-00000000000a', 'ep-2', 'C2', 'windows', null),
   ('20000000-0000-0000-0000-0000000000a3', '10000000-0000-0000-0000-00000000000a', 'ep-3', 'C3', 'windows', null),
   ('20000000-0000-0000-0000-0000000000a4', '10000000-0000-0000-0000-00000000000a', 'ep-4', 'C4', 'windows', null),
-  ('20000000-0000-0000-0000-0000000000a5', '10000000-0000-0000-0000-00000000000a', 'ep-5', 'C5', 'windows', now());
+  ('20000000-0000-0000-0000-0000000000a5', '10000000-0000-0000-0000-00000000000a', 'ep-5', 'C5', 'windows', now()),
+  ('20000000-0000-0000-0000-0000000000a6', '10000000-0000-0000-0000-00000000000a', 'ep-6', 'C6', 'windows', null);
 insert into public.software_titles (id, kind, source, match_key, canonical_name) values
   ('30000000-0000-0000-0000-000000000001', 'program', 'programs', '7-zip|igor pavlov', '7-Zip');
 insert into public.snapshots (tenant_id, computer_id, domain, query_name, query_version, collected_at, row_count, content_hash, applied_at) values
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a1', 'programs', 'inv.programs', 1, now() - interval '2 days', 1, 'h', now()),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a2', 'programs', 'dl.programs', 1, now() - interval '3 days', 1, 'h', now()),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a4', 'programs', 'inv.programs', 1, now() - interval '31 days', 1, 'h', now()),
-  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a5', 'programs', 'inv.programs', 1, now() - interval '1 day', 1, 'h', now());
+  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a5', 'programs', 'inv.programs', 1, now() - interval '1 day', 1, 'h', now()),
+  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a6', 'programs', 'inv.programs', 1, now() - interval '20 days', 1, 'h', now()),
+  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a6', 'programs', 'dl.programs', 1, date_trunc('second', now()) - interval '1 day', 1, 'h', now());
 insert into public.installations (tenant_id, computer_id, title_id, domain, query_name, scope_key, username, version, row_hash, valid_from) values
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a2', '30000000-0000-0000-0000-000000000001', 'programs', 'dl.programs', '', null, '1', 'h', now() - interval '3 days');
 
@@ -34,13 +37,19 @@ set local role authenticated;
 
 select results_eq($$select hostname, inventory_source, coverage_status from public.v_computer_list order by hostname$$,
   $$values ('C1', 'live_endpoint_search', 'current'), ('C2', 'data_lake', 'current'), ('C3', 'none', 'never'),
-    ('C4', 'live_endpoint_search', 'stale'), ('C5', 'live_endpoint_search', 'current')$$,
+    ('C4', 'live_endpoint_search', 'stale'), ('C5', 'live_endpoint_search', 'current'), ('C6', 'data_lake', 'current')$$,
   'source and coverage status per computer');
 select ok((select inventoried_at from public.v_computer_list where hostname = 'C3') is null, 'never inventoried: no date');
 select ok((select inventoried_at from public.v_computer_list where hostname = 'C2') > now() - interval '3 days 1 minute', 'inventoried_at takes any source');
 select results_eq($$select (s->>'coverage_never')::int, (s->>'coverage_stale')::int, (s->>'coverage_current')::int
     from public.overview_stats('10000000-0000-0000-0000-00000000000a') s$$,
-  $$values (1, 1, 2)$$, 'overview counts skip retired computers');
+  $$values (1, 1, 3)$$, 'overview counts skip retired computers');
+select results_eq($$select inventory_source, inventoried_at from public.v_computer_list where hostname = 'C6'$$,
+  $$values ('data_lake', date_trunc('second', now()) - interval '1 day')$$,
+  'old Live Endpoint Search and newer Data Lake snapshot: the source and the date are both the Data Lake one');
+select is((select l from regexp_split_to_table(public.export_csv('computers', '{"search":"C6"}'), E'\r\n') l where l like '"C6",%'),
+  '"C6","Tenant A","windows",,,,,,"not_scheduled",0,0,0,"",,,,"","current",' || public.csv_time(date_trunc('second', now()) - interval '1 day') || ',"data_lake","ep-6"',
+  'export line has coverage, inventoried at and source in their columns');
 reset role;
 
 update public.scan_settings set stale_after_days = 40;
