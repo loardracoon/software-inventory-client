@@ -23,7 +23,7 @@ insert into public.software_titles (id, kind, source, match_key, canonical_name)
 insert into public.snapshots (tenant_id, computer_id, domain, query_name, query_version, collected_at, row_count, content_hash, applied_at) values
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a1', 'programs', 'inv.programs', 1, now() - interval '2 days', 1, 'h', now()),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a2', 'programs', 'dl.programs', 1, now() - interval '3 days', 1, 'h', now()),
-  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a4', 'programs', 'inv.programs', 1, now() - interval '30 days', 1, 'h', now()),
+  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a4', 'programs', 'inv.programs', 1, now() - interval '31 days', 1, 'h', now()),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a5', 'programs', 'inv.programs', 1, now() - interval '1 day', 1, 'h', now());
 insert into public.installations (tenant_id, computer_id, title_id, domain, query_name, scope_key, username, version, row_hash, valid_from) values
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a2', '30000000-0000-0000-0000-000000000001', 'programs', 'dl.programs', '', null, '1', 'h', now() - interval '3 days');
@@ -44,11 +44,11 @@ reset role;
 
 update public.scan_settings set stale_after_days = 40;
 set local role authenticated;
-select is((select coverage_status from public.v_computer_list where hostname = 'C4'), 'current', 'stale_after_days = 40: 30 days old is current');
+select is((select coverage_status from public.v_computer_list where hostname = 'C4'), 'current', 'stale_after_days = 40: 31 days old is current');
 reset role;
 select is((select stale_after_days from public.scan_settings), 40, 'stale_after_days is stored');
 select throws_ok($$update public.scan_settings set stale_after_days = 0$$, '23514', null, 'stale_after_days = 0 is refused');
-select is((select column_default from information_schema.columns where table_name = 'scan_settings' and column_name = 'stale_after_days'), '30', 'default 30');
+select is((select column_default from information_schema.columns where table_name = 'scan_settings' and column_name = 'stale_after_days'), '14', 'default 14');
 
 select * from finish();
 rollback;

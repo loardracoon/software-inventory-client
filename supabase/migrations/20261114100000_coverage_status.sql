@@ -1,6 +1,6 @@
 -- Audit evidence of coverage: which computers are inventoried (and from which source), stale or never inventoried.
 alter table public.scan_settings
-  add column stale_after_days integer not null default 30 check (stale_after_days between 1 and 365);
+  add column stale_after_days integer not null default 14 check (stale_after_days between 1 and 365);
 
 -- v_computer_list as in 20261113130000_data_lake_fixes.sql, plus inventory_source, inventoried_at, coverage_status (last).
 create or replace view public.v_computer_list
@@ -33,7 +33,7 @@ select
   end as inventory_source,
   inv.inventoried_at,
   case when inv.inventoried_at is null then 'never'
-       when inv.inventoried_at <= now() - make_interval(days => coalesce(ss.stale_after_days, 30)) then 'stale'
+       when inv.inventoried_at <= now() - make_interval(days => coalesce(ss.stale_after_days, 14)) then 'stale'
        else 'current' end as coverage_status
 from public.computers c
 join public.my_tenant_roles() r on r.tenant_id = c.tenant_id
@@ -125,7 +125,7 @@ as $$
   ),
   cov as (
     select case when inv.at is null then 'never'
-                when inv.at <= now() - make_interval(days => coalesce(ss.stale_after_days, 30)) then 'stale' else 'current' end as status
+                when inv.at <= now() - make_interval(days => coalesce(ss.stale_after_days, 14)) then 'stale' else 'current' end as status
     from comps c
     left join public.scan_settings ss on ss.tenant_id = c.tenant_id
     left join lateral (select max(sn.collected_at) as at from public.snapshots sn where sn.computer_id = c.id and sn.applied_at is not null) inv on true
