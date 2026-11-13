@@ -13,6 +13,8 @@ umask 077
 INV_DIR=${INV_DIR:-/opt/endpoint-inventory}
 BACKUP_DIR=${BACKUP_DIR:-$INV_DIR/backups}
 KEEP=${KEEP:-14}
+# KEEP=0 or a word would make the rotation delete every dump, the new one too.
+case $KEEP in ''|*[!0-9]*|0) echo "KEEP must be a whole number >= 1" >&2; exit 1 ;; esac
 here=$(cd "$(dirname "$0")" && pwd)
 
 mkdir -p "$BACKUP_DIR"

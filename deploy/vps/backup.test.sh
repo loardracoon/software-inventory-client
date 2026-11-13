@@ -14,6 +14,7 @@ case "$*" in
   *pg_dump*)
     [ "${STUB_FAIL:-}" = dump ] && { echo "pg_dump: error" >&2; exit 1; }
     printf 'PGDMP-fake-dump-bytes'
+    [ "${STUB_BIG:-}" = 1 ] && head -c 1100000 /dev/zero
     [ "${STUB_SLOW:-}" = 1 ] && sleep 3
     exit 0 ;;
   *pg_restore*)
@@ -89,6 +90,9 @@ check "$(ncalls curl)" 1 "(b) one curl call"
 check "$(grep -c -- '--mail-rcpt to@example.test' "$calls")" 1 "(b) mail recipient"
 check "$(grep -c 'SHA-256: [0-9a-f]\{64\}' "$calls.msg")" 1 "(b) message holds the SHA-256"
 check "$(grep -c 'Content-Transfer-Encoding: base64' "$calls.msg")" 1 "(b) base64 attachment"
+check "$(grep -c '^Date: [A-Z][a-z][a-z], [0-9]' "$calls.msg")" 1 "(b) Date header"
+check "$(grep -c '^Message-ID: <backup\.[0-9a-f]\{16\}@example\.test>' "$calls.msg")" 1 "(b) Message-ID header"
+check "$(grep -c -- '--max-time 1800' "$calls")" 1 "(b) curl has a time limit"
 check "$(grep -c 'S3cretPass-9z' "$calls")" 0 "(b) password not in recorded arguments"
 check "$(grep -c 'S3cretPass-9z' "$calls.cfg")" 1 "(b) password reaches curl through the config file"
 check "$(leftovers)" 0 "(b) no .age or work dir left"
@@ -104,7 +108,7 @@ check "$(dumps)" 1 "(c) local dump kept"
 check "$(leftovers)" 0 "(c) no .age left"
 
 # (d) larger than the cap: no curl
-fresh; run $ALL OFFSITE_EMAIL_MAX_MB=0; rc=$?
+fresh; run $ALL OFFSITE_EMAIL_MAX_MB=1 STUB_BIG=1; rc=$?
 check "$rc" 0 "(d) exit code (a skip is not a failure)"
 check "$(ncalls curl)" 0 "(d) no curl"
 check "$(grep -c 'offsite email: skipped (size)' "$root/out")" 1 "(d) log line"
@@ -144,6 +148,23 @@ check "$(grep -c '^Type=oneshot' "$svc")" 1 "(h) oneshot"
 check "$(grep -c '^ExecStart=/opt/endpoint-inventory/backup.sh' "$svc")" 1 "(h) ExecStart"
 check "$(grep -c '^OnCalendar=\*-\*-\* 03:45:00 UTC' "$tmr")" 1 "(h) timer 03:45 UTC"
 check "$(grep -c '^Persistent=true' "$tmr")" 1 "(h) persistent"
+check "$(grep -c '^TimeoutStartSec=2h$' "$svc")" 1 "(h) a hung run is stopped"
+check "$(grep -c '^Wants=network-online.target$' "$svc")" 1 "(h) wants the network"
+check "$(grep -c '^After=.*network-online.target' "$svc")" 1 "(h) starts after the network"
+
+# (j) KEEP 0 or not a number: exit 1 before the dump, nothing deleted or rotated
+for k in 0 abc; do
+  fresh; seed 16; run KEEP=$k; rc=$?
+  check "$(nz "$rc")" nonzero "(j) exit code, KEEP=$k"
+  check "$(count)" 16 "(j) no new dump and nothing deleted, KEEP=$k"
+  check "$(grep -c 'KEEP must be a whole number >= 1' "$root/out")" 1 "(j) message, KEEP=$k"
+done
+# (k) OFFSITE_EMAIL_MAX_MB not a number: exit 1 with a clear message, nothing sent
+fresh; run $ALL OFFSITE_EMAIL_MAX_MB=x; rc=$?
+check "$(nz "$rc")" nonzero "(k) exit code"
+check "$(grep -c 'OFFSITE_EMAIL_MAX_MB must be a whole number >= 1' "$root/out")" 1 "(k) message"
+check "$(wc -c < "$calls" | tr -d ' ')" 0 "(k) nothing sent"
+check "$(dumps)" 1 "(k) local dump kept"
 
 # (i) rotation keeps the newest 14 after a success; SIGTERM during the dump leaves no partial file and rotates nothing
 fresh; seed 16; run

@@ -1,10 +1,13 @@
 [Unit]
 Description=Back up the Endpoint Inventory database
-After=docker.service
+After=docker.service network-online.target
 Requires=docker.service
+Wants=network-online.target
 
 [Service]
 Type=oneshot
+# oneshot has no start limit by default: a hung dump or upload would block every later run.
+TimeoutStartSec=2h
 # backup.env: OFFSITE_ENABLED, AGE_RECIPIENT, OFFSITE_S3, OFFSITE_FTP, OFFSITE_EMAIL_*, SMTP_*, KEEP (see backup.env.example).
 EnvironmentFile=-/opt/endpoint-inventory/backup.env
 ExecStart=/opt/endpoint-inventory/backup.sh

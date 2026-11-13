@@ -10,6 +10,8 @@ umask 077
 file=${1:?usage: offsite.sh FILE}
 INV_DIR=${INV_DIR:-/opt/endpoint-inventory}
 RCLONE_CONF=${RCLONE_CONF:-$INV_DIR/rclone.conf}
+OFFSITE_EMAIL_MAX_MB=${OFFSITE_EMAIL_MAX_MB:-20}
+case $OFFSITE_EMAIL_MAX_MB in ''|*[!0-9]*|0) echo "OFFSITE_EMAIL_MAX_MB must be a whole number >= 1" >&2; exit 1 ;; esac
 
 case "${AGE_RECIPIENT:-}" in
   age1*) ;;
@@ -30,8 +32,11 @@ send_mail() {
   sum=$(sha256sum "$1" | cut -d' ' -f1)
   size=$(wc -c < "$1" | tr -d ' ')
   b="inventory-backup-$sum"
+  host=${OFFSITE_EMAIL_FROM##*@}; host=${host%%>*}
   {
-    printf 'From: %s\nTo: %s\nSubject: Endpoint Inventory backup %s\nMIME-Version: 1.0\n' "$OFFSITE_EMAIL_FROM" "$OFFSITE_EMAIL_TO" "$name"
+    # Date and Message-ID (RFC 5322): without them spam filters can drop the copy while the log says ok.
+    printf 'From: %s\nTo: %s\nDate: %s\nMessage-ID: <backup.%.16s@%s>\n' "$OFFSITE_EMAIL_FROM" "$OFFSITE_EMAIL_TO" "$(date -R)" "$sum" "$host"
+    printf 'Subject: Endpoint Inventory backup %s\nMIME-Version: 1.0\n' "$name"
     printf 'Content-Type: multipart/mixed; boundary="%s"\n\n--%s\nContent-Type: text/plain; charset=us-ascii\n\n' "$b" "$b"
     printf 'Encrypted backup (age) attached.\nFile: %s\nSize: %s bytes\nSHA-256: %s\n\n' "$name" "$size" "$sum"
     printf -- '--%s\nContent-Type: application/octet-stream\nContent-Transfer-Encoding: base64\n' "$b"
@@ -40,7 +45,7 @@ send_mail() {
     printf -- '\n--%s--\n' "$b"
   } | sed 's/$/\r/' > "$work/msg" &&
   printf 'user = "%s:%s"\n' "$(esc "$SMTP_USER")" "$(esc "$SMTP_PASS")" > "$work/curl.cfg" &&
-  curl -sS --ssl-reqd --url "$SMTP_URL" --config "$work/curl.cfg" --mail-from "$OFFSITE_EMAIL_FROM" \
+  curl -sS --ssl-reqd --max-time 1800 --url "$SMTP_URL" --config "$work/curl.cfg" --mail-from "$OFFSITE_EMAIL_FROM" \
     --mail-rcpt "$OFFSITE_EMAIL_TO" --upload-file - < "$work/msg"
 }
 
@@ -58,7 +63,7 @@ ship() {
     echo "offsite email: failed (incomplete settings)"; bad=1; return 0
   fi
   # shortcut: the cap is on the encrypted file; base64 adds about a third, so keep the cap below the mail server limit.
-  if [ "$(wc -c < "$1" | tr -d ' ')" -gt $((${OFFSITE_EMAIL_MAX_MB:-20} * 1048576)) ]; then
+  if [ "$(wc -c < "$1" | tr -d ' ')" -gt $((OFFSITE_EMAIL_MAX_MB * 1048576)) ]; then
     echo "offsite email: skipped (size)"
   elif send_mail "$1"; then echo "offsite email: ok"
   else echo "offsite email: failed"; bad=1; fi
