@@ -9,6 +9,10 @@ import * as dictionary from "@/features/dictionary/api";
 import { ReclassifyDialog, validateReclassification } from "@/features/dictionary/reclassify-dialog";
 import * as api from "@/features/inventory/api";
 import * as vulns from "@/features/vulns/api";
+import * as audit from "@/features/audit/api";
+import { AuditLogLink } from "@/features/audit/audit-log-link";
+import * as users from "@/features/users/api";
+import { AuditLogPage } from "./audit-log-page";
 import { ChangesPage } from "./changes-page";
 import { ComputerDetailPage } from "./computer-detail-page";
 import { ComputersPage } from "./computers-page";
@@ -25,6 +29,15 @@ vi.mock("@/features/vulns/api", async (original) => ({
   fetchVulnOverview: vi.fn(async () => ({ vulns: 0, critical: 0, high: 0, kev: 0, titles: 0, kev_installations: 0, kev_computers: 0, possible: 0, possible_titles: 0, cached: 0, synced_at: null, evaluated_at: null })),
   fetchTitleVulns: vi.fn(async () => []),
   fetchVulnEvents: vi.fn(async () => ({ rows: [], rowCount: 0 })),
+}));
+vi.mock("@/features/audit/api", async (original) => ({
+  ...(await original<typeof import("@/features/audit/api")>()),
+  fetchAuditLog: vi.fn(async () => []),
+  verifyAuditLog: vi.fn(async () => ({ checked: 0, first_bad_id: null })),
+}));
+vi.mock("@/features/users/api", async (original) => ({
+  ...(await original<typeof import("@/features/users/api")>()),
+  fetchUsers: vi.fn(async () => []),
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
@@ -722,5 +735,54 @@ describe("Scans", () => {
     renderAt("/scans", "/scans", <ScansPage />, "viewer");
     expect(await screen.findByText("Only admins can change the schedule.")).toBeInTheDocument();
     expect(screen.getByLabelText("Computers per run")).toBeDisabled();
+  });
+});
+
+describe("Audit log", () => {
+  const rows = [
+    { id: 7, created_at: "2026-11-01T10:00:00Z", user_id: "u1", action: "update computers", target: "computers:c1", data: { note: "=cmd" }, prev_hash: "aa", row_hash: "bb" },
+  ] as audit.AuditRow[];
+
+  beforeEach(() => {
+    vi.mocked(audit.fetchAuditLog).mockResolvedValue(rows);
+    vi.mocked(users.fetchUsers).mockResolvedValue([{ id: "u1", email: "admin@example.com" }] as users.UserRow[]);
+  });
+
+  it("lists rows with the user email and shows the verified chain badge", async () => {
+    vi.mocked(audit.verifyAuditLog).mockResolvedValue({ checked: 1, first_bad_id: null });
+    renderAt("/settings/audit-log", "/settings/audit-log", <AuditLogPage />);
+    expect(await screen.findByText("update computers")).toBeInTheDocument();
+    expect(screen.getByText("admin@example.com")).toBeInTheDocument();
+    expect(await screen.findByText("Chain verified ✓ (1 rows)")).toBeInTheDocument();
+  });
+
+  it("shows where the chain is broken", async () => {
+    vi.mocked(audit.verifyAuditLog).mockResolvedValue({ checked: 9, first_bad_id: 5 });
+    renderAt("/settings/audit-log", "/settings/audit-log", <AuditLogPage />);
+    expect(await screen.findByText("Chain broken at #5")).toBeInTheDocument();
+  });
+
+  it("filters by date range on the server", async () => {
+    const user = userEvent.setup();
+    vi.mocked(audit.verifyAuditLog).mockResolvedValue({ checked: 1, first_bad_id: null });
+    renderAt("/settings/audit-log", "/settings/audit-log", <AuditLogPage />);
+    await user.type(await screen.findByLabelText("From"), "2026-11-01");
+    await waitFor(() => expect(vi.mocked(audit.fetchAuditLog).mock.calls.at(-1)?.[0]).toBe("2026-11-01"));
+  });
+
+  it("builds the CSV with the audit columns and neutralises formulas", () => {
+    const csv = audit.auditCsv(rows, new Map([["u1", "admin@example.com"]]));
+    const [head, line] = csv.split("\r\n");
+    expect(head).toBe("id,created_at,user,action,target,data,prev_hash,row_hash");
+    expect(line).toBe(`7,2026-11-01T10:00:00Z,admin@example.com,update computers,computers:c1,"{""note"":""=cmd""}",aa,bb`);
+    expect(audit.auditCsv([{ ...rows[0], action: "=1+1" }], new Map()).split("\r\n")[1]).toContain("'=1+1");
+  });
+
+  it("shows the menu link to admins only", () => {
+    const { unmount } = renderAt("/settings", "/settings", <AuditLogLink />, "admin");
+    expect(screen.getByRole("link", { name: /audit log/i })).toBeInTheDocument();
+    unmount();
+    renderAt("/settings", "/settings", <AuditLogLink />, "operator");
+    expect(screen.queryByRole("link", { name: /audit log/i })).not.toBeInTheDocument();
   });
 });

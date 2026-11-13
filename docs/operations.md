@@ -131,6 +131,16 @@ The browser only writes secrets (through admin-only RPCs) and sees hints such as
 
 ## Operations
 
+### Audit log
+
+What is logged: row changes on the main tables (tenants, users and roles, policies, computer context and others), Sophos credential and alert changes, exports, and the purge itself, with the user and a UTC time.
+
+- **Protection:** each row stores the hash of the row before it (`prev_hash`, `row_hash`, SHA-256). Update and delete are blocked for every role. Only `purge_audit_log` removes rows.
+- **Retention:** 400 days (more than the 12 months of PCI DSS 10.5.1). The job `audit-log-retention` runs daily at 04:15 and removes the oldest rows older than 400 days. It stores the last removed row id and hash in `audit_anchor`, so the chain still checks after the purge.
+- **Verify:** Settings › Audit log shows "Chain verified" or "Chain broken at #id" (`select * from verify_audit_log()` as an admin).
+- **Export:** Settings › Audit log, pick a date range, **Export CSV** (`id,created_at,user,action,target,data,prev_hash,row_hash`). Keep the file with the audit evidence.
+- A superuser can still change the database directly; the check shows it, it does not prevent it. Back up the database (see backups) to keep an off-host copy.
+
 ### Rotate the Sophos Central credential
 
 1. In Sophos Central › API credentials, create a new credential with the same role.

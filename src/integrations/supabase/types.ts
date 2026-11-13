@@ -103,16 +103,30 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"audit_log": {
+                },"audit_anchor": {
                   Row: {
-                    "action": string,"created_at": string,"data": Json | null,"id": number,"target": string | null,"user_id": string | null
+                    "id": number,"last_purged_hash": string | null,"last_purged_id": number | null,"purged_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "action": string,"created_at"?: string,"data"?: Json | null,"id"?: never,"target"?: string | null,"user_id"?: string | null
+                    "id"?: number,"last_purged_hash"?: string | null,"last_purged_id"?: number | null,"purged_at"?: string | null
                   }
                   Update: {
-                    "action"?: string,"created_at"?: string,"data"?: Json | null,"id"?: never,"target"?: string | null,"user_id"?: string | null
+                    "id"?: number,"last_purged_hash"?: string | null,"last_purged_id"?: number | null,"purged_at"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"audit_log": {
+                  Row: {
+                    "action": string,"created_at": string,"data": Json | null,"id": number,"prev_hash": string | null,"row_hash": string | null,"target": string | null,"user_id": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "action": string,"created_at"?: string,"data"?: Json | null,"id"?: never,"prev_hash"?: string | null,"row_hash"?: string | null,"target"?: string | null,"user_id"?: string | null
+                  }
+                  Update: {
+                    "action"?: string,"created_at"?: string,"data"?: Json | null,"id"?: never,"prev_hash"?: string | null,"row_hash"?: string | null,"target"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     
@@ -2069,6 +2083,9 @@ isOneToOne: false
 "apply_vulnerability_changes":
 { Args: { "p_items": Json,"p_next_seq": number }; Returns: Json
                            },
+"audit_row_hash":
+{ Args: { "p_action": string,"p_at": string,"p_data": Json,"p_id": number,"p_prev": string,"p_target": string,"p_user": string }; Returns: string
+                           },
 "budget_overview":
 { Args: { "p_tenant_id"?: string }; Returns: {
               "active_runs": number,"daily_run_limit": number,"max_active_runs": number,"normal_left": number,"reserve_left": number,"reserve_pct": number,"runs_per_minute": number,"runs_this_minute": number,"runs_today": number,"tenant_id": string,"tenant_name": string
@@ -2161,6 +2178,23 @@ isOneToOne: false
               "due": number,"due_priority": number,"name": string,"platform": Database["public"]['Enums']["platform"],"query_id": string,"sql": string,"version": number
             }[]
                            },
+"export_audit_log":
+{ Args: { "p_from": string,"p_to": string }; Returns: {
+              "action": string,
+"created_at": string,
+"data": Json | null,
+"id": number,
+"prev_hash": string | null,
+"row_hash": string | null,
+"target": string | null,
+"user_id": string | null
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "audit_log"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
 "export_csv":
 { Args: { "p_dataset": string,"p_filters"?: Json }; Returns: string
                            },
@@ -2353,6 +2387,9 @@ isOneToOne: false
 "product_name":
 { Args: { "p_name": string }; Returns: string
                            },
+"purge_audit_log":
+{ Args: { "p_days"?: number }; Returns: number
+                           },
 "purge_raw_results":
 { Args: { "p_days"?: number }; Returns: number
                            },
@@ -2446,6 +2483,11 @@ isOneToOne: false
                            },
 "vendor_key":
 { Args: { "p_vendor": string }; Returns: string
+                           },
+"verify_audit_log":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "checked": number,"first_bad_id": number
+            }[]
                            },
 "version_key":
 { Args: { "v": string }; Returns: (number)[]

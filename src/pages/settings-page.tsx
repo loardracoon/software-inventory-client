@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PageHeader } from "@/components/shared/page-header";
+import { AuditLogLink } from "@/features/audit/audit-log-link";
 import { AlertsCard } from "@/features/alerts/alerts-card";
 import { HubCard } from "@/features/dictionary/hub-card";
 import { QueriesCard } from "@/features/queries/queries-card";
@@ -15,6 +16,7 @@ export function SettingsPage() {
   return (
     <>
       <PageHeader eyebrow="Administration" title="Settings" description="Sophos connection, users, queries, dictionary and alerts." />
+      <AuditLogLink />
       <SophosConnectionCard
         onSynced={() => {
           setSyncCount((n) => n + 1);
