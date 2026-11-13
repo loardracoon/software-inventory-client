@@ -88,6 +88,7 @@ declare
   v_errors jsonb := '[]';
   v_ids uuid[];
   v_key text;
+  v_changes jsonb := '[]';
 begin
   if not exists (select 1 from public.my_tenant_roles() r where r.tenant_id = p_tenant_id and r.role in ('admin', 'operator')) then
     raise exception 'Only admins and operators can import context' using errcode = '42501';
@@ -116,6 +117,8 @@ begin
           then coalesce((select array_agg(btrim(t)) from unnest(string_to_array(v_row ->> 'scope_tags', ';')) t where btrim(t) <> ''), '{}')
         end);
       v_applied := v_applied + 1;
+      v_changes := v_changes || jsonb_build_object('computer_id', v_ids[1], 'owner', v_row ->> 'owner', 'department', v_row ->> 'department',
+        'criticality', v_row ->> 'criticality', 'scope_tags', v_row ->> 'scope_tags');
     exception when others then
       v_errors := v_errors || jsonb_build_object('row', v_i, 'message', sqlerrm);
     end;
@@ -123,7 +126,7 @@ begin
   end loop;
   insert into public.audit_log (user_id, action, target, data)
   values (auth.uid(), 'computer_context', 'tenant:' || p_tenant_id,
-    jsonb_build_object('import', true, 'rows', v_i, 'applied', v_applied, 'errors', jsonb_array_length(v_errors)));
+    jsonb_build_object('import', true, 'rows', v_i, 'applied', v_applied, 'errors', jsonb_array_length(v_errors), 'changes', v_changes));
   return jsonb_build_object('applied', v_applied, 'errors', v_errors);
 end;
 $$;
@@ -144,11 +147,12 @@ declare
 begin
   select pg_get_functiondef(p.oid) into v_def from pg_proc p join pg_namespace n on n.oid = p.pronamespace
   where n.nspname = 'public' and p.proname = 'export_csv';
-  v_def := replace(v_def, 'Packages,Attention''', 'Packages,Attention,Owner,Department,Criticality,Scope tags''');
+  v_def := replace(v_def, 'Packages,Attention''', 'Packages,Attention,Owner,Department,Criticality,Scope tags,Endpoint ID''');
   v_def := replace(v_def, 'public.csv_field(array_to_string(c.attention_level1_slugs, '' ''))) as line',
     'public.csv_field(array_to_string(c.attention_level1_slugs, '' '')),
           public.csv_field(c.owner), public.csv_field(c.department), public.csv_field(c.criticality),
-          public.csv_field(array_to_string(c.scope_tags, '';''))) as line');
+          public.csv_field(array_to_string(c.scope_tags, '';'')),
+          public.csv_field((select x.sophos_endpoint_id from public.computers x where x.id = c.id))) as line');
   v_def := replace(v_def, '        and (nullif(f ->> ''category'', '''') is null or c.attention_level1_slugs @> array[f ->> ''category''])',
     '        and (nullif(f ->> ''category'', '''') is null or c.attention_level1_slugs @> array[f ->> ''category''])
         and (nullif(f ->> ''coverage'', '''') is null or c.coverage_status = f ->> ''coverage'')

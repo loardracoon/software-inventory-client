@@ -5,7 +5,7 @@ set local search_path = public, extensions;
 truncate public.tenants, public.software_titles, public.sophos_connection, public.audit_log cascade;
 delete from public.profiles;
 
-select plan(14);
+select plan(16);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
@@ -68,6 +68,11 @@ select is((select jsonb_agg(e -> 'row' order by e ->> 'row') from imp, jsonb_arr
 select results_eq($$select hostname, owner, department, criticality, scope_tags from public.v_computer_list where hostname in ('W2', 'W3') order by hostname$$,
   $$values ('W2', null, 'IT', 'low', '{}'::text[]), ('W3', 'Bob Example', null, null, '{pci,cde}'::text[])$$, 'endpoint and hostname matches applied');
 select is((select owner from public.v_computer_list where id = '20000000-0000-0000-0000-0000000000a1'), 'Alice Example', 'the bad rows changed nothing');
+select set_config('role', 'postgres', true);
+select is((select data -> 'changes' -> 0 ->> 'computer_id' || ':' || (data -> 'changes' -> 0 ->> 'owner') || ':' || (data -> 'changes' -> 1 ->> 'criticality') || ':' || jsonb_array_length(data -> 'changes')
+  from public.audit_log where action = 'computer_context' and (data ->> 'import')::boolean), '20000000-0000-0000-0000-0000000000a3:Bob Example:low:2', 'import audit row says which computer got which values');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+select is((select count(*)::int from regexp_split_to_table(public.export_csv('computers', '{"owner":"bob"}'), E'\r\n') l where l like '%"ep-w3"'), 1, 'export ends with the endpoint id');
 
 select is((select count(*)::int from regexp_split_to_table(public.export_csv('computers', '{"criticality":"low","scope":""}'), E'\r\n') l where l like '%"IT","low"%'), 1, 'export has the context columns and filters on criticality');
 

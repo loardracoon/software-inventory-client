@@ -12,7 +12,7 @@ import * as vulns from "@/features/vulns/api";
 import { ChangesPage } from "./changes-page";
 import { ComputerDetailPage } from "./computer-detail-page";
 import { ComputersPage } from "./computers-page";
-import { parseCsv } from "@/features/inventory/computer-context";
+import { csvToImportRows, parseCsv } from "@/features/inventory/computer-context";
 import { OverviewPage } from "./overview-page";
 import { ScansPage } from "./scans-page";
 import { SoftwarePage } from "./software-page";
@@ -188,6 +188,11 @@ describe("Computers", () => {
 describe("parseCsv", () => {
   it("handles quotes, escaped quotes, CRLF, a BOM and blank lines", () => {
     expect(parseCsv('﻿a,b\r\n"x, y","say ""hi"""\r\n\r\nlast,')).toEqual([["a", "b"], ["x, y", 'say "hi"'], ["last", ""]]);
+  });
+
+  it("re-imports a file with the export header: scope tags and endpoint id are used", () => {
+    const text = "Hostname,Tenant,Owner,Department,Criticality,Scope tags,Endpoint ID\r\nW1,Lab,Alice,Finance,high,pci;iso,ep-1\r\n";
+    expect(csvToImportRows(text)).toEqual([{ endpoint_id: "ep-1", hostname: "W1", owner: "Alice", department: "Finance", criticality: "high", scope_tags: "pci;iso" }]);
   });
 });
 

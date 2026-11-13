@@ -61,7 +61,7 @@ const COLUMNS = ["endpoint_id", "hostname", "owner", "department", "criticality"
 // Header required (case-insensitive); unknown columns are ignored; a column that is absent leaves the value unchanged.
 export function csvToImportRows(text: string): Record<string, string>[] {
   const [header, ...body] = parseCsv(text);
-  const names = (header ?? []).map((h) => h.trim().toLowerCase());
+  const names = (header ?? []).map((h) => h.trim().toLowerCase().replace(/\s+/g, "_"));
   if (!names.includes("endpoint_id") && !names.includes("hostname")) throw new Error("The CSV needs a header with endpoint_id or hostname");
   const use = COLUMNS.filter((c) => names.includes(c));
   return body.map((cells) => Object.fromEntries(use.map((c) => [c, (cells[names.indexOf(c)] ?? "").trim()])));
