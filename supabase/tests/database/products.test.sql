@@ -3,6 +3,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
+select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.software_titles, public.audit_log, public.dictionary_cache, public.hub_submissions cascade;
 delete from public.profiles;
 

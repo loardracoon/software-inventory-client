@@ -4,6 +4,7 @@ create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
 -- Start from an empty app inside this transaction so data from local use cannot leak into the
 -- assertions; the final rollback restores everything.
+select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.software_titles, public.sophos_connection, public.audit_log,
   public.dictionary_cache, public.hub_submissions cascade;
 delete from public.profiles;

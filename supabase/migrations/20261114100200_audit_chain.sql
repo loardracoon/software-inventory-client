@@ -2,6 +2,9 @@
 -- previous row, nobody can change or delete rows, and only the 400-day purge removes old rows (recording an anchor).
 alter table public.audit_log add column prev_hash text, add column row_hash text;
 
+-- The actor id stays when a user is removed: a SET NULL update would be blocked and would break the chain.
+alter table public.audit_log drop constraint audit_log_user_id_fkey;
+
 create table public.audit_anchor (
   id smallint primary key default 1 check (id = 1),
   last_purged_id bigint,
@@ -38,7 +41,8 @@ begin
 end $$;
 
 -- The lock comes first and the id is taken under it, so id order, chain order and commit order are the same.
--- A single session cannot show this; ids can have gaps.
+-- A single session cannot show this; ids can have gaps. The lock is held until commit, so audit writes are serialised;
+-- a rare deadlock error can occur under concurrent writes and is safe to retry. Writers must use READ COMMITTED (the default).
 create function public.audit_log_chain()
 returns trigger
 language plpgsql
@@ -68,13 +72,15 @@ begin
   if coalesce(current_setting('app.audit_purge', true), '') <> 'on' then
     raise exception 'The audit log cannot be changed' using errcode = '42501';
   end if;
-  return coalesce(new, old);
+  return case when tg_level = 'ROW' then coalesce(new, old) else null end;
 end;
 $$;
 
 create trigger audit_log_block_change before update or delete on public.audit_log for each row execute function public.audit_log_block_change();
 
--- Deletes the oldest contiguous run of rows older than p_days: a hole would break the chain. TRUNCATE is not blocked (superuser only).
+create trigger audit_log_block_truncate before truncate on public.audit_log for each statement execute function public.audit_log_block_change();
+
+-- Deletes the oldest contiguous run of rows older than p_days: a hole would break the chain.
 create function public.purge_audit_log(p_days integer default 400)
 returns integer
 language plpgsql

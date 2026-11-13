@@ -2,10 +2,12 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
+select set_config('app.audit_purge', 'on', true);
 truncate public.audit_log, public.audit_anchor;
+select set_config('app.audit_purge', 'off', true);
 delete from public.profiles;
 
-select plan(14);
+select plan(18);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'admin@example.com'),
@@ -38,6 +40,16 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
 select throws_ok($$select * from public.verify_audit_log()$$, '42501', null, 'non-admin cannot verify');
 select throws_ok($$select * from public.export_audit_log(null, null)$$, '42501', null, 'non-admin cannot export');
 select set_config('role', 'postgres', true);
+
+select throws_ok($$truncate public.audit_log$$, '42501', null, 'truncate is blocked');
+
+-- Removing a user who has audit rows keeps the row, its user id and the chain
+insert into public.audit_log (user_id, action, target) values ('00000000-0000-0000-0000-0000000000a2', 'viewer acted', 'x');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select lives_ok($$select public.remove_user('00000000-0000-0000-0000-0000000000a2')$$, 'admin removes a user who has audit rows');
+select results_eq($$select first_bad_id from public.verify_audit_log()$$, $$values (null::bigint)$$, 'chain intact after the user is removed');
+select set_config('role', 'postgres', true);
+select is((select user_id::text from public.audit_log where action = 'viewer acted'), '00000000-0000-0000-0000-0000000000a2', 'the row keeps the actor id');
 
 -- Purge
 select is(public.purge_audit_log(400), 3, 'purge deletes the rows older than 400 days');

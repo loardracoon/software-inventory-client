@@ -34,6 +34,7 @@ vi.mock("@/features/audit/api", async (original) => ({
   ...(await original<typeof import("@/features/audit/api")>()),
   fetchAuditLog: vi.fn(async () => []),
   verifyAuditLog: vi.fn(async () => ({ checked: 0, first_bad_id: null })),
+  downloadCsv: vi.fn(),
 }));
 vi.mock("@/features/users/api", async (original) => ({
   ...(await original<typeof import("@/features/users/api")>()),
@@ -776,6 +777,20 @@ describe("Audit log", () => {
     expect(head).toBe("id,created_at,user,action,target,data,prev_hash,row_hash");
     expect(line).toBe(`7,2026-11-01T10:00:00Z,admin@example.com,update computers,computers:c1,"{""note"":""=cmd""}",aa,bb`);
     expect(audit.auditCsv([{ ...rows[0], action: "=1+1" }], new Map()).split("\r\n")[1]).toContain("'=1+1");
+  });
+
+  it("exports every page, oldest first", async () => {
+    const user = userEvent.setup();
+    const many = Array.from({ length: 502 }, (_, i) => ({ ...rows[0], id: 502 - i, action: `act-${502 - i}` })) as audit.AuditRow[];
+    vi.mocked(audit.fetchAuditLog).mockImplementation(async (_f, _t, _l, before) => (before === undefined ? many.slice(0, 500) : many.slice(500)));
+    vi.mocked(audit.verifyAuditLog).mockResolvedValue({ checked: 502, first_bad_id: null });
+    renderAt("/settings/audit-log", "/settings/audit-log", <AuditLogPage />);
+    await user.click(await screen.findByRole("button", { name: /export csv/i }));
+    await waitFor(() => expect(audit.downloadCsv).toHaveBeenCalled());
+    const lines = vi.mocked(audit.downloadCsv).mock.calls[0][0].split("\r\n");
+    expect(lines).toHaveLength(503);
+    expect(lines[1]).toContain("act-1,");
+    expect(lines[502]).toContain("act-502,");
   });
 
   it("shows the menu link to admins only", () => {

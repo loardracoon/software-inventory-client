@@ -15,10 +15,25 @@ function range(from: string, to: string) {
   };
 }
 
-// limit 0 = all rows of the range (export).
-export async function fetchAuditLog(from: string, to: string, limit = 500): Promise<AuditRow[]> {
-  const query = db().rpc("export_audit_log", range(from, to));
-  return (orThrow(await (limit > 0 ? query.limit(limit) : query)) ?? []) as AuditRow[];
+export const AUDIT_PAGE = 500;
+
+// Newest first; beforeId = keyset cursor for the next page.
+export async function fetchAuditLog(from: string, to: string, limit = AUDIT_PAGE, beforeId?: number): Promise<AuditRow[]> {
+  let query = db().rpc("export_audit_log", range(from, to));
+  if (beforeId !== undefined) query = query.lt("id", beforeId);
+  return (orThrow(await query.limit(limit)) ?? []) as AuditRow[];
+}
+
+// Every row of the range, oldest first. The server caps one answer (max_rows), so page until a short page.
+export async function collectAuditPages(fetchPage: (beforeId?: number) => Promise<AuditRow[]>): Promise<AuditRow[]> {
+  const all: AuditRow[] = [];
+  for (let before: number | undefined; ; ) {
+    const page = await fetchPage(before);
+    all.push(...page);
+    if (page.length < AUDIT_PAGE) break;
+    before = page[page.length - 1].id;
+  }
+  return all.reverse();
 }
 
 export async function verifyAuditLog(): Promise<{ checked: number; first_bad_id: number | null }> {

@@ -11,7 +11,7 @@ import { ErrorLine } from "@/components/shared/error-line";
 import { Field } from "@/components/shared/filters";
 import { PageHeader } from "@/components/shared/page-header";
 import { useAuth } from "@/features/auth/auth-context";
-import { auditCsv, downloadCsv, fetchAuditLog, verifyAuditLog } from "@/features/audit/api";
+import { AUDIT_PAGE, auditCsv, collectAuditPages, downloadCsv, fetchAuditLog, verifyAuditLog } from "@/features/audit/api";
 import { fetchUsers } from "@/features/users/api";
 import { formatDateTime } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
@@ -29,7 +29,7 @@ export function AuditLogPage() {
 
   async function exportCsv() {
     try {
-      downloadCsv(auditCsv(await fetchAuditLog(from, to, 0), emails));
+      downloadCsv(auditCsv(await collectAuditPages((before) => fetchAuditLog(from, to, AUDIT_PAGE, before)), emails));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not export");
     }

@@ -4,6 +4,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 set local search_path = public, extensions;
+select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.audit_log cascade;
 delete from public.profiles;
 delete from vault.secrets where name = 'hub_client_key' or name like 'hub_enrollment_key_%';
