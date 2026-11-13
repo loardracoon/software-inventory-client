@@ -549,6 +549,62 @@ describe("Scans", () => {
     expect(await screen.findByText(/Sophos Data Lake/, { selector: "span" })).toBeInTheDocument();
   });
 
+  describe("run detail drawer", () => {
+    const run = { id: "run1", tenant_id: "t1", started_at: "2026-10-26T12:00:00Z", query_name: "inv.programs", domain: "programs", query_version: 2, platform: "windows", provider: "live_endpoint_search", priority: false, endpoints: 2, collected: 1, no_response: 1, errors: 0, duration_seconds: 40, status: "finished" };
+    const longPath = "C:\\Users\\alice\\AppData\\Local\\" + "x".repeat(120);
+    const detail = (preview: boolean) => ({
+      run: { id: "run1", provider: "live_endpoint_search", domain: "programs", platform: "windows", query_name: "inv.programs", query_version: 2, status: "finished", cancelled: false, error: null, started_at: "2026-10-26T12:00:00Z", finished_at: "2026-10-26T12:00:40Z", endpoints: 2 },
+      preview_allowed: preview,
+      computers: [
+        { computer_id: "c1", hostname: "LAB-WIN-01", endpoint_id: "e1", task_status: "collected", last_error: null, row_count: 25, bytes: 5120, received_at: "2026-10-26T12:00:30Z", ingested_at: "2026-10-26T12:01:00Z", ingest_error: null,
+          rows: preview ? [{ name: "7-Zip 23.01 (x64)", version: "23.01", install_location: longPath }, { name: "Git", version: "2.45.1", count: 3 }] : null },
+        { computer_id: "c2", hostname: "LAB-WIN-02", endpoint_id: "e2", task_status: "no_response", last_error: "The computer did not answer before the run timed out.", row_count: null, bytes: null, received_at: null, ingested_at: null, ingest_error: null, rows: null },
+      ],
+    });
+    async function openDrawer(preview: boolean, role?: "viewer") {
+      vi.mocked(api.fetchRecentRuns).mockResolvedValue({ rows: [run], rowCount: 1 } as never);
+      vi.mocked(api.fetchRunDetail).mockResolvedValue(detail(preview) as never);
+      renderAt("/scans", "/scans", <ScansPage />, role);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("tab", { name: "Recent runs" }));
+      await user.click(await screen.findByText("inv.programs.v2"));
+      return within(await screen.findByRole("dialog"));
+    }
+
+    it("opens on a click and shows status, size and a tabular preview per computer", async () => {
+      const d = await openDrawer(true);
+      expect(api.fetchRunDetail).toHaveBeenCalledWith("run1");
+      expect(await d.findByText("LAB-WIN-01")).toBeInTheDocument();
+      expect(d.getByText(/25 rows · 5\.0 KB/)).toBeInTheDocument();
+      expect(d.getByText(/first 2 of 25 rows/)).toBeInTheDocument();
+      expect(d.getByRole("columnheader", { name: "install_location" })).toBeInTheDocument();
+      expect(d.getByRole("columnheader", { name: "count" })).toBeInTheDocument();
+      const cut = d.getByTitle(longPath);
+      expect(cut.textContent!.length).toBeLessThanOrEqual(81);
+      expect(d.getByText("3")).toBeInTheDocument();
+      expect(d.getByText("LAB-WIN-02")).toBeInTheDocument();
+      expect(d.getByText("The computer did not answer before the run timed out.")).toBeInTheDocument();
+    });
+
+    it("opens with the keyboard", async () => {
+      vi.mocked(api.fetchRecentRuns).mockResolvedValue({ rows: [run], rowCount: 1 } as never);
+      vi.mocked(api.fetchRunDetail).mockResolvedValue(detail(true) as never);
+      renderAt("/scans", "/scans", <ScansPage />);
+      const user = userEvent.setup();
+      await user.click(await screen.findByRole("tab", { name: "Recent runs" }));
+      (await screen.findByText("inv.programs.v2")).closest("tr")!.focus();
+      await user.keyboard("{Enter}");
+      expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    });
+
+    it("shows counts but no rows when the preview is not allowed", async () => {
+      const d = await openDrawer(false, "viewer");
+      expect(await d.findByText(/25 rows · 5\.0 KB/)).toBeInTheDocument();
+      expect(d.getByText(/Only admins and operators see the rows/)).toBeInTheDocument();
+      expect(d.queryByRole("columnheader", { name: "install_location" })).toBeNull();
+    });
+  });
+
   it("is read-only for viewers", async () => {
     vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
     renderAt("/scans", "/scans", <ScansPage />, "viewer");

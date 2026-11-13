@@ -2376,6 +2376,9 @@ isOneToOne: false
 "remove_user":
 { Args: { "p_user_id": string }; Returns: undefined
                            },
+"run_detail":
+{ Args: { "p_run_id": string }; Returns: Json
+                           },
 "scan_now":
 { Args: { "p_computer_id": string }; Returns: number
                            },

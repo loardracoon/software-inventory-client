@@ -198,7 +198,8 @@ export class DataLakeClient {
       if (rows.length >= MAX_SEARCH_ROWS) throw new DataLakeOverLimitError();
     } while (cursor);
 
-    if (state.overThreshold || (total !== null && rows.length < total)) throw new DataLakeOverLimitError();
+    // overThreshold is not a cut: live it was true on a search with 0 rows and totals 0. Totals and the cap decide.
+    if (total !== null && rows.length < total) throw new DataLakeOverLimitError();
     return { urn, rows };
   }
 }
