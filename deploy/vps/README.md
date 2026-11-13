@@ -48,15 +48,38 @@ database dump cannot open the Vault without it.
 `endpoint-inventory-update.timer` runs it every 5 minutes (`journalctl -u endpoint-inventory-update.service`).
 Changes to `docker-compose.yml` or `tls.conf` are copied to the server by hand.
 
-## Backup
+## Backups
 
-```bash
-cd /opt/endpoint-inventory
-docker compose exec -T db pg_dump -U supabase_admin -h localhost -d postgres -Fc > backups/inventory-$(date +%F).dump
-```
+`backup.sh` runs daily at 03:45 UTC (`endpoint-inventory-backup.timer`, 15 minutes after the Hub): `pg_dump`, a full
+read check with `pg_restore`, mode 600 in `backups/`, the newest `KEEP` (14) kept, and a one-time copy of
+`pgsodium_root.key` into `backups/`. A bad night keeps the last good dump. With `OFFSITE_ENABLED=1`, `offsite.sh`
+then encrypts the dump with `age` and sends the `.age` copy to every target set in `backup.env`. The plain dump
+never leaves the host. A failed target is logged (`offsite s3: failed`) and the unit exits non-zero, but the local
+dump stays.
 
-Restore into this install only (same Vault key): stop `kong functions auth rest tls`, then
-`docker compose exec -T db pg_restore -U supabase_admin -h localhost -d postgres --clean --if-exists < <file>`,
+1. `apt install age rclone` on the server.
+2. Make the key pair **off the server**: `age-keygen -o key.txt`. Keep `key.txt` offline (password manager, safe).
+   Only the public key (`age1...`) goes to the server.
+3. `cp backup.env.example /opt/endpoint-inventory/backup.env`, `chmod 600`, and fill it in. Leave out a target to turn
+   it off.
+   - S3 (R2, B2, any S3): `rclone config` with `RCLONE_CONFIG=/opt/endpoint-inventory/rclone.conf`, then
+     `OFFSITE_S3=<remote>:<bucket>/inventory`. Use a key that can only write to this bucket.
+   - FTP or SFTP: the same, with an `ftp` or `sftp` remote, `OFFSITE_FTP=<remote>:<dir>`.
+   - Email: `OFFSITE_EMAIL_TO`, `OFFSITE_EMAIL_FROM`, `SMTP_URL` (for example `smtps://mail.<domain>:465`),
+     `SMTP_USER`, `SMTP_PASS`. The encrypted file is sent only when it is at most `OFFSITE_EMAIL_MAX_MB` (20) MB;
+     bigger files log `offsite email: skipped (size)`. Base64 adds a third, so check the mail server limit.
+     The password goes to `curl` in a temporary file, not on the command line.
+   - `OFFSITE_SEND_KEY=1` also sends the Vault key, encrypted. Default 0: copy `pgsodium_root.key` off the host by hand.
+4. `chmod 600 /opt/endpoint-inventory/rclone.conf`, copy the two backup units to `/etc/systemd/system/`,
+   `systemctl daemon-reload && systemctl enable --now endpoint-inventory-backup.timer`.
+5. Test once: `systemctl start endpoint-inventory-backup.service`, then
+   `journalctl -u endpoint-inventory-backup.service` (look for `offsite <target>: ok`).
+6. Set a lifecycle rule on the bucket (delete objects after N days, for example 30) and clear old files on the FTP
+   target, so off-host copies expire too.
+
+Restore into this install only (same Vault key; keep a copy of `pgsodium_root.key` that matches the dump): fetch the
+`.age` file, `age -d -i key.txt inventory-<stamp>.dump.age > inventory.dump`, stop `kong functions auth rest tls`,
+then `docker compose exec -T db pg_restore -U supabase_admin -h localhost -d postgres --clean --if-exists < inventory.dump`,
 then `docker compose up -d`.
 
 ## Move from K3S (done once, 2026-11-03)
