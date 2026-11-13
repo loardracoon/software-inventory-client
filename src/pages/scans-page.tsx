@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorLine } from "@/components/shared/error-line";
 import { Eyebrow } from "@/components/shared/eyebrow";
 import { Field, NativeSelect } from "@/components/shared/filters";
+import { Switch } from "@/components/ui/switch";
 import { PageHeader } from "@/components/shared/page-header";
 import { ServerDataTable, type ServerColumnDef, type ServerPageRequest } from "@/components/shared/server-data-table";
 import { asScanStatus, StatusBadge } from "@/components/shared/status-badge";
@@ -63,6 +64,8 @@ const RETRY_COLUMNS: ServerColumnDef<RetryRow>[] = [
   { accessorKey: "next_attempt_at", header: "Next attempt", enableSorting: false, cell: ({ getValue }) => (getValue() ? formatDateTime(getValue() as string) : "—") },
 ];
 
+const PROVIDER_LABEL: Record<string, string> = { live_endpoint_search: "Live Endpoint Search", live_discover_rest: "Live Discover REST", data_lake: "Sophos Data Lake" };
+
 const RUN_COLUMNS: ServerColumnDef<RunRow>[] = [
   { accessorKey: "started_at", header: "Started", enableSorting: false, cell: ({ getValue }) => formatDateTime(getValue() as string) },
   {
@@ -75,7 +78,7 @@ const RUN_COLUMNS: ServerColumnDef<RunRow>[] = [
           {row.original.query_name ?? row.original.domain}.v{row.original.query_version}
         </span>
         <span className="text-xs text-text-muted">
-          {label(PLATFORM_LABEL, row.original.platform)} · {row.original.provider === "live_discover_rest" ? "Live Discover REST" : "Live Endpoint Search"}
+          {label(PLATFORM_LABEL, row.original.platform)} · {PROVIDER_LABEL[row.original.provider] ?? row.original.provider}
           {row.original.priority ? " · priority" : ""}
         </span>
       </div>
@@ -255,6 +258,13 @@ function ScheduleForm({ settings, readOnly, onSaved }: { settings: ScanSettings;
             ]}
           />
         </Field>
+        <div className="flex items-start gap-3 sm:col-span-2">
+          <Switch id="s-datalake" checked={values.data_lake_inventory} onCheckedChange={(v) => set("data_lake_inventory", v)} />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="s-datalake" className="text-sm font-semibold text-text-strong">Fill gaps from the Sophos Data Lake</label>
+            <p className="m-0 text-xs text-text-muted">Windows computers that Live Endpoint Search has never collected get their programs and Chrome and Edge extensions from the daily Data Lake snapshot. Live Endpoint Search takes over at its first collection. Turning it off keeps the rows already collected.</p>
+          </div>
+        </div>
       </fieldset>
       <p className="m-0 text-xs text-text-muted">
         Last changed {formatDateTime(settings.updated_at)}. Times use the tenant time zone. Live Endpoint Search allows 1,000 runs a day per tenant; the REST API 500.

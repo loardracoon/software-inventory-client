@@ -166,6 +166,15 @@ Configure them in Settings › Alerts:
 
 Each condition is alerted once. Failed deliveries are retried for up to 5 attempts, and the last error shows in the card.
 
+### Data Lake gap fill
+
+Scans › Schedule has the switch **Fill gaps from the Sophos Data Lake** (admins only, off by default). When it is on, the collector step `data_lake` reads the daily Data Lake snapshot for Windows computers that Live Endpoint Search has never collected. It gets programs and Chrome and Edge extensions only. Each computer is read at most every 20 hours. Live Endpoint Search takes over at its first collection of a computer, with no change events. When the switch is turned off, the Data Lake rows stay as they are (the last snapshot) until Live Endpoint Search collects the computer. See [Data Lake (softwareinfo)](queries.md#data-lake-softwareinfo) for the query and the field mapping.
+
+- **Requirement:** the Sophos tenant needs the Sophos XDR data lake. Without it, the search finds no rows or returns an error.
+- **Retry:** if a tenant fails, the collector tries that tenant again after one hour.
+- **Failures:** read the table `collector_logs` (for example in the database console), step `collector`, level `warn`. A failed search has the message "Data Lake search failed for <tenant>: Data Lake: ..." (for example, a timeout, a failed search or a search outcome that is not ALL). A computer that is skipped has a message that starts with "Data Lake:" (an endpoint id that is not a UUID, or one computer with more than 10,000 rows).
+- **Local tests:** the environment variable `SOPHOS_FUSION_URL` replaces the Fusion API address.
+
 ### API budget
 
 The Scans page shows, per tenant: runs this minute (limit 10), runs today (limit 1,000 on Live Endpoint Search), the normal share left and the reserve left, and active runs (limit 4). Weekly tasks stop at 80 % of the day; the remaining 20 % is kept for retries and Scan now.

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor, within } from "@testing-library/react";
+import { formatDateTime } from "@/lib/format";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { AuthContext, type AppRole, type AuthContextValue } from "@/features/auth/auth-context";
@@ -374,6 +375,17 @@ describe("Computer detail", () => {
     expect(api.scanNow).toHaveBeenCalledWith("c1");
   });
 
+  it("shows the Data Lake snapshot in the header only when set", async () => {
+    vi.mocked(api.fetchComputer).mockResolvedValue({ ...computer, data_lake_snapshot_at: "2026-10-26T12:00:00Z" } as api.ComputerRow);
+    const { unmount } = renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />);
+    expect(await screen.findByText(`Data Lake snapshot ${formatDateTime("2026-10-26T12:00:00Z")}`, { exact: false })).toBeInTheDocument();
+    unmount();
+    vi.mocked(api.fetchComputer).mockResolvedValue({ ...computer, data_lake_snapshot_at: null } as api.ComputerRow);
+    renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />);
+    expect(await screen.findByRole("heading", { level: 1, name: "LAB-WIN-01" })).toBeInTheDocument();
+    expect(screen.queryByText(/Data Lake/)).toBeNull();
+  });
+
   it("has no Scan now for viewers", async () => {
     renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />, "viewer");
     expect(await screen.findByRole("heading", { level: 1, name: "LAB-WIN-01" })).toBeInTheDocument();
@@ -487,6 +499,7 @@ describe("Scans", () => {
     reserve_pct: 20,
     run_grace_minutes: 10,
     provider: "live_endpoint_search",
+    data_lake_inventory: false,
     updated_at: "2026-10-26T12:00:00Z",
     updated_by: null,
   } as api.ScanSettings;
@@ -506,6 +519,34 @@ describe("Scans", () => {
     await user.type(batch, "25");
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ batch_size: 25, cycle_time: "10:00:00" })));
+  });
+
+  it("has a Data Lake switch that saves, and the provider select has no Data Lake option", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
+    renderAt("/scans", "/scans", <ScansPage />);
+    const sw = await screen.findByRole("switch", { name: "Fill gaps from the Sophos Data Lake" });
+    expect(sw).not.toBeChecked();
+    expect(within(screen.getByLabelText("Query provider")).getAllByRole("option")).toHaveLength(2);
+    await user.click(sw);
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ data_lake_inventory: true })));
+  });
+
+  it("disables the Data Lake switch for viewers", async () => {
+    vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
+    renderAt("/scans", "/scans", <ScansPage />, "viewer");
+    expect(await screen.findByRole("switch", { name: "Fill gaps from the Sophos Data Lake" })).toBeDisabled();
+  });
+
+  it("labels Data Lake runs", async () => {
+    vi.mocked(api.fetchRecentRuns).mockResolvedValue({
+      rows: [{ id: "run1", tenant_id: "t1", started_at: "2026-10-26T12:00:00Z", query_name: "softwareinfo", domain: "programs", query_version: 1, platform: "windows", provider: "data_lake", priority: false, endpoints: 3, collected: 3, no_response: 0, duration_seconds: 5, status: "completed" }],
+      rowCount: 1,
+    } as never);
+    renderAt("/scans", "/scans", <ScansPage />);
+    await userEvent.setup().click(await screen.findByRole("tab", { name: "Recent runs" }));
+    expect(await screen.findByText(/Sophos Data Lake/, { selector: "span" })).toBeInTheDocument();
   });
 
   it("is read-only for viewers", async () => {

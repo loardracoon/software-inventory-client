@@ -252,6 +252,7 @@ export function ComputerDetailPage() {
             <>
               {[c.os_name, c.os_version].filter(Boolean).join(" ")} · User {c.user_masked ? "hidden" : (c.associated_user ?? "—")} · Last seen{" "}
               {c.last_seen_at ? formatDateTime(c.last_seen_at) : "—"} · Last collected {c.last_collected_at ? formatDateTime(c.last_collected_at) : "never"}
+              {c.data_lake_snapshot_at ? ` · Data Lake snapshot ${formatDateTime(c.data_lake_snapshot_at)}` : null}
             </>
           ) : null
         }

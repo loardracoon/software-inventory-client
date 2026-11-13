@@ -287,6 +287,36 @@ A query has a **version** (`query_catalog.version`). Rules:
 | All 19 | 1 | First release (Phase 3) |
 | `inv.programs`, `inv.programs.deb`, `inv.programs.rpm` | 2 | **The SQL is the same as version 1.** The version tells the normalizer to remove the version number and the architecture from the program name, so one product is one title. Version 1 results keep their old keys, so their stored hashes never change |
 
+## Data Lake (softwareinfo)
+
+This is not an osquery query. It is an optional gap fill for Windows computers that Live Endpoint Search has never collected (for example, computers that are offline most of the time). It is off by default; admins turn it on per tenant in Scans › Schedule.
+
+The Sophos Data Lake is read through the Sophos Fusion Search GraphQL API (`https://api.taegis.sophos.com/graphql`). It uses the same OAuth token as Sophos Central and the header `X-Tenant-ID`. The collector searches 20 computers at a time, with a window of 26 hours that ends at the last whole UTC hour that is at least 15 minutes ago (so that a search does not catch a snapshot that Sophos is still writing). A search returns at most 10,000 rows. When a search has 10,000 rows or more, the collector searches each half of the computers again, down to one computer. One computer that still has too many rows, or that has an endpoint id that is not a UUID, is marked as checked with no data and is tried again at its next turn.
+
+```
+from softwareinfo where normalizer = 'sophos-xdr-it-hygiene-ingestor' and host_id in ('<endpoint id>', ...) earliest='<start>' latest='<end>' | fields host_id, time, product.name, product.version, product.vendor_name, product.uid, product.type_id, product.path, product.source, product.url_string, original_data
+```
+
+Sophos writes one full snapshot per computer per day. The app keeps only the rows within 10 minutes of the newest row of each computer. When a computer has a snapshot, a domain with no rows (for example, Chrome was removed) is stored as an empty snapshot, which closes the old rows of that domain. A computer with no rows at all gets no snapshot.
+
+| Domain | Rows with `product.type_id` | Column | Source |
+| --- | --- | --- | --- |
+| Programs | `TYPE_ID_APPLICATION` | `name` | `product.name`, else `original_data.name` (a row without a name is dropped) |
+| | | `version` | `product.version` |
+| | | `publisher` | `product.vendor_name` |
+| | | `install_location` | empty (not in the Data Lake) |
+| | | `install_date` | `original_data.installDate` |
+| | | `identifying_number` | `product.uid` |
+| Extensions | `TYPE_ID_BROWSER_EXTENSION` | `identifier` | `product.uid` |
+| | | `name` | `product.name` |
+| | | `version` | `product.version` |
+| | | `path` | `product.path` |
+| | | `username` | `original_data.username` |
+| | | `browser_type` | `product.source`, in lower case |
+| | | `update_url` | `product.url_string` |
+
+**Source rule:** a computer is a target only when it is a Windows computer and has no applied Live Endpoint Search snapshot of that domain. At its first Live Endpoint Search collection, Live Endpoint Search takes over without change events. The Data Lake has no Firefox extensions, no Store (AppX) apps, no macOS or Linux data and no install locations. The console shows "Data Lake snapshot <date>" in the header of a computer while it has open Data Lake rows.
+
 ## What is collected and what is not
 
 **Collected:** names, versions, publishers and install locations of software; extension IDs, update URLs and

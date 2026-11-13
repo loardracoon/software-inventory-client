@@ -43,6 +43,8 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 - **Policy**: your rules put every installed application into one of four classes: Core system, Sanctioned,
   Tolerated or Unsanctioned.
 
+**Optional Data Lake gap fill:** for Windows computers that Live Endpoint Search has never collected, an admin can turn on the Sophos Data Lake gap fill in Scans › Schedule. The app then reads the daily Data Lake snapshot (programs and Chrome and Edge extensions only) until Live Endpoint Search collects the computer for the first time. It is off by default and needs the Sophos XDR data lake on the tenant. See the [operations guide](docs/operations.md#data-lake-gap-fill).
+
 ## Main features
 
 | Area | Features |

@@ -10,6 +10,8 @@
 //   5 dispatch         due tasks in batches, within the Sophos limits (budget.ts); only computers online
 //                      now run, offline ones are checked again later the same day (no run spent)
 //   6 poll             per-endpoint status and results while they arrive; give up after the grace time
+//   6a data_lake       Windows computers Live Discover never collected: programs and extensions from the Data
+//                      Lake softwareinfo (opt-in per tenant, _shared/data-lake-run.ts)
 //   6b ingest          raw results → snapshots → versioned inventory (Phase 5); title_summary refresh
 //   6e hub_enrollment  status of an open access request to the Sophizo Hub when due; approved → connected (10c)
 //   6c hub_sync        Dictionary Hub pull / share / request status when due (Phase 7, _shared/hub-sync.ts)
@@ -23,6 +25,8 @@
 import { runAllowance, spendRun, type RunAllowance } from "../_shared/budget.ts";
 import { decideEndpoint, rowsByEndpoint, runName, runPastGrace } from "../_shared/collector-plan.ts";
 import { refreshComputerStatus, syncComputers } from "../_shared/computer-sync.ts";
+import { syncDataLake } from "../_shared/data-lake-run.ts";
+import { DataLakeClient, FUSION_GRAPHQL_URL } from "../_shared/data-lake.ts";
 import { checkHubEnrollment, enrollmentCheckDue } from "../_shared/hub-enroll-run.ts";
 import { hubSyncDue, loadHub, runHubSync, type HubSyncSummary } from "../_shared/hub-sync.ts";
 import { ingestPending, type IngestSummary } from "../_shared/ingest.ts";
@@ -88,6 +92,7 @@ Deno.serve(async (req) => {
     runsFinished: 0,
     retriesScheduled: 0,
     cyclesCompleted: 0,
+    dataLake: { searches: 0, rawResults: 0 },
     ingest: null as IngestSummary | null,
     hubSync: null as HubSyncSummary | null,
     vulns: null as VulnRunSummary | null,
@@ -108,6 +113,7 @@ Deno.serve(async (req) => {
     logs.add(level, message, null, tenantId);
   };
   const lesUrl = Deno.env.get("SOPHOS_LES_URL") || undefined;
+  const fusionUrl = Deno.env.get("SOPHOS_FUSION_URL") || FUSION_GRAPHQL_URL;
   const warnedNoOnlineCheck = new Set<string>();
 
   try {
@@ -361,6 +367,16 @@ Deno.serve(async (req) => {
             summary.runsFinished++;
           }
         }
+      }
+    }
+
+    // 6a. data_lake
+    if (step("data_lake")) {
+      for (const t of active) {
+        if (timeLeft() < 30_000) break;
+        const r = await syncDataLake(admin, sophos, logs, t, timeLeft, Date.now(), (x) => new DataLakeClient(sophos, x.sophos_tenant_id, fusionUrl));
+        summary.dataLake.searches += r.searches;
+        summary.dataLake.rawResults += r.rawResults;
       }
     }
 

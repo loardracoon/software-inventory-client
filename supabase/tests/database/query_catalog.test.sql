@@ -13,10 +13,10 @@ select plan(16);
 
 -- Seed ------------------------------------------------------------------------------------------
 select results_eq(
-  'select platform::text, count(*)::int from public.query_catalog where version = 1 group by 1 order by 1',
+  'select platform::text, count(*)::int from public.query_catalog where version = 1 and name like ''inv.%'' group by 1 order by 1',
   $$values ('linux', 7), ('macos', 6), ('windows', 6)$$,
   'version 1 has 6 Windows, 6 macOS and 7 Linux queries');
-select is((select count(*) from public.query_catalog where cardinality(required_tables) = 0), 0::bigint,
+select is((select count(*) from public.query_catalog where name like 'inv.%' and cardinality(required_tables) = 0), 0::bigint,
   'every query lists its required tables');
 select is((select count(*) from public.query_catalog where sql ~ '^\s|\s$'), 0::bigint, 'SQL is trimmed');
 select ok((select sql from public.query_catalog where platform = 'windows' and name = 'inv.packages') like '%chocolatey_packages%',

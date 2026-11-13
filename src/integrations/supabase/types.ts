@@ -333,14 +333,14 @@ isOneToOne: false
                   ]
                 },"computers": {
                   Row: {
-                    "associated_user": string | null,"created_at": string,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
+                    "associated_user": string | null,"created_at": string,"data_lake_checked_at": string | null,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "associated_user"?: string | null,"created_at"?: string,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
+                    "associated_user"?: string | null,"created_at"?: string,"data_lake_checked_at"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "associated_user"?: string | null,"created_at"?: string,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
+                    "associated_user"?: string | null,"created_at"?: string,"data_lake_checked_at"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1053,14 +1053,14 @@ isOneToOne: false
                   ]
                 },"scan_settings": {
                   Row: {
-                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
+                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1239,14 +1239,14 @@ isOneToOne: false
                   ]
                 },"tenants": {
                   Row: {
-                    "created_at": string,"data_region_host": string | null,"id": string,"id_type": string,"last_synced_at": string | null,"name": string,"sophos_tenant_id": string,"status_checked_at": string | null,"updated_at": string
+                    "created_at": string,"data_lake_attempt_at": string | null,"data_region_host": string | null,"id": string,"id_type": string,"last_synced_at": string | null,"name": string,"sophos_tenant_id": string,"status_checked_at": string | null,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"data_region_host"?: string | null,"id"?: string,"id_type": string,"last_synced_at"?: string | null,"name": string,"sophos_tenant_id": string,"status_checked_at"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"data_lake_attempt_at"?: string | null,"data_region_host"?: string | null,"id"?: string,"id_type": string,"last_synced_at"?: string | null,"name": string,"sophos_tenant_id": string,"status_checked_at"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"data_region_host"?: string | null,"id"?: string,"id_type"?: string,"last_synced_at"?: string | null,"name"?: string,"sophos_tenant_id"?: string,"status_checked_at"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"data_lake_attempt_at"?: string | null,"data_region_host"?: string | null,"id"?: string,"id_type"?: string,"last_synced_at"?: string | null,"name"?: string,"sophos_tenant_id"?: string,"status_checked_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -1694,7 +1694,7 @@ isOneToOne: false
                   ]
                 },"v_computer_list": {
                   Row: {
-                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"cycle_status": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
+                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -2139,6 +2139,11 @@ isOneToOne: false
               "closes_at": string,"collected": number,"computers": number,"computers_collected": number,"coverage_pct": number,"cycle_id": string,"dispatched": number,"errors": number,"missed": number,"next_retry_at": string,"opened_at": string,"pending": number,"retrying": number,"skipped": number,"tasks": number,"tenant_id": string,"tenant_name": string
             }[]
                            },
+"data_lake_targets":
+{ Args: { "p_limit"?: number,"p_tenant_id": string }; Returns: {
+              "computer_id": string,"domains": (Database["public"]['Enums']["inventory_domain"])[],"sophos_endpoint_id": string
+            }[]
+                           },
 "defer_offline_tasks":
 { Args: { "p_next_at": string,"p_reason": string,"p_task_ids": (string)[] }; Returns: number
                            },
@@ -2193,6 +2198,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "client_id": string,"client_secret": string
             }[]
+                           },
+"has_live_snapshot":
+{ Args: { "p_computer_id": string,"p_domain": Database["public"]['Enums']["inventory_domain"] }; Returns: boolean
                            },
 "hub_enrollment_activate":
 { Args: Record<PropertyKey, never>; Returns: undefined
@@ -2397,6 +2405,9 @@ isOneToOne: false
 "set_user_role":
 { Args: { "p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined
                            },
+"store_data_lake_results":
+{ Args: { "p_checked": (string)[],"p_results": Json,"p_search_urn": string,"p_tenant_id": string }; Returns: number
+                           },
 "store_endpoint_result":
 { Args: { "p_rows": Json,"p_run_id": string,"p_sophos_endpoint_id": string }; Returns: boolean
                            },
@@ -2455,7 +2466,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id"|"cvss"|"kev"|"epss","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
+            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id"|"cvss"|"kev"|"epss","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest"|"data_lake","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -2575,7 +2586,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"policy_class": ["core_system", "sanctioned_app", "tolerated_app", "unsanctioned_app"],"policy_field": ["vendor", "name", "category", "subcategory", "version", "external_id", "cvss", "kev", "epss"],"policy_operator": ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "regex", "in", "not_in", "gt", "gte", "lt", "lte", "between"],"policy_status": ["draft", "published", "archived"],"query_provider": ["live_endpoint_search", "live_discover_rest"],"rule_match": ["all", "any"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
+            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"policy_class": ["core_system", "sanctioned_app", "tolerated_app", "unsanctioned_app"],"policy_field": ["vendor", "name", "category", "subcategory", "version", "external_id", "cvss", "kev", "epss"],"policy_operator": ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "regex", "in", "not_in", "gt", "gte", "lt", "lte", "between"],"policy_status": ["draft", "published", "archived"],"query_provider": ["live_endpoint_search", "live_discover_rest", "data_lake"],"rule_match": ["all", "any"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
           }
         }
 } as const
