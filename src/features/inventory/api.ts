@@ -91,9 +91,12 @@ export type ComputerFilters = {
   coverage: "" | "never" | "stale" | "current";
   category: string; // level-1 slug among attention categories
   search: string;
+  criticality: "" | "low" | "medium" | "high" | "critical";
+  scope: string; // one scope tag
+  owner: string; // text search
 };
 
-const COMPUTER_SORT = new Set(["online", "hostname", "associated_user", "last_collected_at", "cycle_status", "programs", "extensions", "packages", "platform"]);
+const COMPUTER_SORT = new Set(["online", "hostname", "associated_user", "owner", "criticality", "last_collected_at", "cycle_status", "programs", "extensions", "packages", "platform"]);
 
 export async function fetchComputers(filters: ComputerFilters, request: PageRequest): Promise<Page<ComputerRow>> {
   const sort = request.sorting[0];
@@ -103,6 +106,9 @@ export async function fetchComputers(filters: ComputerFilters, request: PageRequ
   if (filters.platform) q = q.eq("platform", filters.platform);
   if (filters.coverage) q = q.eq("coverage_status", filters.coverage);
   if (filters.category) q = q.contains("attention_level1_slugs", [filters.category]);
+  if (filters.criticality) q = q.eq("criticality", filters.criticality);
+  if (filters.scope.trim()) q = q.contains("scope_tags", [filters.scope.trim()]);
+  if (filters.owner.trim()) q = q.ilike("owner", likePattern(filters.owner));
   if (filters.search.trim()) {
     const p = likePattern(filters.search);
     q = q.or(`hostname.ilike.${p},associated_user.ilike.${p},os_name.ilike.${p}`);
@@ -155,6 +161,28 @@ export async function fetchInstallations(filters: InstallationFilters, request: 
   const { data, error, count } = await q.range(from, to).abortSignal(request.signal);
   if (error) throw new Error(error.message);
   return { rows: data ?? [], rowCount: count ?? 0 };
+}
+
+export type ComputerContext = { owner?: string; department?: string; criticality?: string; scopeTags?: string[] };
+
+// Owner, department, criticality and scope tags. A missing field is left unchanged; "" or [] clears it.
+export async function setComputerContext(ids: string[], c: ComputerContext): Promise<number> {
+  return orThrow(
+    await db().rpc("set_computer_context", {
+      p_computer_ids: ids,
+      p_owner: (c.owner ?? null) as string,
+      p_department: (c.department ?? null) as string,
+      p_criticality: (c.criticality ?? null) as string,
+      p_scope_tags: (c.scopeTags ?? null) as string[],
+    }),
+  ) as number;
+}
+
+export type ContextImportRow = Record<string, string>;
+export type ContextImportResult = { applied: number; errors: { row: number; message: string }[] };
+
+export async function importComputerContext(tenantId: string, rows: ContextImportRow[]): Promise<ContextImportResult> {
+  return orThrow(await db().rpc("import_computer_context", { p_tenant_id: tenantId, p_rows: rows })) as unknown as ContextImportResult;
 }
 
 export async function scanNow(computerId: string): Promise<number> {

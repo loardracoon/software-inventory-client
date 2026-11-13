@@ -12,6 +12,7 @@ import * as vulns from "@/features/vulns/api";
 import { ChangesPage } from "./changes-page";
 import { ComputerDetailPage } from "./computer-detail-page";
 import { ComputersPage } from "./computers-page";
+import { parseCsv } from "@/features/inventory/computer-context";
 import { OverviewPage } from "./overview-page";
 import { ScansPage } from "./scans-page";
 import { SoftwarePage } from "./software-page";
@@ -145,6 +146,48 @@ describe("Computers", () => {
 
     await user.selectOptions(screen.getByLabelText("Coverage"), "never");
     await waitFor(() => expect(lastFilters(api.fetchComputers).coverage).toBe("never"));
+  });
+  it("shows owner, criticality and scope, filters on them and imports a CSV with the per-row errors", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchComputers).mockResolvedValue({
+      rows: [{ ...computer, owner: "Alice Example", department: "Finance", criticality: "high", scope_tags: ["pci", "iso"] } as api.ComputerRow],
+      rowCount: 1,
+    });
+    vi.mocked(api.importComputerContext).mockResolvedValue({ applied: 1, errors: [{ row: 2, message: 'No computer matches "NOPE"' }] });
+    localStorage.setItem("endpoint-inventory.tenant", "t1");
+    renderAt("/computers", "/computers", <ComputersPage />);
+    const row = (await screen.findByRole("link", { name: "LAB-WIN-01" })).closest("tr")!;
+    expect(within(row).getByText("Alice Example")).toBeInTheDocument();
+    expect(within(row).getByText("high")).toBeInTheDocument();
+    expect(within(row).getByText("pci")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /Owner/ })).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText("Criticality"), "high");
+    await user.type(screen.getByLabelText("Scope tag"), "pci");
+    await user.type(screen.getByLabelText("Owner"), "alice");
+    await waitFor(() => expect(lastFilters(api.fetchComputers)).toMatchObject({ criticality: "high", scope: "pci", owner: "alice" }));
+
+    const csv = "endpoint_id,hostname,owner,department,criticality,scope_tags\nep-1,,Alice,Finance,high,pci;iso\n,NOPE,Bob,,,\n";
+    await user.upload(screen.getByLabelText("CSV file"), new File([csv], "context.csv", { type: "text/csv" }));
+    expect(api.importComputerContext).toHaveBeenCalledWith("t1", [
+      { endpoint_id: "ep-1", hostname: "", owner: "Alice", department: "Finance", criticality: "high", scope_tags: "pci;iso" },
+      { endpoint_id: "", hostname: "NOPE", owner: "Bob", department: "", criticality: "", scope_tags: "" },
+    ]);
+    expect(await screen.findByText(/^1 applied/)).toBeInTheDocument();
+    expect(screen.getByText(/Row 2/)).toHaveTextContent('No computer matches "NOPE"');
+    localStorage.removeItem("endpoint-inventory.tenant");
+  });
+
+  it("has no Import CSV for viewers", async () => {
+    renderAt("/computers", "/computers", <ComputersPage />, "viewer");
+    expect(await screen.findByRole("heading", { level: 1, name: "Computers" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Import CSV" })).toBeNull();
+  });
+});
+
+describe("parseCsv", () => {
+  it("handles quotes, escaped quotes, CRLF, a BOM and blank lines", () => {
+    expect(parseCsv('﻿a,b\r\n"x, y","say ""hi"""\r\n\r\nlast,')).toEqual([["a", "b"], ["x, y", 'say "hi"'], ["last", ""]]);
   });
 });
 
@@ -408,6 +451,25 @@ describe("Computer detail", () => {
     renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />);
     expect(await screen.findByRole("heading", { level: 1, name: "LAB-WIN-01" })).toBeInTheDocument();
     expect(screen.queryByText(/Data Lake/)).toBeNull();
+  });
+
+  it("shows the context and lets admins edit it, but not viewers", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchComputer).mockResolvedValue({ ...computer, owner: "Alice Example", department: "Finance", criticality: "high", scope_tags: ["pci"] } as api.ComputerRow);
+    const { unmount } = renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />);
+    expect(await screen.findByText(/Owner Alice Example · Department Finance · Criticality high · Scope pci/)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit context" }));
+    await user.clear(screen.getByLabelText("Owner"));
+    await user.type(screen.getByLabelText("Owner"), "Bob Example");
+    await user.selectOptions(screen.getByLabelText("Criticality"), "critical");
+    await user.clear(screen.getByLabelText("Scope tags"));
+    await user.type(screen.getByLabelText("Scope tags"), "pci, cde");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(api.setComputerContext).toHaveBeenCalledWith(["c1"], { owner: "Bob Example", department: "Finance", criticality: "critical", scopeTags: ["pci", "cde"] });
+    unmount();
+    renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />, "viewer");
+    expect(await screen.findByText(/Owner Alice Example/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Edit context" })).toBeNull();
   });
 
   it("has no Scan now for viewers", async () => {

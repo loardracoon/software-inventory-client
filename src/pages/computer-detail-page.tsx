@@ -19,6 +19,7 @@ import { ServerDataTable, type ServerColumnDef, type ServerPageRequest } from "@
 import { asScanStatus, StatusBadge } from "@/components/shared/status-badge";
 import { useAuth } from "@/features/auth/auth-context";
 import { useCanContribute } from "@/features/dictionary/api";
+import { EditContextButton, useCanEditContext } from "@/features/inventory/computer-context";
 import { ReclassifyDialog, type ReclassifyTarget } from "@/features/dictionary/reclassify-dialog";
 import {
   fetchChanges,
@@ -176,6 +177,7 @@ export function ComputerDetailPage() {
   );
   const changeFetch = useCallback((request: ServerPageRequest<ChangeFilters>) => fetchChanges(request.filters, request), []);
   const canContribute = useCanContribute();
+  const canEditContext = useCanEditContext();
   const [reclassifying, setReclassifying] = useState<ReclassifyTarget | null>(null);
   const extensionColumns = useMemo<ServerColumnDef<InstallationRow>[]>(
     () =>
@@ -253,15 +255,26 @@ export function ComputerDetailPage() {
               {[c.os_name, c.os_version].filter(Boolean).join(" ")} · User {c.user_masked ? "hidden" : (c.associated_user ?? "—")} · Last seen{" "}
               {c.last_seen_at ? formatDateTime(c.last_seen_at) : "—"} · Last collected {c.last_collected_at ? formatDateTime(c.last_collected_at) : "never"}
               {c.data_lake_snapshot_at ? ` · Data Lake snapshot ${formatDateTime(c.data_lake_snapshot_at)}` : null}
+              <br />
+              Owner {c.owner ?? "—"} · Department {c.department ?? "—"} · Criticality {c.criticality ?? "—"} · Scope {c.scope_tags?.length ? c.scope_tags.join(", ") : "—"}
             </>
           ) : null
         }
         actions={
           (profile?.role === "admin" || profile?.role === "operator") && c ? (
-            <Button size="sm" onClick={() => void onScanNow()} disabled={scanning}>
-              {scanning ? <Loader2 className="animate-spin" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}
-              Scan now
-            </Button>
+            <>
+              {canEditContext ? (
+                <EditContextButton
+                  computerId={id}
+                  values={{ owner: c.owner, department: c.department, criticality: c.criticality, scope_tags: c.scope_tags ?? [] }}
+                  onSaved={computer.reload}
+                />
+              ) : null}
+              <Button size="sm" onClick={() => void onScanNow()} disabled={scanning}>
+                {scanning ? <Loader2 className="animate-spin" aria-hidden="true" /> : <RefreshCw aria-hidden="true" />}
+                Scan now
+              </Button>
+            </>
           ) : null
         }
       />

@@ -37,6 +37,8 @@ export function inventoryApiMock() {
     fetchHardware: vi.fn(async () => []),
     fetchInstallations: vi.fn(emptyPage),
     scanNow: vi.fn(async () => 0),
+    setComputerContext: vi.fn(async () => 1),
+    importComputerContext: vi.fn(async () => ({ applied: 0, errors: [] })),
     searchTitles: vi.fn(emptyPage),
     fetchTitle: vi.fn(async () => ({ title: null, classification: null, spellings: [] })),
     fetchTitleVersions: vi.fn(async () => []),

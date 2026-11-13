@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { CircleDashed, Monitor, Wifi, WifiOff } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AttentionIcons, type AttentionCategory, type VulnCounts } from "@/components/shared/attention-icons";
@@ -11,6 +12,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { ExportButton } from "@/features/dictionary/export-button";
 import { ServerDataTable, type ServerColumnDef, type ServerPageRequest } from "@/components/shared/server-data-table";
 import { asScanStatus, StatusBadge } from "@/components/shared/status-badge";
+import { CRITICALITY_OPTIONS, ImportContextButton, useCanEditContext } from "@/features/inventory/computer-context";
 import { fetchComputers, fetchNeedsAttention, type ComputerFilters, type ComputerRow } from "@/features/inventory/api";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { formatDateTime, formatNumber } from "@/lib/format";
@@ -87,6 +89,25 @@ const COLUMNS: ServerColumnDef<ComputerRow>[] = [
     header: "Last collected",
     cell: ({ row }) => (row.original.last_collected_at ? formatDateTime(row.original.last_collected_at) : <span className="text-text-muted">Never</span>),
   },
+  { accessorKey: "owner", header: "Owner", cell: ({ row }) => row.original.owner ?? <span className="text-text-muted">—</span> },
+  { accessorKey: "criticality", header: "Criticality", cell: ({ row }) => row.original.criticality ?? <span className="text-text-muted">—</span> },
+  {
+    accessorKey: "scope_tags",
+    header: "Scope",
+    enableSorting: false,
+    cell: ({ row }) =>
+      row.original.scope_tags?.length ? (
+        <div className="flex flex-wrap gap-1">
+          {row.original.scope_tags.map((tag) => (
+            <Badge key={tag} color="blue" soft>
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      ) : (
+        <span className="text-text-muted">—</span>
+      ),
+  },
   { accessorKey: "coverage_status", header: "Coverage", cell: ({ row }) => <CoverageStatus row={row.original} /> },
   {
     accessorKey: "cycle_status",
@@ -135,6 +156,11 @@ export function ComputersPage() {
   const [platform, setPlatform] = useState<ComputerFilters["platform"]>("");
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
+  const [criticality, setCriticality] = useState<ComputerFilters["criticality"]>("");
+  const [scope, setScope] = useState("");
+  const [owner, setOwner] = useState("");
+  const [version, setVersion] = useState(0);
+  const canEdit = useCanEditContext();
   const [params] = useSearchParams();
   const [coverage, setCoverage] = useState<ComputerFilters["coverage"]>(() => {
     const c = params.get("coverage");
@@ -149,14 +175,21 @@ export function ComputersPage() {
   }, [attention.data]);
 
   const filters = useMemo<ComputerFilters>(
-    () => ({ tenantId: selectedTenantId, status, platform, coverage, category, search }),
-    [selectedTenantId, status, platform, coverage, category, search],
+    () => ({ tenantId: selectedTenantId, status, platform, coverage, category, search, criticality, scope, owner }),
+    [selectedTenantId, status, platform, coverage, category, search, criticality, scope, owner],
   );
-  const fetchPage = useCallback((request: ServerPageRequest<ComputerFilters>) => fetchComputers(request.filters, request), []);
+  // A new function reloads the table after an import.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fetchPage = useCallback((request: ServerPageRequest<ComputerFilters>) => fetchComputers(request.filters, request), [version]);
 
   return (
     <>
-      <PageHeader eyebrow="Inventory" title="Computers" description="Who is collected, on retry or in error." actions={<ExportButton dataset="computers" filters={filters} />} />
+      <PageHeader eyebrow="Inventory" title="Computers" description="Who is collected, on retry or in error." actions={
+          <>
+            {canEdit ? <ImportContextButton tenantId={selectedTenantId} onDone={() => setVersion((v) => v + 1)} /> : null}
+            <ExportButton dataset="computers" filters={filters} />
+          </>
+        } />
       <Tabs value={status} onValueChange={(v) => setStatus(v as ComputerFilters["status"])}>
         <TabsList aria-label="Cycle status">
           {TABS.map((t) => (
@@ -177,6 +210,20 @@ export function ComputersPage() {
             onChange={(v) => setPlatform(v as ComputerFilters["platform"])}
             options={[{ value: "", label: "All platforms" }, ...Object.entries(PLATFORM_LABEL).map(([value, l]) => ({ value, label: l }))]}
           />
+        </Field>
+        <Field label="Owner" htmlFor="computer-owner" className="w-44">
+          <Input id="computer-owner" type="search" value={owner} onChange={(e) => setOwner(e.target.value)} />
+        </Field>
+        <Field label="Criticality" htmlFor="computer-criticality" className="w-40">
+          <NativeSelect
+            id="computer-criticality"
+            value={criticality}
+            onChange={(v) => setCriticality(v as ComputerFilters["criticality"])}
+            options={[{ value: "", label: "All criticality" }, ...CRITICALITY_OPTIONS.slice(1)]}
+          />
+        </Field>
+        <Field label="Scope tag" htmlFor="computer-scope" className="w-40">
+          <Input id="computer-scope" type="search" value={scope} onChange={(e) => setScope(e.target.value)} />
         </Field>
         <Field label="Coverage" htmlFor="computer-coverage" className="w-48">
           <NativeSelect

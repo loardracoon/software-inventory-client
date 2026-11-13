@@ -333,14 +333,14 @@ isOneToOne: false
                   ]
                 },"computers": {
                   Row: {
-                    "associated_user": string | null,"created_at": string,"data_lake_checked_at": string | null,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
+                    "associated_user": string | null,"context_updated_at": string | null,"context_updated_by": string | null,"created_at": string,"criticality": string | null,"data_lake_checked_at": string | null,"department": string | null,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"owner": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"scope_tags": (string)[],"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "associated_user"?: string | null,"created_at"?: string,"data_lake_checked_at"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
+                    "associated_user"?: string | null,"context_updated_at"?: string | null,"context_updated_by"?: string | null,"created_at"?: string,"criticality"?: string | null,"data_lake_checked_at"?: string | null,"department"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"owner"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"scope_tags"?: (string)[],"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "associated_user"?: string | null,"created_at"?: string,"data_lake_checked_at"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
+                    "associated_user"?: string | null,"context_updated_at"?: string | null,"context_updated_by"?: string | null,"created_at"?: string,"criticality"?: string | null,"data_lake_checked_at"?: string | null,"department"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"owner"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"scope_tags"?: (string)[],"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -1694,7 +1694,7 @@ isOneToOne: false
                   ]
                 },"v_computer_list": {
                   Row: {
-                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"coverage_status": string | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"inventoried_at": string | null,"inventory_source": string | null,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
+                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"coverage_status": string | null,"criticality": string | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"department": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"inventoried_at": string | null,"inventory_source": string | null,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"owner": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"scope_tags": (string)[],"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -2033,7 +2033,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "access_role_for":
+            "_apply_computer_context":
+{ Args: { "p_criticality": string,"p_department": string,"p_ids": (string)[],"p_owner": string,"p_tags": (string)[] }; Returns: number
+                           },
+"access_role_for":
 { Args: { "p_email": string }; Returns: Database["public"]['Enums']["app_role"]
                            },
 "acquire_collector_lease":
@@ -2227,6 +2230,9 @@ isOneToOne: false
 "hub_sync_finished":
 { Args: { "p_error"?: string,"p_ok": boolean }; Returns: string
                            },
+"import_computer_context":
+{ Args: { "p_rows": Json,"p_tenant_id": string }; Returns: Json
+                           },
 "ingest_snapshot":
 { Args: { "p_payload": Json,"p_raw_result_id": string }; Returns: Json
                            },
@@ -2393,6 +2399,9 @@ isOneToOne: false
 "set_alert_settings":
 { Args: { "p_coverage_threshold"?: number,"p_email_from"?: string,"p_email_to"?: (string)[],"p_enabled"?: boolean,"p_resend_key"?: string,"p_stale_minutes"?: number,"p_webhook_url"?: string }; Returns: undefined
                            },
+"set_computer_context":
+{ Args: { "p_computer_ids": (string)[],"p_criticality": string,"p_department": string,"p_owner": string,"p_scope_tags": (string)[] }; Returns: number
+                           },
 "set_hub_connection":
 { Args: { "p_key": string,"p_url": string }; Returns: undefined
                            },
@@ -2431,6 +2440,9 @@ isOneToOne: false
 { Args: { "p_tenant_id"?: string,"p_title_id": string }; Returns: {
               "aliases": (string)[],"computers": number,"cvss_score": number,"cvss_vector": string,"cvss_version": string,"cwe": (string)[],"epss": number,"epss_percentile": number,"fixed_in": string,"kev_added": string,"kev_due": string,"kev_ransomware": string,"platforms": (string)[],"published": string,"refs": (string)[],"severity": string,"summary": string,"uncertain": boolean,"versions": (string)[],"vuln_id": string
             }[]
+                           },
+"valid_scope_tags":
+{ Args: { "p_tags": (string)[] }; Returns: boolean
                            },
 "vendor_key":
 { Args: { "p_vendor": string }; Returns: string
