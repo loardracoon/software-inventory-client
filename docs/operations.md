@@ -139,7 +139,7 @@ What is logged: row changes on the main tables (tenants, users and roles, polici
 - **Retention:** 400 days (more than the 12 months of PCI DSS 10.5.1). The job `audit-log-retention` runs daily at 04:15 and removes the oldest rows older than 400 days. It stores the last removed row id and hash in `audit_anchor`, so the chain still checks after the purge.
 - **Verify:** Settings › Audit log shows "Chain verified" or "Chain broken at #id" (`select * from verify_audit_log()` as an admin).
 - **Export:** Settings › Audit log, pick a date range, **Export CSV** (`id,created_at,user,action,target,data,prev_hash,row_hash`). Keep the file with the audit evidence.
-- Verification detects edited rows and gaps. It does not detect a full rewrite of the chain by someone with database superuser access; the off-host backups (see backups) are the control for that.
+- Verification detects edited rows and rows removed inside the chain. It does not detect the removal of the newest rows (the tail) or a full rewrite of the chain by someone with database superuser access; the off-host backups (see backups) are the control for both.
 - Audit writes are serialised by one lock held until commit. A rare deadlock error can occur under concurrent writes and is safe to retry. Writers must use READ COMMITTED (the default).
 
 ### Rotate the Sophos Central credential

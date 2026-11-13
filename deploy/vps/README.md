@@ -57,13 +57,15 @@ then encrypts the dump with `age` and sends the `.age` copy to every target set 
 never leaves the host. A failed target is logged (`offsite s3: failed`) and the unit exits non-zero, but the local
 dump stays.
 
-1. `apt install age rclone` on the server.
+1. `apt install age` on the server, and rclone. The apt rclone of Ubuntu 22.04 is old (no Cloudflare provider):
+   install the current release from rclone.org, or use `provider = Other` in the S3 remote.
 2. Make the key pair **off the server**: `age-keygen -o key.txt`. Keep `key.txt` offline (password manager, safe).
    Only the public key (`age1...`) goes to the server.
 3. `cp backup.env.example /opt/endpoint-inventory/backup.env`, `chmod 600`, and fill it in. Leave out a target to turn
    it off.
    - S3 (R2, B2, any S3): `rclone config` with `RCLONE_CONFIG=/opt/endpoint-inventory/rclone.conf`, then
-     `OFFSITE_S3=<remote>:<bucket>/inventory`. Use a key that can only write to this bucket.
+     `OFFSITE_S3=<remote>:<bucket>/inventory`. Use a key that can only write to this bucket. If that key cannot
+     create buckets, add `no_check_bucket = true` to the remote.
    - FTP or SFTP: the same, with an `ftp` or `sftp` remote, `OFFSITE_FTP=<remote>:<dir>`.
    - Email: `OFFSITE_EMAIL_TO`, `OFFSITE_EMAIL_FROM`, `SMTP_URL` (for example `smtps://mail.<domain>:465`),
      `SMTP_USER`, `SMTP_PASS`. The encrypted file is sent only when it is at most `OFFSITE_EMAIL_MAX_MB` (20) MB;
@@ -72,7 +74,8 @@ dump stays.
    - `OFFSITE_SEND_KEY=1` also sends the Vault key, encrypted. Default 0: copy `pgsodium_root.key` off the host by hand.
 4. `chmod 600 /opt/endpoint-inventory/rclone.conf`, `chmod 755 backup.sh offsite.sh update.sh`, copy the two backup units to `/etc/systemd/system/`,
    `systemctl daemon-reload && systemctl enable --now endpoint-inventory-backup.timer`.
-5. Test once: `systemctl start endpoint-inventory-backup.service`, then
+5. Test once: `systemctl start endpoint-inventory-backup.service` (also for manual runs: the scripts read no file,
+   only the unit loads `backup.env`), then
    `journalctl -u endpoint-inventory-backup.service` (look for `offsite <target>: ok`).
 6. Set a lifecycle rule on the bucket (delete objects after N days, for example 30) and clear old files on the FTP
    target, so off-host copies expire too.
@@ -80,7 +83,8 @@ dump stays.
 Restore into this install only (same Vault key; keep a copy of `pgsodium_root.key` that matches the dump): fetch the
 `.age` file, `age -d -i key.txt inventory-<stamp>.dump.age > inventory.dump`, stop `kong functions auth rest tls`,
 then `docker compose exec -T db pg_restore -U supabase_admin -h localhost -d postgres --clean --if-exists < inventory.dump`,
-then `docker compose up -d`.
+then `docker compose up -d`. With `OFFSITE_SEND_KEY=1`, the Vault key copy is decrypted the same way:
+`age -d -i key.txt pgsodium_root.key.age > pgsodium_root.key`.
 
 ## Move from K3S (done once, 2026-11-03)
 
