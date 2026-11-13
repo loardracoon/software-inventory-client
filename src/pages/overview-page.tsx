@@ -22,6 +22,7 @@ import { useTenant } from "@/features/tenants/tenant-context";
 import { formatDate, formatDateTime, formatNumber } from "@/lib/format";
 import { label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
+import { cn } from "@/lib/utils";
 import { CycleCard } from "@/features/inventory/cycle-card";
 import { PolicyCard } from "@/features/policy/policy-card";
 import { VulnOverviewCard } from "@/features/vulns/vuln-overview-card";
@@ -81,6 +82,26 @@ export function OverviewPage() {
           description={`${formatNumber(s?.added_7d)} added · ${formatNumber(s?.updated_7d)} updated · ${formatNumber(s?.removed_7d)} removed`}
         />
       </div>
+
+      {s ? (
+        <Card className="gap-4 px-6">
+          <Eyebrow>Inventory coverage</Eyebrow>
+          <div className="grid grid-cols-3 gap-3">
+            {(
+              [
+                ["never", "Never inventoried", s.coverage_never, true],
+                ["stale", "Stale", s.coverage_stale, true],
+                ["current", "Current", s.coverage_current, false],
+              ] as const
+            ).map(([key, name, value, alert]) => (
+              <Link key={key} to={`/computers?coverage=${key}`} className="flex flex-col gap-0.5 rounded-md border border-border-subtle p-3 no-underline hover:bg-surface-subtle">
+                <span className={cn("text-2xl font-semibold", alert && value > 0 ? "text-text-critical" : "text-text-strong")}>{formatNumber(value)}</span>
+                <span className="text-sm text-text-strong">{name}</span>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       {s && s.computers > 0 ? <PolicyCard tenantId={selectedTenantId} /> : null}
       {s && s.computers > 0 ? <VulnOverviewCard tenantId={selectedTenantId} /> : null}

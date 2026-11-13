@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 import { CircleDashed, Monitor, Wifi, WifiOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,6 +44,22 @@ function OnlineStatus({ row }: { row: ComputerRow }) {
   );
 }
 
+const ageInDays = (iso: string) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+
+// Audit evidence: never inventoried, stale (age in whole days) or current; source and date in the tooltip.
+function CoverageStatus({ row }: { row: ComputerRow }) {
+  const days = row.inventoried_at ? ageInDays(row.inventoried_at) : 0;
+  const text = row.coverage_status === "never" ? "Never inventoried" : row.coverage_status === "stale" ? `Stale (${days} d)` : "Current";
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className={cn("font-semibold", row.coverage_status === "current" ? "text-text-strong" : "text-text-critical")}>{text}</span>
+      <span className="text-xs text-text-muted">
+        {row.inventoried_at ? `${formatDateTime(row.inventoried_at)} · ${row.inventory_source === "data_lake" ? "Data Lake" : "Live Endpoint Search"}` : "No inventory yet"}
+      </span>
+    </div>
+  );
+}
+
 const COLUMNS: ServerColumnDef<ComputerRow>[] = [
   { accessorKey: "online", header: "Status", cell: ({ row }) => <OnlineStatus row={row.original} /> },
   {
@@ -71,6 +87,7 @@ const COLUMNS: ServerColumnDef<ComputerRow>[] = [
     header: "Last collected",
     cell: ({ row }) => (row.original.last_collected_at ? formatDateTime(row.original.last_collected_at) : <span className="text-text-muted">Never</span>),
   },
+  { accessorKey: "coverage_status", header: "Coverage", cell: ({ row }) => <CoverageStatus row={row.original} /> },
   {
     accessorKey: "cycle_status",
     header: "Cycle status",
@@ -118,6 +135,11 @@ export function ComputersPage() {
   const [platform, setPlatform] = useState<ComputerFilters["platform"]>("");
   const [category, setCategory] = useState("");
   const [search, setSearch] = useState("");
+  const [params] = useSearchParams();
+  const [coverage, setCoverage] = useState<ComputerFilters["coverage"]>(() => {
+    const c = params.get("coverage");
+    return c === "never" || c === "stale" || c === "current" ? c : "";
+  });
   const attention = useLoad(`attention:${selectedTenantId ?? "all"}`, () => fetchNeedsAttention(selectedTenantId, 50));
 
   const level1 = useMemo(() => {
@@ -127,8 +149,8 @@ export function ComputersPage() {
   }, [attention.data]);
 
   const filters = useMemo<ComputerFilters>(
-    () => ({ tenantId: selectedTenantId, status, platform, category, search }),
-    [selectedTenantId, status, platform, category, search],
+    () => ({ tenantId: selectedTenantId, status, platform, coverage, category, search }),
+    [selectedTenantId, status, platform, coverage, category, search],
   );
   const fetchPage = useCallback((request: ServerPageRequest<ComputerFilters>) => fetchComputers(request.filters, request), []);
 
@@ -154,6 +176,19 @@ export function ComputersPage() {
             value={platform}
             onChange={(v) => setPlatform(v as ComputerFilters["platform"])}
             options={[{ value: "", label: "All platforms" }, ...Object.entries(PLATFORM_LABEL).map(([value, l]) => ({ value, label: l }))]}
+          />
+        </Field>
+        <Field label="Coverage" htmlFor="computer-coverage" className="w-48">
+          <NativeSelect
+            id="computer-coverage"
+            value={coverage}
+            onChange={(v) => setCoverage(v as ComputerFilters["coverage"])}
+            options={[
+              { value: "", label: "All coverage" },
+              { value: "never", label: "Never inventoried" },
+              { value: "stale", label: "Stale" },
+              { value: "current", label: "Current" },
+            ]}
           />
         </Field>
       </div>

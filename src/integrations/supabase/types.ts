@@ -1053,14 +1053,14 @@ isOneToOne: false
                   ]
                 },"scan_settings": {
                   Row: {
-                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
+                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1694,7 +1694,7 @@ isOneToOne: false
                   ]
                 },"v_computer_list": {
                   Row: {
-                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
+                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"coverage_status": string | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"inventoried_at": string | null,"inventory_source": string | null,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
                   }
                   ComputedFields: never
                   Relationships: [

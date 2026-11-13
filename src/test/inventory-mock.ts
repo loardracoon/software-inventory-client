@@ -11,6 +11,9 @@ export function inventoryApiMock() {
     fetchOverviewStats: vi.fn(async () => ({
       computers: 0,
       computers_by_platform: {},
+      coverage_never: 0,
+      coverage_stale: 0,
+      coverage_current: 0,
       coverage_pct: null,
       titles: 0,
       extension_installs: 0,

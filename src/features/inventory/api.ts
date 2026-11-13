@@ -28,6 +28,9 @@ export type PageRequest = { pageIndex: number; pageSize: number; sorting: Sortin
 export type OverviewStats = {
   computers: number;
   computers_by_platform: Record<string, number>;
+  coverage_never: number;
+  coverage_stale: number;
+  coverage_current: number;
   coverage_pct: number | null;
   titles: number;
   extension_installs: number;
@@ -85,6 +88,7 @@ export type ComputerFilters = {
   tenantId: string | null;
   status: "all" | "collected" | "retry_scheduled" | "error";
   platform: Platform | "";
+  coverage: "" | "never" | "stale" | "current";
   category: string; // level-1 slug among attention categories
   search: string;
 };
@@ -97,6 +101,7 @@ export async function fetchComputers(filters: ComputerFilters, request: PageRequ
   if (filters.tenantId) q = q.eq("tenant_id", filters.tenantId);
   if (filters.status !== "all") q = q.eq("cycle_status", filters.status);
   if (filters.platform) q = q.eq("platform", filters.platform);
+  if (filters.coverage) q = q.eq("coverage_status", filters.coverage);
   if (filters.category) q = q.contains("attention_level1_slugs", [filters.category]);
   if (filters.search.trim()) {
     const p = likePattern(filters.search);
@@ -315,7 +320,7 @@ export async function fetchScanSettings(tenantId: string): Promise<ScanSettings 
 
 const EDITABLE_SETTINGS = [
   "cycle_weekday", "cycle_time", "retry_time", "timezone", "batch_size", "max_active_runs", "runs_per_minute",
-  "daily_run_limit", "reserve_pct", "run_grace_minutes", "provider", "data_lake_inventory",
+  "daily_run_limit", "reserve_pct", "run_grace_minutes", "provider", "data_lake_inventory", "stale_after_days",
 ] as const;
 
 // Only the editable columns; updated_at and updated_by are set by the database trigger.

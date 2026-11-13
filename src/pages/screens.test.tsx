@@ -122,6 +122,30 @@ describe("Computers", () => {
     await waitFor(() => expect(lastFilters(api.fetchComputers).category).toBe("remote-access"));
     expect(lastFilters(api.fetchComputers).tenantId).toBeNull();
   });
+
+  it("shows coverage per computer and filters by coverage from the URL and the select", async () => {
+    const user = userEvent.setup();
+    const at = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+    vi.mocked(api.fetchComputers).mockResolvedValue({
+      rows: [
+        { ...computer, id: "n1", hostname: "NEVER-01", coverage_status: "never", inventoried_at: null, inventory_source: "none" },
+        { ...computer, id: "s1", hostname: "STALE-01", coverage_status: "stale", inventoried_at: at(30.5), inventory_source: "data_lake" },
+        { ...computer, id: "c1", hostname: "CURRENT-01", coverage_status: "current", inventoried_at: at(1), inventory_source: "live_endpoint_search" },
+      ],
+      rowCount: 3,
+    });
+    renderAt("/computers?coverage=stale", "/computers", <ComputersPage />);
+
+    const cell = async (host: string) => (await screen.findByRole("link", { name: host })).closest("tr")!;
+    expect(within(await cell("NEVER-01")).getByText("Never inventoried")).toBeInTheDocument();
+    expect(within(await cell("STALE-01")).getByText("Stale (30 d)")).toBeInTheDocument();
+    expect(within(await cell("CURRENT-01")).getByText("Current")).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: /Coverage/ })).toBeInTheDocument();
+    expect(lastFilters(api.fetchComputers).coverage).toBe("stale");
+
+    await user.selectOptions(screen.getByLabelText("Coverage"), "never");
+    await waitFor(() => expect(lastFilters(api.fetchComputers).coverage).toBe("never"));
+  });
 });
 
 describe("Software", () => {
@@ -398,6 +422,9 @@ describe("Overview", () => {
     vi.mocked(api.fetchOverviewStats).mockResolvedValue({
       computers: 11,
       computers_by_platform: { windows: 9, macos: 2 },
+      coverage_never: 1,
+      coverage_stale: 2,
+      coverage_current: 8,
       coverage_pct: 94.4,
       titles: 1284,
       extension_installs: 3906,
@@ -418,6 +445,11 @@ describe("Overview", () => {
     expect(await screen.findByText("1,284")).toBeInTheDocument();
     expect(screen.getByText("9 Windows · 2 macOS")).toBeInTheDocument();
     expect(screen.getByText("94.4")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Never inventoried/ })).toHaveAttribute("href", "/computers?coverage=never");
+    expect(screen.getByRole("link", { name: /Never inventoried/ })).toHaveTextContent("1");
+    expect(screen.getByRole("link", { name: /Stale/ })).toHaveAttribute("href", "/computers?coverage=stale");
+    expect(screen.getByRole("link", { name: /Stale/ })).toHaveTextContent("2");
+    expect(screen.getByRole("link", { name: /Current/ })).toHaveAttribute("href", "/computers?coverage=current");
     expect(screen.getByText("148 added · 61 updated · 27 removed")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Anonymizers/ })).toHaveAttribute("href", "/software?category=proxy-and-tunnel%2Fanonymizers");
     expect(screen.getByText("Not allowed")).toBeInTheDocument();
@@ -425,7 +457,7 @@ describe("Overview", () => {
   });
 
   it("shows the known vulnerabilities card with links to the filtered Software list", async () => {
-    vi.mocked(api.fetchOverviewStats).mockResolvedValue({ computers: 3, computers_by_platform: {}, coverage_pct: null, titles: 1, extension_installs: 0, distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0 });
+    vi.mocked(api.fetchOverviewStats).mockResolvedValue({ computers: 3, computers_by_platform: {}, coverage_never: 0, coverage_stale: 0, coverage_current: 3, coverage_pct: null, titles: 1, extension_installs: 0, distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0 });
     vi.mocked(vulns.fetchVulnOverview).mockResolvedValue({ vulns: 4, critical: 1, high: 2, kev: 1, titles: 2, kev_installations: 3, kev_computers: 2, possible: 9, possible_titles: 1, cached: 40, synced_at: null, evaluated_at: null });
     renderAt("/", "/", <OverviewPage />);
 
@@ -500,6 +532,7 @@ describe("Scans", () => {
     run_grace_minutes: 10,
     provider: "live_endpoint_search",
     data_lake_inventory: false,
+    stale_after_days: 30,
     updated_at: "2026-10-26T12:00:00Z",
     updated_by: null,
   } as api.ScanSettings;
@@ -519,6 +552,18 @@ describe("Scans", () => {
     await user.type(batch, "25");
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ batch_size: 25, cycle_time: "10:00:00" })));
+  });
+
+  it("saves the stale-after days of the schedule", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
+    renderAt("/scans", "/scans", <ScansPage />);
+    const days = await screen.findByLabelText("Stale after (days)");
+    expect(days).toHaveValue(30);
+    await user.clear(days);
+    await user.type(days, "45");
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ stale_after_days: 45 })));
   });
 
   it("has a Data Lake switch that saves, and the provider select has no Data Lake option", async () => {

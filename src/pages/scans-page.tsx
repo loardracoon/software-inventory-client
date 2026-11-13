@@ -245,6 +245,9 @@ function ScheduleForm({ settings, readOnly, onSaved }: { settings: ScanSettings;
         <Field label="Cancel run after (minutes)" htmlFor="s-grace">
           <Input id="s-grace" type="number" min={1} max={60} value={values.run_grace_minutes} onChange={num("run_grace_minutes")} required />
         </Field>
+        <Field label="Stale after (days)" htmlFor="s-stale">
+          <Input id="s-stale" type="number" min={1} max={365} value={values.stale_after_days} onChange={num("stale_after_days")} required />
+        </Field>
         <Field label="Daily reserve (%)" htmlFor="s-reserve">
           <Input id="s-reserve" type="number" min={0} max={90} value={values.reserve_pct} onChange={num("reserve_pct")} required />
         </Field>
