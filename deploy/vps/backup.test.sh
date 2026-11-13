@@ -53,7 +53,7 @@ nz() { [ "$1" -ne 0 ] && echo nonzero; }
 fresh() { rm -rf "$root/inv" "$root/backups" "$calls"*; mkdir -p "$root/inv" "$root/backups"; echo vaultkey > "$root/inv/pgsodium_root.key"; : > "$calls"; }
 seed() { n=$1; i=1; while [ "$i" -le "$n" ]; do f="$root/backups/inventory-202601$(printf '%02d' "$i")-000000.dump"; echo old > "$f"; touch -d "2026-01-$(printf '%02d' "$i")" "$f"; i=$((i + 1)); done; }
 # run VAR=value ...: backup.sh under $BACKUP_SH with the stubs first on PATH; output in $root/out
-run() { env INV_DIR="$root/inv" BACKUP_DIR="$root/backups" ENV_FILE="$root/none.env" CALLS="$calls" PATH="$root/bin:$PATH" "$@" "${BACKUP_SH:-sh}" "$here/backup.sh" >"$root/out" 2>&1; }
+run() { env INV_DIR="$root/inv" BACKUP_DIR="$root/backups" CALLS="$calls" PATH="$root/bin:$PATH" "$@" "${BACKUP_SH:-sh}" "$here/backup.sh" >"$root/out" 2>&1; }
 count() { ls -A1 "$root/backups" | wc -l | tr -d ' '; }
 ncalls() { grep -c "^$1 " "$calls"; }
 dumps() { ls -1 "$root/backups" | grep -c '^inventory-.*\.dump$'; }
@@ -123,6 +123,11 @@ for mode in dump restore truncated; do
   check "$(wc -c < "$calls" | tr -d ' ')" 0 "(f) no off-host, $mode"
 done
 
+# (g0) a password with $, &, ; and a space survives intact
+fresh; run $ALL SMTP_PASS='ab$cd&ef;gh ij'; rc=$?
+check "$rc" 0 "(g0) exit code"
+check "$(grep -c 'ab$cd&ef;gh ij' "$calls.cfg")" 1 "(g0) password intact in curl config"
+check "$(grep -c -e 'gh ij' -e 'ef;gh' -e 'cd&ef' "$root/out")" 0 "(g0) no fragment printed"
 # (g) no secret in stdout/stderr, success or SMTP failure
 fresh; run $ALL
 check "$(grep -c 'S3cretPass-9z' "$root/out")" 0 "(g) password not printed"
@@ -144,7 +149,7 @@ check "$(grep -c '^Persistent=true' "$tmr")" 1 "(h) persistent"
 fresh; seed 16; run
 check "$(dumps)" 14 "(i) 14 dumps remain"
 fresh; seed 16
-env INV_DIR="$root/inv" BACKUP_DIR="$root/backups" ENV_FILE="$root/none.env" CALLS="$calls" PATH="$root/bin:$PATH" STUB_SLOW=1 "${BACKUP_SH:-sh}" "$here/backup.sh" >/dev/null 2>&1 &
+env INV_DIR="$root/inv" BACKUP_DIR="$root/backups" CALLS="$calls" PATH="$root/bin:$PATH" STUB_SLOW=1 "${BACKUP_SH:-sh}" "$here/backup.sh" >/dev/null 2>&1 &
 pid=$!
 sleep 1; kill -TERM "$pid" 2>/dev/null; wait "$pid" 2>/dev/null
 sleep 4

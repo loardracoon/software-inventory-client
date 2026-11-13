@@ -1,7 +1,7 @@
 #!/bin/sh
 # Encrypts a backup file with age (public key only) and sends the .age copy to each configured target. Called by backup.sh.
 #   offsite.sh FILE
-# Settings (backup.env, no quotes): AGE_RECIPIENT (age1... public key, required), OFFSITE_S3 and OFFSITE_FTP (rclone paths,
+# Settings (from the environment; the unit loads backup.env): AGE_RECIPIENT (age1... public key, required), OFFSITE_S3 and OFFSITE_FTP (rclone paths,
 # remotes in $INV_DIR/rclone.conf), OFFSITE_EMAIL_TO + OFFSITE_EMAIL_FROM + SMTP_URL + SMTP_USER + SMTP_PASS,
 # OFFSITE_EMAIL_MAX_MB (20), OFFSITE_SEND_KEY=1 (also send pgsodium_root.key, encrypted the same way; default 0).
 # Every target logs "offsite <target>: ok|failed"; exit 1 if any failed. The plain dump never leaves the host; no secret is printed.
@@ -9,9 +9,7 @@ set -eu
 umask 077
 file=${1:?usage: offsite.sh FILE}
 INV_DIR=${INV_DIR:-/opt/endpoint-inventory}
-ENV_FILE=${ENV_FILE:-$INV_DIR/backup.env}
 RCLONE_CONF=${RCLONE_CONF:-$INV_DIR/rclone.conf}
-[ -f "$ENV_FILE" ] && . "$ENV_FILE"
 
 case "${AGE_RECIPIENT:-}" in
   age1*) ;;

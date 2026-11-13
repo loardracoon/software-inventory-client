@@ -70,7 +70,7 @@ dump stays.
      bigger files log `offsite email: skipped (size)`. Base64 adds a third, so check the mail server limit.
      The password goes to `curl` in a temporary file, not on the command line.
    - `OFFSITE_SEND_KEY=1` also sends the Vault key, encrypted. Default 0: copy `pgsodium_root.key` off the host by hand.
-4. `chmod 600 /opt/endpoint-inventory/rclone.conf`, copy the two backup units to `/etc/systemd/system/`,
+4. `chmod 600 /opt/endpoint-inventory/rclone.conf`, `chmod 755 backup.sh offsite.sh update.sh`, copy the two backup units to `/etc/systemd/system/`,
    `systemctl daemon-reload && systemctl enable --now endpoint-inventory-backup.timer`.
 5. Test once: `systemctl start endpoint-inventory-backup.service`, then
    `journalctl -u endpoint-inventory-backup.service` (look for `offsite <target>: ok`).

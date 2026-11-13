@@ -11,8 +11,6 @@
 set -eu
 umask 077
 INV_DIR=${INV_DIR:-/opt/endpoint-inventory}
-ENV_FILE=${ENV_FILE:-$INV_DIR/backup.env}
-[ -f "$ENV_FILE" ] && . "$ENV_FILE"
 BACKUP_DIR=${BACKUP_DIR:-$INV_DIR/backups}
 KEEP=${KEEP:-14}
 here=$(cd "$(dirname "$0")" && pwd)
