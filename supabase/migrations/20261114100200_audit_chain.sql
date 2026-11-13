@@ -12,7 +12,8 @@ create table public.audit_anchor (
   purged_at timestamptz
 );
 alter table public.audit_anchor enable row level security;
-revoke all on table public.audit_anchor from anon, authenticated;
+-- Only the purge (security definer) writes the anchor; service_role has no direct access either.
+revoke all on table public.audit_anchor from anon, authenticated, service_role;
 
 -- created_at is rendered in UTC so the hash does not depend on the session time zone.
 create function public.audit_row_hash(p_prev text, p_id bigint, p_user uuid, p_action text, p_target text, p_data jsonb, p_at timestamptz)

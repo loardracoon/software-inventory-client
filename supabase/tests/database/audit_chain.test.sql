@@ -7,7 +7,7 @@ truncate public.audit_log, public.audit_anchor;
 select set_config('app.audit_purge', 'off', true);
 delete from public.profiles;
 
-select plan(18);
+select plan(21);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'admin@example.com'),
@@ -56,6 +56,10 @@ select is(public.purge_audit_log(400), 3, 'purge deletes the rows older than 400
 select ok((select last_purged_id is not null and last_purged_hash is not null from public.audit_anchor), 'the anchor records the last purged row');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
 select results_eq($$select first_bad_id from public.verify_audit_log()$$, $$values (null::bigint)$$, 'verify after purge: chain intact from the anchor');
+select set_config('role', 'postgres', true);
+select ok(not has_table_privilege('service_role', 'public.audit_anchor', 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE'), 'service_role has no privilege on audit_anchor');
+select throws_ok($$set local role service_role; update public.audit_anchor set last_purged_hash = 'x'$$, '42501', null, 'service_role cannot change the anchor directly');
+select lives_ok($$set local role service_role; select public.purge_audit_log(400)$$, 'service_role still purges through the function');
 select set_config('role', 'postgres', true);
 
 -- Tamper
