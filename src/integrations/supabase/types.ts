@@ -131,6 +131,32 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"audit_reports": {
+                  Row: {
+                    "archive": string,"as_of": string,"generated_at": string,"generated_by": string | null,"id": string,"manifest": NonNullable<Json>,"manifest_sha256": string,"scope_tag": string | null,"tenant_id": string,"users_masked": boolean
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "archive": string,"as_of": string,"generated_at"?: string,"generated_by"?: string | null,"id"?: string,"manifest": NonNullable<Json>,"manifest_sha256": string,"scope_tag"?: string | null,"tenant_id": string,"users_masked": boolean
+                  }
+                  Update: {
+                    "archive"?: string,"as_of"?: string,"generated_at"?: string,"generated_by"?: string | null,"id"?: string,"manifest"?: NonNullable<Json>,"manifest_sha256"?: string,"scope_tag"?: string | null,"tenant_id"?: string,"users_masked"?: boolean
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "audit_reports_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "audit_reports_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"capability_probes": {
                   Row: {
                     "computer_id": string,"error": string | null,"finished_at": string | null,"id": string,"platform": Database["public"]['Enums']["platform"],"provider": Database["public"]['Enums']["query_provider"],"requested_by": string | null,"sophos_run_id": string | null,"started_at": string,"status": string,"table_count": number | null,"tenant_id": string
@@ -1067,14 +1093,14 @@ isOneToOne: false
                   ]
                 },"scan_settings": {
                   Row: {
-                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
+                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"scope_statement": string,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1618,6 +1644,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"v_audit_reports": {
+                  Row: {
+                    "archive_bytes": number | null,"as_of": string,"generated_at": string,"generated_by": string | null,"generated_by_email": string | null,"id": string,"manifest": NonNullable<Json>,"manifest_sha256": string,"scope_tag": string | null,"tenant_id": string,"users_masked": boolean
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "audit_reports_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "audit_reports_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"v_capability_probes_latest": {
                   Row: {
                     "computer_id": string,"error": string | null,"finished_at": string | null,"hostname": string,"id": string,"platform": Database["public"]['Enums']["platform"],"provider": Database["public"]['Enums']["query_provider"],"started_at": string,"status": string,"table_count": number | null,"tenant_id": string,"tenant_name": string
@@ -2083,6 +2129,9 @@ isOneToOne: false
 "apply_vulnerability_changes":
 { Args: { "p_items": Json,"p_next_seq": number }; Returns: Json
                            },
+"audit_report_data":
+{ Args: { "p_as_of": string,"p_scope_tag"?: string,"p_tenant_id": string }; Returns: Json
+                           },
 "audit_row_hash":
 { Args: { "p_action": string,"p_at": string,"p_data": Json,"p_id": number,"p_prev": string,"p_target": string,"p_user": string }; Returns: string
                            },
@@ -2210,6 +2259,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "coverage_threshold": number,"email_configured": boolean,"email_from": string,"email_to": (string)[],"enabled": boolean,"last_error": string,"last_sent_at": string,"pending": number,"stale_minutes": number,"updated_at": string,"webhook_configured": boolean,"webhook_hint": string
             }[]
+                           },
+"get_audit_report_archive":
+{ Args: { "p_report_id": string }; Returns: string
                            },
 "get_hub_credential":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -2400,6 +2452,9 @@ isOneToOne: false
                            },
 "record_api_run":
 { Args: { "p_runs"?: number,"p_tenant_id": string }; Returns: undefined
+                           },
+"record_audit_report":
+{ Args: { "p_archive": string,"p_as_of": string,"p_generated_by"?: string,"p_manifest": Json,"p_manifest_sha256": string,"p_scope_tag": string,"p_tenant_id": string,"p_users_masked": boolean }; Returns: string
                            },
 "record_dispatch":
 { Args: { "p_endpoint_ids": (string)[],"p_priority": boolean,"p_provider": Database["public"]['Enums']["query_provider"],"p_query_id": string,"p_sophos_run_id": string,"p_task_ids": (string)[],"p_tenant_id": string }; Returns: string
