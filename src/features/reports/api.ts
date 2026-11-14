@@ -10,10 +10,9 @@ export async function fetchAuditReports(tenantId: string): Promise<AuditReportRo
   return orThrow(await db().from("v_audit_reports").select("*").eq("tenant_id", tenantId).order("generated_at", { ascending: false }).limit(200)) ?? [];
 }
 
-// Distinct scope tags in use in the tenant (the optional filter of a package).
+// Distinct scope tags in use in the tenant (the optional filter of a package), from SQL: PostgREST returns at most 1,000 rows.
 export async function fetchScopeTags(tenantId: string): Promise<string[]> {
-  const rows = orThrow(await db().from("v_computer_list").select("scope_tags").eq("tenant_id", tenantId).limit(5000)) ?? [];
-  return [...new Set(rows.flatMap((r) => r.scope_tags ?? []))].sort();
+  return orThrow(await db().rpc("scope_tags_in_use", { p_tenant_id: tenantId })) ?? [];
 }
 
 // asOf: ISO date-time. scopeTag: null = all computers.

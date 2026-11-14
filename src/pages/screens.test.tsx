@@ -55,7 +55,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.f
 
 const TENANT = { id: "t1", name: "Lab" };
 
-function renderAt(path: string, routePath: string, element: React.ReactNode, role: AppRole = "admin") {
+function renderAt(path: string, routePath: string, element: React.ReactNode, role: AppRole = "admin", tenants = [TENANT]) {
   const auth: AuthContextValue = {
     status: "signed_in",
     session: null,
@@ -66,7 +66,7 @@ function renderAt(path: string, routePath: string, element: React.ReactNode, rol
   };
   return render(
     <AuthContext.Provider value={auth}>
-      <TenantProvider tenants={[TENANT]}>
+      <TenantProvider tenants={tenants}>
         <MemoryRouter initialEntries={[path]}>
           <Routes>
             <Route path={routePath} element={element} />
@@ -870,6 +870,35 @@ describe("Reports", () => {
     expect(screen.queryByRole("button", { name: "Generate package" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Download" })).toBeNull();
     expect(screen.getByText(/only admins and operators can download/i)).toBeInTheDocument();
+  });
+
+  it("does not offer a date in the future", async () => {
+    renderAt("/reports", "/reports", <ReportsPage />, "admin");
+    const input = await screen.findByLabelText("Inventory as of");
+    expect(input).toHaveAttribute("max", expect.stringMatching(/^\d{4}-\d\d-\d\dT\d\d:\d\d$/));
+  });
+
+  it("asks for a tenant when several are visible and none is selected", async () => {
+    localStorage.removeItem("endpoint-inventory.tenant");
+    renderAt("/reports", "/reports", <ReportsPage />, "admin", [TENANT, { id: "t2", name: "Branch" }]);
+    expect(await screen.findByText("Select a tenant to generate packages or record reviews")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Generate package" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Record review" })).toBeNull();
+    expect(reports.fetchAuditReports).not.toHaveBeenCalled();
+  });
+
+  it("names the selected tenant in the form and in the review dialog", async () => {
+    const user = userEvent.setup();
+    localStorage.setItem("endpoint-inventory.tenant", "t2");
+    try {
+      renderAt("/reports", "/reports", <ReportsPage />, "admin", [TENANT, { id: "t2", name: "Branch" }]);
+      expect(await screen.findByText("Tenant: Branch")).toBeInTheDocument();
+      await user.click(await screen.findByRole("button", { name: "Record review" }));
+      expect(await screen.findByText(/Branch/, { selector: "[role=dialog] *" })).toBeInTheDocument();
+      expect(reports.fetchAuditReports).toHaveBeenCalledWith("t2");
+    } finally {
+      localStorage.removeItem("endpoint-inventory.tenant");
+    }
   });
 });
 

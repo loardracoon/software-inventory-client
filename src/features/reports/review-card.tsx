@@ -19,7 +19,7 @@ const WEEK_MS = 7 * 86_400_000;
 const CONTROL =
   "w-full min-w-0 rounded-sm border-[1.5px] border-input bg-surface-raised px-3 py-2 text-[15px] text-text-body focus-visible:border-action focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none";
 
-function ReviewDialog({ packages, onClose, onDone }: { packages: AuditReportRow[]; onClose: () => void; onDone: () => void }) {
+function ReviewDialog({ tenantName, packages, onClose, onDone }: { tenantName: string; packages: AuditReportRow[]; onClose: () => void; onDone: () => void }) {
   const [reportId, setReportId] = useState(packages[0]?.id ?? "");
   const [outcome, setOutcome] = useState<ReviewOutcome>("accurate");
   const [statement, setStatement] = useState(DEFAULT_STATEMENT);
@@ -48,7 +48,7 @@ function ReviewDialog({ packages, onClose, onDone }: { packages: AuditReportRow[
         <form onSubmit={submit} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>Record inventory review</DialogTitle>
-            <DialogDescription>Your email and the time are stored with the review. A review needs a package generated in the last 7 days.</DialogDescription>
+            <DialogDescription>Tenant: {tenantName}. Your email and the time are stored with the review. A review needs a package generated in the last 7 days.</DialogDescription>
           </DialogHeader>
           {packages.length === 0 ? (
             <p role="alert" className="m-0 text-sm text-text-critical">
@@ -96,7 +96,7 @@ function ReviewDialog({ packages, onClose, onDone }: { packages: AuditReportRow[
 }
 
 // Periodic inventory review (PCI DSS 12.5.1): who reviewed, when, against which package. Only tenant admins record.
-export function InventoryReviewCard({ tenantId, reports }: { tenantId: string; reports: AuditReportRow[] }) {
+export function InventoryReviewCard({ tenantId, tenantName, reports }: { tenantId: string; tenantName: string; reports: AuditReportRow[] }) {
   const { profile } = useAuth();
   const [open, setOpen] = useState<AuditReportRow[] | null>(null);
   const status = useLoad(`review-status:${tenantId}`, () => fetchReviewStatus(tenantId));
@@ -161,6 +161,7 @@ export function InventoryReviewCard({ tenantId, reports }: { tenantId: string; r
       ) : null}
       {open ? (
         <ReviewDialog
+          tenantName={tenantName}
           // The server rule: generated in the last 7 days.
           packages={open}
           onClose={() => setOpen(null)}

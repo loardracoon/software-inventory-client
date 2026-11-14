@@ -42,7 +42,9 @@ async function download(id: string, onBusy?: (busy: boolean) => void) {
 export function ReportsPage() {
   const { tenants, selectedTenantId } = useTenant();
   const canGenerate = useCanEditContext();
-  const tenantId = selectedTenantId ?? tenants[0]?.id ?? null;
+  // "All tenants" with several tenants: a package and a review belong to one tenant, so the user picks it first.
+  const tenantId = selectedTenantId ?? (tenants.length === 1 ? tenants[0].id : null);
+  const tenantName = tenants.find((t) => t.id === tenantId)?.name ?? "";
   const [asOf, setAsOf] = useState(localNow);
   const [scopeTag, setScopeTag] = useState("");
   const [busy, setBusy] = useState(false);
@@ -74,14 +76,18 @@ export function ReportsPage() {
         title="Reports"
         description="Evidence packages for auditors: a dated ZIP with the inventory, vulnerabilities, policy and a manifest with SHA-256 hashes. A package is kept as generated and downloads unchanged."
       />
-      {canGenerate && tenantId ? (
-        <Card className="p-5">
+      {!tenantId ? (
+        <p className="m-0 text-sm text-text-muted">Select a tenant to generate packages or record reviews</p>
+      ) : canGenerate ? (
+        <Card className="flex flex-col gap-3 p-5">
+          <p className="m-0 text-sm font-semibold text-text-strong">Tenant: {tenantName}</p>
           <form onSubmit={generate} className="flex flex-wrap items-end gap-4">
             <Field label="Inventory as of" htmlFor="report-as-of" className="w-60">
               <input
                 id="report-as-of"
                 type="datetime-local"
                 value={asOf}
+                max={localNow()}
                 onChange={(e) => setAsOf(e.target.value)}
                 required
                 className="h-10 w-full rounded-sm border-[1.5px] border-input bg-surface-raised px-3 text-[15px] text-text-body"
@@ -104,9 +110,9 @@ export function ReportsPage() {
       ) : (
         <p className="m-0 text-sm text-text-muted">Only admins and operators can download packages, because they contain user names.</p>
       )}
-      {tenantId ? <InventoryReviewCard tenantId={tenantId} reports={reports.data ?? []} /> : null}
+      {tenantId ? <InventoryReviewCard tenantId={tenantId} tenantName={tenantName} reports={reports.data ?? []} /> : null}
       {reports.error ? <ErrorLine message={reports.error} /> : null}
-      {reports.data && reports.data.length === 0 ? (
+      {!tenantId ? null : reports.data && reports.data.length === 0 ? (
         <EmptyState title="No packages yet" description="Generated packages appear here and are never deleted." />
       ) : reports.data ? (
         <Table>
