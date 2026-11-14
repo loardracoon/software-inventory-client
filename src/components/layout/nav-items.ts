@@ -1,4 +1,4 @@
-import { History, LayoutDashboard, Monitor, Package, RefreshCw, ShieldCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { FileCheck2, History, LayoutDashboard, Monitor, Package, RefreshCw, ShieldCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
 
 export type NavItem = { to: string; label: string; icon: LucideIcon; end?: boolean };
 
@@ -9,5 +9,6 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/policies", label: "Policies", icon: ShieldCheck },
   { to: "/changes", label: "Changes", icon: History },
   { to: "/scans", label: "Scans", icon: RefreshCw },
+  { to: "/reports", label: "Reports", icon: FileCheck2 },
   { to: "/settings", label: "Settings", icon: SlidersHorizontal },
 ];

@@ -12,12 +12,14 @@ import * as vulns from "@/features/vulns/api";
 import * as audit from "@/features/audit/api";
 import { AuditLogLink } from "@/features/audit/audit-log-link";
 import * as users from "@/features/users/api";
+import * as reports from "@/features/reports/api";
 import { AuditLogPage } from "./audit-log-page";
 import { ChangesPage } from "./changes-page";
 import { ComputerDetailPage } from "./computer-detail-page";
 import { ComputersPage } from "./computers-page";
 import { csvToImportRows, parseCsv } from "@/features/inventory/computer-context";
 import { OverviewPage } from "./overview-page";
+import { ReportsPage } from "./reports-page";
 import { ScansPage } from "./scans-page";
 import { SoftwarePage } from "./software-page";
 import { SoftwareTitlePage } from "./software-title-page";
@@ -39,6 +41,12 @@ vi.mock("@/features/audit/api", async (original) => ({
 vi.mock("@/features/users/api", async (original) => ({
   ...(await original<typeof import("@/features/users/api")>()),
   fetchUsers: vi.fn(async () => []),
+}));
+vi.mock("@/features/reports/api", () => ({
+  fetchAuditReports: vi.fn(async () => []),
+  fetchScopeTags: vi.fn(async () => ["pci"]),
+  generateAuditReport: vi.fn(async () => ({ report_id: "r1", manifest_sha256: "f".repeat(64) })),
+  downloadAuditReport: vi.fn(async () => {}),
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
@@ -804,5 +812,30 @@ describe("Audit log", () => {
     unmount();
     renderAt("/settings", "/settings", <AuditLogLink />, "operator");
     expect(screen.queryByRole("link", { name: /audit log/i })).not.toBeInTheDocument();
+  });
+});
+
+describe("Reports", () => {
+  const report = { id: "r1", tenant_id: "t1", as_of: "2026-11-01T12:00:00Z", scope_tag: null, generated_by: "u1", generated_by_email: "admin@example.com", generated_at: "2026-11-14T12:00:00Z", manifest: {}, manifest_sha256: "abcdef0123456789".repeat(4), archive_bytes: 10, users_masked: false };
+
+  it("lists packages with the short hash and lets an admin generate and download", async () => {
+    const user = userEvent.setup();
+    vi.mocked(reports.fetchAuditReports).mockResolvedValue([report]);
+    renderAt("/reports", "/reports", <ReportsPage />, "admin");
+    expect(await screen.findByText("abcdef012345")).toBeInTheDocument();
+    await user.selectOptions(await screen.findByLabelText("Scope tag (optional)"), "pci");
+    await user.click(screen.getByRole("button", { name: "Generate package" }));
+    await waitFor(() => expect(reports.generateAuditReport).toHaveBeenCalledWith({ tenantId: "t1", asOf: expect.stringMatching(/^\d{4}-\d\d-\d\dT/), scopeTag: "pci" }));
+    await user.click(screen.getByRole("button", { name: "Download" }));
+    expect(reports.downloadAuditReport).toHaveBeenCalledWith("r1");
+  });
+
+  it("shows viewers the table but no form and no download", async () => {
+    vi.mocked(reports.fetchAuditReports).mockResolvedValue([report]);
+    renderAt("/reports", "/reports", <ReportsPage />, "viewer");
+    expect(await screen.findByText("abcdef012345")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Generate package" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Download" })).toBeNull();
+    expect(screen.getByText(/only admins and operators can download/i)).toBeInTheDocument();
   });
 });

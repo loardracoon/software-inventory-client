@@ -10,4 +10,6 @@ const anonKey = runtime.SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_
 export const isSupabaseConfigured = Boolean(url && anonKey);
 
 // Anon key only: RLS protects the data. The service role key never reaches the browser.
+// Base URL for the one call the client library cannot make (a binary download).
+export const supabaseUrl: string = url;
 export const supabase = isSupabaseConfigured ? createClient<Database>(url, anonKey) : null;

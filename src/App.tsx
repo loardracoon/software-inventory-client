@@ -17,6 +17,7 @@ const PolicyRulePage = lazy(() => import("@/pages/policy-rule-page").then((m) =>
 const ChangesPage = lazy(() => import("@/pages/changes-page").then((m) => ({ default: m.ChangesPage })));
 const ScansPage = lazy(() => import("@/pages/scans-page").then((m) => ({ default: m.ScansPage })));
 const AuditLogPage = lazy(() => import("@/pages/audit-log-page").then((m) => ({ default: m.AuditLogPage })));
+const ReportsPage = lazy(() => import("@/pages/reports-page").then((m) => ({ default: m.ReportsPage })));
 const SettingsPage = lazy(() => import("@/pages/settings-page").then((m) => ({ default: m.SettingsPage })));
 
 function Page({ children }: { children: ReactNode }) {
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="policies/rules/:lineageId" element={<Page><PolicyRulePage /></Page>} />
         <Route path="changes" element={<Page><ChangesPage /></Page>} />
         <Route path="scans" element={<Page><ScansPage /></Page>} />
+        <Route path="reports" element={<Page><ReportsPage /></Page>} />
         <Route path="settings" element={<Page><SettingsPage /></Page>} />
         <Route path="settings/audit-log" element={<Page><AuditLogPage /></Page>} />
         <Route path="*" element={<NotFoundPage />} />
