@@ -3,21 +3,15 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { adminClient, corsHeaders, errorMessage, HttpError } from "../_shared/edge.ts";
-import { buildEvidence, zipEvidence, type ReportData } from "../_shared/evidence.ts";
+import { buildEvidence, bytesToPgHex, contentTooBig, pgHexToBytes, type ReportData } from "../_shared/evidence.ts";
+import { zipEvidence } from "./zip.ts";
 
 const MAX_ARCHIVE_BYTES = 25 * 1024 * 1024;
+const TOO_BIG = "The package is too big (25 MB limit). Narrow it with a scope tag.";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const cors = { ...corsHeaders, "Access-Control-Allow-Methods": "GET, POST, OPTIONS", "Access-Control-Expose-Headers": "Content-Disposition" };
 
 const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
-const toHex = (bytes: Uint8Array) => "\\x" + [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-
-function fromHex(value: string): Uint8Array {
-  const hex = value.startsWith("\\x") ? value.slice(2) : value;
-  const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  return out;
-}
 
 function failure(error: { code?: string; message: string }): never {
   if (error.code === "42501") throw new HttpError(403, "Only admins and operators can do this");
@@ -50,7 +44,7 @@ Deno.serve(async (req) => {
       const { data: tenant } = row ? await admin.from("tenants").select("name").eq("id", row.tenant_id).maybeSingle() : { data: null };
       const slug = (tenant?.name ?? "tenant").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "tenant";
       const name = `evidence-${slug}-${(row?.as_of ?? "").slice(0, 10)}-${reportId.slice(0, 8)}.zip`;
-      return new Response(fromHex(data) as BodyInit, {
+      return new Response(pgHexToBytes(data) as BodyInit, {
         headers: { ...cors, "Content-Type": "application/zip", "Content-Disposition": `attachment; filename="${name}"` },
       });
     }
@@ -64,13 +58,17 @@ Deno.serve(async (req) => {
     const asOf = asOfDate.toISOString();
 
     // The generated type marks p_scope_tag as a non-null string; null means "all computers".
-    const { data: report, error } = await asUser.rpc("audit_report_data", { p_tenant_id: tenantId, p_as_of: asOf, p_scope_tag: scopeTag as unknown as string });
-    if (error) failure(error);
+    let report: unknown;
+    {
+      const call = await asUser.rpc("audit_report_data", { p_tenant_id: tenantId, p_as_of: asOf, p_scope_tag: scopeTag as unknown as string });
+      if (call.error) failure(call.error);
+      report = call.data;
+    }
     const { data: tenant } = await admin.from("tenants").select("id, name").eq("id", tenantId).maybeSingle();
     if (!tenant) throw new HttpError(404, "Tenant not found");
 
     const reportId = crypto.randomUUID();
-    const evidence = await buildEvidence(report as unknown as ReportData, {
+    const evidence = await buildEvidence(report as ReportData, {
       reportId,
       tenant: { id: tenant.id, name: tenant.name },
       asOf,
@@ -79,8 +77,10 @@ Deno.serve(async (req) => {
       scopeTag,
       appVersion: Deno.env.get("APP_TAG") || "dev",
     });
+    report = null; // the big JSON is not needed any more
+    if (contentTooBig(evidence.files)) throw new HttpError(413, TOO_BIG);
     const archive = zipEvidence(evidence.files, evidence.manifestBytes);
-    if (archive.length > MAX_ARCHIVE_BYTES) throw new HttpError(413, "The package is bigger than 25 MB. Narrow it with a scope tag.");
+    if (archive.length > MAX_ARCHIVE_BYTES) throw new HttpError(413, TOO_BIG);
 
     const { data: id, error: saveError } = await admin.rpc("record_audit_report", {
       p_tenant_id: tenantId,
@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
       p_scope_tag: scopeTag as unknown as string,
       p_manifest: evidence.manifest as never,
       p_manifest_sha256: evidence.manifestSha256,
-      p_archive: toHex(archive),
+      p_archive: bytesToPgHex(archive),
       p_users_masked: evidence.manifest.users_masked,
       p_generated_by: auth.user.id,
     });

@@ -27,11 +27,14 @@ function copyHash(hash: string) {
   );
 }
 
-async function download(id: string) {
+async function download(id: string, onBusy?: (busy: boolean) => void) {
+  onBusy?.(true);
   try {
     await downloadAuditReport(id);
   } catch (error) {
     toast.error(error instanceof Error ? error.message : "Download failed");
+  } finally {
+    onBusy?.(false);
   }
 }
 
@@ -42,6 +45,7 @@ export function ReportsPage() {
   const [asOf, setAsOf] = useState(localNow);
   const [scopeTag, setScopeTag] = useState("");
   const [busy, setBusy] = useState(false);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const reports = useLoad(`reports:${tenantId}`, () => (tenantId ? fetchAuditReports(tenantId) : Promise.resolve([])));
   const tags = useLoad(`report-tags:${tenantId}`, () => (tenantId && canGenerate ? fetchScopeTags(tenantId) : Promise.resolve([])));
 
@@ -131,8 +135,8 @@ export function ReportsPage() {
                 </TableCell>
                 {canGenerate ? (
                   <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => void download(r.id)}>
-                      <Download aria-hidden="true" />
+                    <Button variant="outline" size="sm" disabled={downloading === r.id} onClick={() => void download(r.id, (b) => setDownloading(b ? r.id : null))}>
+                      {downloading === r.id ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Download aria-hidden="true" />}
                       Download
                     </Button>
                   </TableCell>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildEvidence, toCsv, zipEvidence, type ReportData } from "./evidence.ts";
+import { buildEvidence, bytesToPgHex, contentTooBig, pgHexToBytes, toCsv, type ReportData } from "./evidence.ts";
 
 const data: ReportData = {
   computers: [{ hostname: "A", sophos_endpoint_id: "e1", platform: "windows", associated_user: "x@y.z", scope_tags: ["pci", "prod"] }],
@@ -45,8 +45,27 @@ describe("evidence package", () => {
     expect(e.manifest).toMatchObject({ report_id: "r1", generated_by: "admin@example.com", scope_tag: null, app_version: "dev", users_masked: false });
   });
 
-  it("download again is identical", async () => {
-    const e = await buildEvidence(data, meta);
-    expect(zipEvidence(e.files, e.manifestBytes)).toEqual(zipEvidence(e.files, e.manifestBytes));
+  it("round-trips bytea hex, including 0x00, 0xff and empty", () => {
+    const random = crypto.getRandomValues(new Uint8Array(1000));
+    random.set([0, 255, 0, 255]);
+    expect(pgHexToBytes(bytesToPgHex(random))).toEqual(random);
+    expect(bytesToPgHex(new Uint8Array())).toBe("\\x");
+    expect(pgHexToBytes("\\x")).toEqual(new Uint8Array());
+    expect(bytesToPgHex(new Uint8Array([0, 255, 16]))).toBe("\\x00ff10");
+    expect(pgHexToBytes("\\x00FF10")).toEqual(new Uint8Array([0, 255, 16]));
+  });
+
+  it("encodes 5 MB without per-byte strings", () => {
+    const big = new Uint8Array(5 * 1024 * 1024).fill(171);
+    const hex = bytesToPgHex(big);
+    expect(hex.length).toBe(2 + big.length * 2);
+    expect(hex.slice(0, 6)).toBe("\\xabab");
+    expect(pgHexToBytes(hex).length).toBe(big.length);
+  });
+
+  it("flags an oversize package before it is zipped", () => {
+    const file = (n: number) => ({ name: "x", bytes: new Uint8Array(n) });
+    expect(contentTooBig([file(60), file(40)], 100)).toBe(false);
+    expect(contentTooBig([file(60), file(41)], 100)).toBe(true);
   });
 });

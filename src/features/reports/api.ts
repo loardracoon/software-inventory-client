@@ -35,5 +35,6 @@ export async function downloadAuditReport(reportId: string): Promise<void> {
   const url = URL.createObjectURL(await response.blob());
   const link = Object.assign(document.createElement("a"), { href: url, download: name });
   link.click();
-  URL.revokeObjectURL(url);
+  // Safari and older Firefox can cancel the download if the URL is revoked at once.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

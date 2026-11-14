@@ -830,6 +830,19 @@ describe("Reports", () => {
     expect(reports.downloadAuditReport).toHaveBeenCalledWith("r1");
   });
 
+  it("disables Download while the request runs", async () => {
+    const user = userEvent.setup();
+    let finish: () => void = () => {};
+    vi.mocked(reports.fetchAuditReports).mockResolvedValue([report]);
+    vi.mocked(reports.downloadAuditReport).mockImplementationOnce(() => new Promise<void>((resolve) => (finish = resolve)));
+    renderAt("/reports", "/reports", <ReportsPage />, "admin");
+    await user.click(await screen.findByRole("button", { name: "Download" }));
+    expect(screen.getByRole("button", { name: "Download" })).toBeDisabled();
+    finish();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Download" })).toBeEnabled());
+    expect(reports.downloadAuditReport).toHaveBeenCalledTimes(1);
+  });
+
   it("shows viewers the table but no form and no download", async () => {
     vi.mocked(reports.fetchAuditReports).mockResolvedValue([report]);
     renderAt("/reports", "/reports", <ReportsPage />, "viewer");

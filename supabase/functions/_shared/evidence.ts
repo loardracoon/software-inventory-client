@@ -1,8 +1,6 @@
 // Evidence package for auditors: CSV + JSON files, a manifest with SHA-256 per file, and a reproducible ZIP.
 // Runtime-neutral (Deno Edge Function and Vitest).
 
-import { zipSync } from "npm:fflate@0.8.3";
-
 export type ReportData = {
   computers: Record<string, unknown>[];
   software: Record<string, unknown>[];
@@ -104,10 +102,32 @@ export async function buildEvidence(
   return { files: [...content, { name: "manifest.json", bytes: manifestBytes }], manifest, manifestBytes, manifestSha256: await sha256Hex(manifestBytes) };
 }
 
-// The mtime of every entry is the generation time (from the manifest), so the same input gives the same bytes.
-export function zipEvidence(files: EvidenceFile[], manifestBytes: Uint8Array): Uint8Array {
-  const entries: Record<string, Uint8Array> = {};
-  for (const f of files) entries[f.name] = f.name === "manifest.json" ? manifestBytes : f.bytes;
-  const generatedAt = (JSON.parse(new TextDecoder().decode(manifestBytes)) as Manifest).generated_at;
-  return zipSync(entries, { mtime: new Date(generatedAt) });
+// Largest uncompressed package we build in memory (the worker has 256 MB); a ZIP over 25 MB is refused separately.
+export const MAX_CONTENT_BYTES = 60 * 1024 * 1024;
+
+export function contentTooBig(files: EvidenceFile[], limit = MAX_CONTENT_BYTES): boolean {
+  return files.reduce((sum, f) => sum + f.bytes.length, 0) > limit;
+}
+
+const HEX = new Uint8Array(16).map((_, i) => "0123456789abcdef".charCodeAt(i));
+
+// bytea as PostgREST text ("\\x" + hex), built without per-byte strings (one allocation, one decode).
+export function bytesToPgHex(bytes: Uint8Array): string {
+  const out = new Uint8Array(2 + bytes.length * 2);
+  out[0] = 0x5c;
+  out[1] = 0x78;
+  for (let i = 0, o = 2; i < bytes.length; i++) {
+    out[o++] = HEX[bytes[i] >> 4];
+    out[o++] = HEX[bytes[i] & 15];
+  }
+  return new TextDecoder().decode(out);
+}
+
+const nibble = (code: number) => (code <= 57 ? code - 48 : (code | 32) - 87);
+
+export function pgHexToBytes(value: string): Uint8Array {
+  const start = value.startsWith("\\x") ? 2 : 0;
+  const out = new Uint8Array((value.length - start) >> 1);
+  for (let i = 0, c = start; i < out.length; i++, c += 2) out[i] = (nibble(value.charCodeAt(c)) << 4) | nibble(value.charCodeAt(c + 1));
+  return out;
 }
