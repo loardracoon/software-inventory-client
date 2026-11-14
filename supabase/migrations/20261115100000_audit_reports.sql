@@ -9,7 +9,8 @@ create table public.audit_reports (
   tenant_id uuid not null references public.tenants (id) on delete restrict,
   as_of timestamptz not null,
   scope_tag text,
-  generated_by uuid references auth.users (id) on delete set null,
+  -- No foreign key: the actor id stays when a user is removed (SET NULL is an update and the no-change trigger would refuse it).
+  generated_by uuid,
   generated_at timestamptz not null default now(),
   manifest jsonb not null,
   manifest_sha256 text not null,
@@ -75,7 +76,7 @@ begin
         and (p_scope_tag is null or p_scope_tag = any (l.scope_tags))
     ),
     soft as (
-      select c.hostname, i.computer_id, i.title_id, coalesce(i.version, '') as version, t.kind, t.source, t.canonical_name, t.vendor,
+      select c.hostname, c.platform, i.computer_id, i.title_id, coalesce(i.version, '') as version, t.kind, t.source, t.canonical_name, t.vendor,
         nullif(concat_ws(' / ', tc.level1_name, tc.level2_name), '') as category, tc.attention_level,
         case when v_pol is not null then vp.class end as policy_class, i.valid_from
       from public.installations i
@@ -85,15 +86,19 @@ begin
       left join public.title_version_policy vp on vp.tenant_id = p_tenant_id and vp.title_id = i.title_id and vp.version = coalesce(i.version, '')
       where i.valid_from <= p_as_of and (i.valid_to is null or i.valid_to > p_as_of)
     ),
+    -- One row per (title, version, platform), so each vulnerability row joins this small set instead of rescanning installations.
+    present as (
+      select s.title_id, s.version, s.platform::text as platform, count(distinct s.computer_id) as computers from soft s group by 1, 2, 3
+    ),
     vulns as (
       select t.canonical_name, v.version, v.vuln_id, vc.severity, vc.cvss_score, vc.kev_added is not null as kev, vc.kev_due, vc.epss,
-        v.fixed_in, v.first_seen_at,
-        (select count(distinct s.computer_id) from soft s where s.title_id = v.title_id and s.version = v.version) as computers
+        v.fixed_in, v.first_seen_at, sum(pr.computers)::bigint as computers
       from public.title_version_vulns v
+      join present pr on pr.title_id = v.title_id and pr.version = v.version and (v.platforms is null or pr.platform = any (v.platforms))
       join public.vuln_cache vc on vc.product_key = v.product_key and vc.vuln_id = v.vuln_id
       join public.software_titles t on t.id = v.title_id
       where v.tenant_id = p_tenant_id and not v.uncertain
-        and exists (select 1 from soft s where s.title_id = v.title_id and s.version = v.version)
+      group by t.canonical_name, v.title_id, v.version, v.vuln_id, vc.severity, vc.cvss_score, vc.kev_added, vc.kev_due, vc.epss, v.fixed_in, v.first_seen_at
     )
     select jsonb_build_object(
       'computers', coalesce((select jsonb_agg(to_jsonb(c) - 'id' order by c.hostname, c.id) from comp c), '[]'::jsonb),

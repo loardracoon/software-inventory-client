@@ -6,7 +6,7 @@ select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.software_titles, public.sophos_connection, public.audit_log cascade;
 delete from public.profiles;
 
-select plan(23);
+select plan(27);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'first@example.com'),
@@ -26,11 +26,12 @@ insert into public.computers (id, tenant_id, sophos_endpoint_id, hostname, platf
   ('20000000-0000-0000-0000-0000000000a2', '10000000-0000-0000-0000-00000000000a', 'ep-2', 'C2', 'windows', 'bob', null, null, '{}', now() - interval '30 days', now() - interval '5 days'),
   ('20000000-0000-0000-0000-0000000000a3', '10000000-0000-0000-0000-00000000000a', 'ep-3', 'C3', 'windows', null, null, null, '{}', now() - interval '30 days', now() - interval '20 days'),
   ('20000000-0000-0000-0000-0000000000a4', '10000000-0000-0000-0000-00000000000a', 'ep-4', 'C4', 'windows', null, null, null, '{}', now() - interval '2 days', null),
-  ('20000000-0000-0000-0000-0000000000a5', '10000000-0000-0000-0000-00000000000a', 'ep-5', 'C5', 'windows', null, null, null, '{}', now() - interval '30 days', null);
+  ('20000000-0000-0000-0000-0000000000a5', '10000000-0000-0000-0000-00000000000a', 'ep-5', 'C5', 'macos', null, null, null, '{}', now() - interval '30 days', null);
 insert into public.software_titles (id, kind, source, match_key, canonical_name, vendor) values
   ('30000000-0000-0000-0000-000000000001', 'program', 'programs', '7-zip|igor pavlov', '7-Zip', 'Igor Pavlov'),
   ('30000000-0000-0000-0000-000000000002', 'program', 'programs', 'old tool|acme', 'Old Tool', 'Acme'),
   ('30000000-0000-0000-0000-000000000003', 'program', 'programs', 'new tool|acme', 'New Tool', 'Acme');
+insert into public.software_titles (id, kind, source, match_key, canonical_name) values ('30000000-0000-0000-0000-000000000004', 'program', 'programs', 'mac tool|acme', 'Mac Tool');
 insert into public.snapshots (tenant_id, computer_id, domain, query_name, query_version, collected_at, row_count, content_hash, applied_at) values
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a1', 'programs', 'inv.programs', 1, now() - interval '2 days', 1, 'h', now()),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a5', 'programs', 'inv.programs', 1, now() - interval '31 days', 1, 'h', now());
@@ -39,6 +40,8 @@ insert into public.installations (tenant_id, computer_id, title_id, domain, quer
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a2', '30000000-0000-0000-0000-000000000001', 'programs', 'inv.programs', '', '1', 'h', now() - interval '20 days', null),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a1', '30000000-0000-0000-0000-000000000002', 'programs', 'inv.programs', '', '1', 'h', now() - interval '20 days', now() - interval '15 days'),
   ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a1', '30000000-0000-0000-0000-000000000003', 'programs', 'inv.programs', '', '1', 'h', now() - interval '5 days', null);
+insert into public.installations (tenant_id, computer_id, title_id, domain, query_name, scope_key, version, row_hash, valid_from) values
+  ('10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a5', '30000000-0000-0000-0000-000000000004', 'programs', 'inv.programs', '', '1', 'h', now() - interval '20 days');
 insert into public.vuln_cache (product_key, vuln_id, severity, cvss_score, kev_added, kev_due, epss) values
   ('7-zip', 'CVE-2024-0001', 'HIGH', 8.1, current_date - 30, current_date + 5, 0.5),
   ('7-zip', 'CVE-2024-0002', 'LOW', 2.0, null, null, null),
@@ -49,6 +52,9 @@ insert into public.title_version_vulns (tenant_id, title_id, version, product_ke
   ('10000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000001', '1', '7-zip', 'CVE-2024-0002', true, null, gen_random_uuid()),
   ('10000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000002', '1', 'old-tool', 'CVE-2024-0003', false, null, gen_random_uuid()),
   ('10000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000003', '1', 'new-tool', 'CVE-2024-0004', false, null, gen_random_uuid());
+insert into public.vuln_cache (product_key, vuln_id, severity) values ('mac-tool', 'CVE-2024-0005', 'LOW');
+insert into public.title_version_vulns (tenant_id, title_id, version, product_key, vuln_id, platforms, run_id) values
+  ('10000000-0000-0000-0000-00000000000a', '30000000-0000-0000-0000-000000000004', '1', 'mac-tool', 'CVE-2024-0005', '{windows}', gen_random_uuid());
 insert into public.policies (id, tenant_id, version, status, published_at) values
   ('40000000-0000-0000-0000-00000000000a', '10000000-0000-0000-0000-00000000000a', 1, 'published', now());
 insert into public.policy_rules (policy_id, position, name, class, kinds, owner, review_by) values
@@ -74,7 +80,7 @@ select is((pg_temp.rep() ->> 'users_masked')::boolean, false, 'operator: users_m
 select results_eq($$select e ->> 'hostname' from jsonb_array_elements(pg_temp.rep('pci') -> 'computers') e$$,
   $$values ('C1')$$, 'scope filter');
 select results_eq($$select e ->> 'canonical_name' || ' ' || (e ->> 'hostname') from jsonb_array_elements(pg_temp.rep() -> 'software') e order by 1$$,
-  $$values ('7-Zip C1'), ('7-Zip C2')$$, 'point in time: installations valid at the as-of date (ended before and started after are left out)');
+  $$values ('7-Zip C1'), ('7-Zip C2'), ('Mac Tool C5')$$, 'point in time: installations valid at the as-of date (ended before and started after are left out)');
 select is((select e ->> 'policy_class' from jsonb_array_elements(pg_temp.rep() -> 'software') e where e ->> 'hostname' = 'C1' and e ->> 'canonical_name' = '7-Zip'),
   'tolerated_app', 'software has the current policy class');
 select results_eq($$select pg_temp.cov('total'), pg_temp.cov('current'), pg_temp.cov('stale'), pg_temp.cov('never')$$,
@@ -83,6 +89,7 @@ select results_eq($$select e ->> 'vuln_id' || ' ' || (e ->> 'computers') || ' ' 
   $$values ('CVE-2024-0001 2 true')$$, 'vulnerabilities: certain matches of titles present at the date (not ended or new ones), with computer count');
 select results_eq($$select e ->> 'name' from jsonb_array_elements(pg_temp.rep() -> 'exceptions') e$$,
   $$values ('Tolerated tools')$$, 'exceptions come from the published policy');
+select is((select count(*)::int from jsonb_array_elements(pg_temp.rep() -> 'vulnerabilities') e where e ->> 'vuln_id' = 'CVE-2024-0005'), 0, 'a Windows-only vulnerability does not match a title installed only on macOS');
 select is(pg_temp.rep() -> 'policy' ->> 'version', '1', 'policy version');
 select is(jsonb_array_length(pg_temp.rep() -> 'policy' -> 'rules'), 2, 'policy rules in the export format');
 select matches(pg_temp.rep() ->> 'scope_statement', '^Computers managed by Sophos Central', 'scope statement default');
@@ -114,5 +121,12 @@ select is(public.get_audit_report_archive(pg_temp.rid()), '\x504b'::bytea, 'oper
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select is(public.get_audit_report_archive(pg_temp.rid()), null, 'another tenant gets null');
 
+reset role;
+select public.record_audit_report('10000000-0000-0000-0000-00000000000a', now(), null, '{}', 'def', '\x00'::bytea, false, '00000000-0000-0000-0000-00000000000b');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select lives_ok($$select public.remove_user('00000000-0000-0000-0000-00000000000b')$$, 'a user who generated a package can be removed');
+reset role;
+select is((select generated_by from public.audit_reports where manifest_sha256 = 'def'), '00000000-0000-0000-0000-00000000000b'::uuid, 'the report keeps generated_by');
+select is((select count(*)::int from public.audit_reports), 2, 'the report still exists');
 select * from finish();
 rollback;
