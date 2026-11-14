@@ -68,6 +68,8 @@ What `install.sh` does (it is safe to run again; it keeps the secrets it made):
 
 What runs: `db` (Postgres with pg_cron and Vault; the Vault key is kept in the `db-config` volume), `auth`, `rest`, `functions`, `kong` (the console and API gateway, the same image as K3S), `mailpit`, and `caddy`, the only published service (HTTPS with Let's Encrypt for a domain, plain HTTP for `--http-port`; it also gives the gateway the client address for the rate limits).
 
+`functions` stores evidence packages through `INTERNAL_REST_URL` (`http://rest:3000`, set for the `functions` service in `deploy/compose`, `deploy/vps` and `deploy/k3s/app/stack.yaml`): straight to PostgREST on the internal network, not through the gateway. The gateway limits REST request bodies to `RL_BODY_REST` (2 MB) and a package goes to the database as hex (twice the ZIP size), so through it every package over about 1 MB would fail. Without the variable (Supabase CLI, Supabase Cloud) the function uses `SUPABASE_URL` as before.
+
 | File in `deploy/compose` | What it is |
 | --- | --- |
 | `docker-compose.yml`, `Caddyfile` | The services; Caddy in front |
@@ -266,6 +268,20 @@ SAML SSO needs a Supabase project on the Pro plan and cannot run on the local st
 - The Reports page shows an **Overdue** badge, and the alert `review_overdue` ("Inventory review overdue since YYYY-MM-DD") is sent once per due date through the alert channels of Settings > Alerts.
 - **Scans > Schedule > Scope statement** is the text written into `scope.txt` of each package.
 - Each package and each review adds a row to the audit log (`audit_report`, `inventory_review`).
+
+Packages:
+
+- **Who**: tenant admins and operators generate and download. Viewers see the list and the hashes but cannot download, because a package contains user names; they ask an admin or operator for the file.
+- **Contents**: `computers.csv`, `software.csv`, `vulnerabilities.csv`, `exceptions.csv` (UTF-8 with BOM, CRLF), `coverage.json`, `policy.json`, `scope.txt`, `data.json` and `manifest.json`. Installations are as of the chosen date (it cannot be in the future); policy classes, vulnerabilities and computer context are as of generation.
+- **`users_masked`** in the manifest: `false` means the `associated_user` column holds the user names (the generator was an admin or operator, which is always the case today); `true` would mean the names were left out.
+- **Size limit**: at most 100,000 installations at the date (after the scope tag). A bigger request is refused at once with "The package is too big (N installations, limit 100,000). Narrow it with a scope tag." (HTTP 413). The files may also hold at most 60 MB uncompressed and the ZIP at most 25 MB (HTTP 413, "The package is too big (25 MB limit)"); nothing is stored then.
+- **Why 100,000** (measured 2026-11-14 on an isolated stack with the production functions image, worker memory 256 MB, synthetic data): 99,900 installations with long names: 3.1 s, ZIP 1.0 MB, 60 MB of files. 120,000 with short names: 2.6 s, ZIP 1.2 MB. 150,000: refused by the 60 MB file limit. 210,000 and more: the worker ran out of memory and the user saw only "Worker failed to respond due to a resource limit" (HTTP 546). 600,000 (2,000 computers x 300 programs): the SQL alone took 7.0 s of the 8 s `statement_timeout` of the `authenticated` role, then the worker ran out of memory. With the limit the 600,000 request gets the 413 in 0.3 s. Bigger tenants generate one package per scope tag.
+
+Verify a package (an auditor can do this without the app):
+
+1. Unzip it. `sha256sum manifest.json` must equal the SHA-256 shown in Reports (copy button) and the `manifest_sha256` of its `audit_report` row in the audit log. The ZIP itself is not hashed (only its content counts).
+2. For each entry of `files` in `manifest.json`: `sha256sum <name>` equals its `sha256`, the file size equals `bytes`, and for a CSV the data rows (without the header) equal `rows`.
+3. `report_id`, `tenant`, `as_of`, `generated_at`, `generated_by` and `scope_tag` in the manifest match the Reports row; `app_version` is the commit of the functions image that built it.
 
 ## Tests
 
