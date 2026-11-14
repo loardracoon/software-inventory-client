@@ -6,20 +6,22 @@ select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.audit_log cascade;
 delete from public.profiles;
 
-select plan(18);
+select plan(20);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'first@example.com'),
   ('00000000-0000-0000-0000-00000000000b', 'operator@example.com'),
   ('00000000-0000-0000-0000-00000000000c', 'viewer@example.com'),
-  ('00000000-0000-0000-0000-00000000000e', 'admin@example.com');
+  ('00000000-0000-0000-0000-00000000000e', 'admin@example.com'),
+  ('00000000-0000-0000-0000-00000000000f', 'admin-b@example.com');
 insert into public.tenants (id, sophos_tenant_id, name, id_type, created_at) values
   ('10000000-0000-0000-0000-00000000000a', 'sophos-a', 'Tenant A', 'partner', now() - interval '100 days'),
   ('10000000-0000-0000-0000-00000000000b', 'sophos-b', 'Tenant B', 'partner', now());
 insert into public.tenant_members (user_id, tenant_id, role) values
   ('00000000-0000-0000-0000-00000000000e', '10000000-0000-0000-0000-00000000000a', 'admin'),
   ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-00000000000a', 'operator'),
-  ('00000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a', 'viewer');
+  ('00000000-0000-0000-0000-00000000000c', '10000000-0000-0000-0000-00000000000a', 'viewer'),
+  ('00000000-0000-0000-0000-00000000000f', '10000000-0000-0000-0000-00000000000b', 'admin');
 insert into public.audit_reports (id, tenant_id, as_of, manifest, manifest_sha256, archive, users_masked, generated_at) values
   ('50000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-00000000000a', now(), '{}', 'h', '\x00', false, now() - interval '1 day'),
   ('50000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-00000000000a', now(), '{}', 'h', '\x00', false, now() - interval '8 days'),
@@ -65,6 +67,10 @@ select results_eq($$select last_reviewer, overdue, due_at::date = (now() + inter
   $$values ('admin@example.com', false, true)$$, 'after a review: not overdue, due in 90 days');
 select throws_ok($$update public.inventory_reviews set notes = 'x'$$, '42501', null, 'update is blocked');
 select throws_ok($$delete from public.inventory_reviews$$, '42501', null, 'delete is blocked');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000c');
+select is((select count(*)::int from public.inventory_reviews where tenant_id = '10000000-0000-0000-0000-00000000000a'), 1, 'a viewer of tenant A reads the review');
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
+select is((select count(*)::int from public.inventory_reviews where tenant_id = '10000000-0000-0000-0000-00000000000a'), 0, 'a member of tenant B reads no review of tenant A');
 
 reset role;
 select is((select count(*)::int from public.audit_log where action = 'inventory_review' and user_id = '00000000-0000-0000-0000-00000000000e'), 1, 'audit row written');

@@ -59,9 +59,24 @@ as $$
 declare
   v_stale integer;
   v_pol uuid;
+  v_rows bigint;
 begin
   if not exists (select 1 from public.my_tenant_roles() r where r.tenant_id = p_tenant_id and r.role in ('admin', 'operator')) then
     raise exception 'Only admins and operators can generate audit reports' using errcode = '42501';
+  end if;
+  if p_as_of > now() then
+    raise exception 'as_of cannot be in the future' using errcode = '22023';
+  end if;
+  -- The Edge Function holds the whole report in a 256 MB worker: refuse a big one before it is built
+  -- (measured limit and numbers: docs/operations.md > Audit evidence and reviews).
+  select count(*) into v_rows
+  from public.installations i
+  join public.computers k on k.id = i.computer_id
+  where i.tenant_id = p_tenant_id and k.created_at <= p_as_of and (k.retired_at is null or k.retired_at > p_as_of)
+    and (p_scope_tag is null or p_scope_tag = any (k.scope_tags))
+    and i.valid_from <= p_as_of and (i.valid_to is null or i.valid_to > p_as_of);
+  if v_rows > 100000 then
+    raise exception 'The package is too big (% installations, limit 100,000). Narrow it with a scope tag.', v_rows using errcode = '54000';
   end if;
   select coalesce(max(s.stale_after_days), 14) into v_stale from public.scan_settings s where s.tenant_id = p_tenant_id;
   select p.id into v_pol from public.policies p where p.tenant_id = p_tenant_id and p.status = 'published';
@@ -133,6 +148,22 @@ begin
 end;
 $$;
 
+-- Distinct scope tags in use (the optional filter of a package); a function because PostgREST returns at most 1000 computer rows.
+-- Security invoker: the computers policy limits it to the caller's tenants (admins and operators).
+create function public.scope_tags_in_use(p_tenant_id uuid default null)
+returns setof text
+language sql
+stable
+security invoker
+set search_path = ''
+as $$
+  select distinct t.tag
+  from public.computers c
+  cross join lateral unnest(c.scope_tags) as t(tag)
+  where p_tenant_id is null or c.tenant_id = p_tenant_id
+  order by 1;
+$$;
+
 -- p_generated_by: the user who asked for the package (the Edge Function runs as service_role, so auth.uid() is empty).
 create function public.record_audit_report(p_tenant_id uuid, p_as_of timestamptz, p_scope_tag text, p_manifest jsonb,
   p_manifest_sha256 text, p_archive bytea, p_users_masked boolean, p_generated_by uuid default null)
@@ -172,5 +203,7 @@ $$;
 revoke all on function public.audit_reports_block_change() from public, anon, authenticated;
 revoke all on function public.audit_report_data(uuid, timestamptz, text), public.get_audit_report_archive(uuid) from public, anon;
 grant execute on function public.audit_report_data(uuid, timestamptz, text), public.get_audit_report_archive(uuid) to authenticated;
+revoke all on function public.scope_tags_in_use(uuid) from public, anon;
+grant execute on function public.scope_tags_in_use(uuid) to authenticated;
 revoke all on function public.record_audit_report(uuid, timestamptz, text, jsonb, text, bytea, boolean, uuid) from public, anon, authenticated;
 grant execute on function public.record_audit_report(uuid, timestamptz, text, jsonb, text, bytea, boolean, uuid) to service_role;

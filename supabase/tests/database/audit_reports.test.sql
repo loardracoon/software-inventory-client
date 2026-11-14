@@ -6,7 +6,7 @@ select set_config('app.audit_purge', 'on', true);
 truncate public.tenants, public.software_titles, public.sophos_connection, public.audit_log cascade;
 delete from public.profiles;
 
-select plan(27);
+select plan(35);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'first@example.com'),
@@ -79,6 +79,14 @@ select is(pg_temp.rep() -> 'computers' -> 0 ->> 'associated_user', 'alice', 'ope
 select is((pg_temp.rep() ->> 'users_masked')::boolean, false, 'operator: users_masked = false');
 select results_eq($$select e ->> 'hostname' from jsonb_array_elements(pg_temp.rep('pci') -> 'computers') e$$,
   $$values ('C1')$$, 'scope filter');
+select results_eq($$select distinct e ->> 'hostname' from jsonb_array_elements(pg_temp.rep('pci') -> 'software') e$$,
+  $$values ('C1')$$, 'scope filter: software of in-scope computers only');
+select is((pg_temp.rep('pci') -> 'coverage' ->> 'total')::int, 1, 'scope filter: coverage counts in-scope computers only');
+select results_eq($$select e ->> 'vuln_id' || ' ' || (e ->> 'computers') from jsonb_array_elements(pg_temp.rep('pci') -> 'vulnerabilities') e$$,
+  $$values ('CVE-2024-0001 1')$$, 'scope filter: vulnerability computer count of in-scope computers only');
+select throws_ok($$select public.audit_report_data('10000000-0000-0000-0000-00000000000a', now() + interval '1 day')$$,
+  '22023', 'as_of cannot be in the future', 'as_of in the future is refused');
+select results_eq($$select public.scope_tags_in_use('10000000-0000-0000-0000-00000000000a')$$, $$values ('pci')$$, 'scope tags in use of the tenant');
 select results_eq($$select e ->> 'canonical_name' || ' ' || (e ->> 'hostname') from jsonb_array_elements(pg_temp.rep() -> 'software') e order by 1$$,
   $$values ('7-Zip C1'), ('7-Zip C2'), ('Mac Tool C5')$$, 'point in time: installations valid at the as-of date (ended before and started after are left out)');
 select is((select e ->> 'policy_class' from jsonb_array_elements(pg_temp.rep() -> 'software') e where e ->> 'hostname' = 'C1' and e ->> 'canonical_name' = '7-Zip'),
@@ -120,6 +128,8 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
 select is(public.get_audit_report_archive(pg_temp.rid()), '\x504b'::bytea, 'operator gets the archive');
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select is(public.get_audit_report_archive(pg_temp.rid()), null, 'another tenant gets null');
+select is((select count(*)::int from public.v_audit_reports where tenant_id = '10000000-0000-0000-0000-00000000000a'), 0, 'a member of tenant B lists no package of tenant A');
+select is((select count(*)::int from public.scope_tags_in_use()), 0, 'a member of tenant B gets no scope tag of tenant A');
 
 reset role;
 select public.record_audit_report('10000000-0000-0000-0000-00000000000a', now(), null, '{}', 'def', '\x00'::bytea, false, '00000000-0000-0000-0000-00000000000b');
@@ -128,5 +138,12 @@ select lives_ok($$select public.remove_user('00000000-0000-0000-0000-00000000000
 reset role;
 select is((select generated_by from public.audit_reports where manifest_sha256 = 'def'), '00000000-0000-0000-0000-00000000000b'::uuid, 'the report keeps generated_by');
 select is((select count(*)::int from public.audit_reports), 2, 'the report still exists');
+
+-- Size guard: more than 100,000 installations at the date is refused before the report is built.
+insert into public.installations (tenant_id, computer_id, title_id, domain, query_name, scope_key, version, row_hash, valid_from)
+select '10000000-0000-0000-0000-00000000000a', '20000000-0000-0000-0000-0000000000a1', '30000000-0000-0000-0000-000000000001', 'programs', 'inv.programs', 'k' || g, '1', 'h', now() - interval '20 days'
+from generate_series(1, 100000) g;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000a');
+select throws_ok($$select pg_temp.rep()$$, '54000', null, 'more than 100,000 installations: refused with a clear error');
 select * from finish();
 rollback;

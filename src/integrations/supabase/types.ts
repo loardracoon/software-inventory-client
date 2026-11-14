@@ -2529,6 +2529,9 @@ isOneToOne: false
 "schedule_retries":
 { Args: { "p_later_at"?: string,"p_next_at": string,"p_tenant_id": string }; Returns: number
                            },
+"scope_tags_in_use":
+{ Args: { "p_tenant_id"?: string }; Returns: string[]
+                           },
 "search_titles":
 { Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_policy"?: (Database["public"]['Enums']["policy_class"])[],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string,"p_vuln"?: string }; Returns: {
               "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"max_cvss": number,"method": string,"mixed_versions": boolean,"origin": string,"policy_class": Database["public"]['Enums']["policy_class"],"policy_rule_lineage_id": string,"policy_rule_name": string,"product_key": string,"source": string,"spellings": number,"title_id": string,"total_count": number,"vendor": string,"versions": number,"vuln_top": Json,"vulns": number,"vulns_critical": number,"vulns_high": number,"vulns_kev": number,"vulns_low": number,"vulns_medium": number,"vulns_possible": number
