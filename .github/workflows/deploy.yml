@@ -81,6 +81,7 @@ jobs:
           context: .
           file: deploy/k3s/functions.Dockerfile
           push: true
+          build-args: APP_TAG=${{ github.sha }}
           tags: ghcr.io/${{ github.repository }}-functions:${{ github.sha }}
 
       - name: Migrate image

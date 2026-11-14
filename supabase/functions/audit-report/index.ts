@@ -4,6 +4,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { adminClient, corsHeaders, errorMessage, HttpError } from "../_shared/edge.ts";
 import { buildEvidence, bytesToPgHex, contentTooBig, pgHexToBytes, type ReportData } from "../_shared/evidence.ts";
+import { storeReport } from "./store.ts";
 import { zipEvidence } from "./zip.ts";
 
 const MAX_ARCHIVE_BYTES = 25 * 1024 * 1024;
@@ -15,6 +16,8 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
 
 function failure(error: { code?: string; message: string }): never {
   if (error.code === "42501") throw new HttpError(403, "Only admins and operators can do this");
+  if (error.code === "22023") throw new HttpError(400, error.message);
+  if (error.code === "54000") throw new HttpError(413, error.message);
   throw new Error(error.message);
 }
 
@@ -82,16 +85,23 @@ Deno.serve(async (req) => {
     const archive = zipEvidence(evidence.files, evidence.manifestBytes);
     if (archive.length > MAX_ARCHIVE_BYTES) throw new HttpError(413, TOO_BIG);
 
-    const { data: id, error: saveError } = await admin.rpc("record_audit_report", {
-      p_tenant_id: tenantId,
-      p_as_of: asOf,
-      p_scope_tag: scopeTag as unknown as string,
-      p_manifest: evidence.manifest as never,
-      p_manifest_sha256: evidence.manifestSha256,
-      p_archive: bytesToPgHex(archive),
-      p_users_masked: evidence.manifest.users_masked,
-      p_generated_by: auth.user.id,
-    });
+    const { data: id, error: saveError } = await storeReport(
+      {
+        p_tenant_id: tenantId,
+        p_as_of: asOf,
+        p_scope_tag: scopeTag,
+        p_manifest: evidence.manifest,
+        p_manifest_sha256: evidence.manifestSha256,
+        p_archive: bytesToPgHex(archive),
+        p_users_masked: evidence.manifest.users_masked,
+        p_generated_by: auth.user.id,
+      },
+      {
+        restUrl: Deno.env.get("INTERNAL_REST_URL") || undefined,
+        serviceKey: Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+        rpc: (args) => admin.rpc("record_audit_report", args),
+      },
+    );
     if (saveError) throw new Error(`Could not store the package: ${saveError.message}`);
     return reply({ report_id: id, manifest_sha256: evidence.manifestSha256 });
   } catch (error) {

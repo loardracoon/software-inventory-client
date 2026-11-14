@@ -99,6 +99,8 @@ services:
     environment:
       <<: *jwt
       SUPABASE_URL: http://kong:8000
+      # Large writes (evidence packages) skip the gateway's body limit. docs/operations.md › Audit evidence and reviews.
+      INTERNAL_REST_URL: http://rest:3000
       NO_VERIFY_JWT: sync-computers,probe-capabilities,collector,hub-sync,alerts
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
