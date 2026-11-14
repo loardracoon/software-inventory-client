@@ -38,3 +38,19 @@ export async function downloadAuditReport(reportId: string): Promise<void> {
   // Safari and older Firefox can cancel the download if the URL is revoked at once.
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
+
+export type InventoryReviewRow = Database["public"]["Tables"]["inventory_reviews"]["Row"];
+export type ReviewStatus = Database["public"]["Functions"]["inventory_review_status"]["Returns"][number];
+export type ReviewOutcome = "accurate" | "accurate_with_changes";
+
+export async function fetchReviewStatus(tenantId: string): Promise<ReviewStatus | null> {
+  return (orThrow(await db().rpc("inventory_review_status", { p_tenant_id: tenantId })) ?? [])[0] ?? null;
+}
+
+export async function fetchInventoryReviews(tenantId: string): Promise<InventoryReviewRow[]> {
+  return orThrow(await db().from("inventory_reviews").select("*").eq("tenant_id", tenantId).order("reviewed_at", { ascending: false }).limit(200)) ?? [];
+}
+
+export async function recordInventoryReview(input: { reportId: string; outcome: ReviewOutcome; statement: string; notes: string | null }): Promise<string> {
+  return orThrow(await db().rpc("record_inventory_review", { p_report_id: input.reportId, p_outcome: input.outcome, p_statement: input.statement, p_notes: input.notes ?? undefined })) as string;
+}

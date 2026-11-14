@@ -47,6 +47,9 @@ vi.mock("@/features/reports/api", () => ({
   fetchScopeTags: vi.fn(async () => ["pci"]),
   generateAuditReport: vi.fn(async () => ({ report_id: "r1", manifest_sha256: "f".repeat(64) })),
   downloadAuditReport: vi.fn(async () => {}),
+  fetchReviewStatus: vi.fn(async () => ({ last_reviewed_at: null, last_reviewer: null, due_at: "2026-02-01T00:00:00Z", overdue: true })),
+  fetchInventoryReviews: vi.fn(async () => []),
+  recordInventoryReview: vi.fn(async () => "rv1"),
 }));
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn(), info: vi.fn() } }));
 
@@ -627,6 +630,8 @@ describe("Scans", () => {
     provider: "live_endpoint_search",
     data_lake_inventory: false,
     stale_after_days: 30,
+    review_every_days: 90,
+    scope_statement: "Scope text",
     updated_at: "2026-10-26T12:00:00Z",
     updated_by: null,
   } as api.ScanSettings;
@@ -658,6 +663,21 @@ describe("Scans", () => {
     await user.type(days, "45");
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ stale_after_days: 45 })));
+  });
+
+  it("saves the review cadence and the scope statement", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
+    renderAt("/scans", "/scans", <ScansPage />);
+    const days = await screen.findByLabelText("Review every (days)");
+    expect(days).toHaveValue(90);
+    await user.clear(days);
+    await user.type(days, "30");
+    const scope = screen.getByLabelText("Scope statement");
+    await user.clear(scope);
+    await user.type(scope, "New scope");
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ review_every_days: 30, scope_statement: "New scope" })));
   });
 
   it("has a Data Lake switch that saves, and the provider select has no Data Lake option", async () => {
@@ -850,5 +870,36 @@ describe("Reports", () => {
     expect(screen.queryByRole("button", { name: "Generate package" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Download" })).toBeNull();
     expect(screen.getByText(/only admins and operators can download/i)).toBeInTheDocument();
+  });
+});
+
+describe("Inventory review", () => {
+  const recent = { id: "r1", tenant_id: "t1", as_of: "2026-11-01T12:00:00Z", scope_tag: null, generated_by: "u1", generated_by_email: "admin@example.com", generated_at: new Date(Date.now() - 86_400_000).toISOString(), manifest: {}, manifest_sha256: "abcdef0123456789".repeat(4), archive_bytes: 10, users_masked: false };
+  const old = { ...recent, id: "r2", generated_at: new Date(Date.now() - 10 * 86_400_000).toISOString(), manifest_sha256: "0".repeat(64) };
+
+  it("shows the last review, the due date and an Overdue badge", async () => {
+    vi.mocked(reports.fetchReviewStatus).mockResolvedValue({ last_reviewed_at: "2026-08-01T12:00:00Z", last_reviewer: "ana@example.com", due_at: "2026-10-30T12:00:00Z", overdue: true });
+    vi.mocked(reports.fetchInventoryReviews).mockResolvedValue([{ id: "v1", tenant_id: "t1", report_id: "r1", reviewed_by: "u1", reviewer_email: "ana@example.com", reviewed_at: "2026-08-01T12:00:00Z", outcome: "accurate_with_changes", statement: "S".repeat(30), notes: null }]);
+    renderAt("/reports", "/reports", <ReportsPage />, "viewer");
+    expect(await screen.findByText("Overdue")).toBeInTheDocument();
+    expect(screen.getAllByText(/ana@example.com/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Accurate with changes").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Record review" })).toBeNull();
+  });
+
+  it("lets an admin record a review against a package of the last 7 days", async () => {
+    const user = userEvent.setup();
+    vi.mocked(reports.fetchAuditReports).mockResolvedValue([old, recent]);
+    renderAt("/reports", "/reports", <ReportsPage />, "admin");
+    await user.click(await screen.findByRole("button", { name: "Record review" }));
+    const select = await screen.findByLabelText("Evidence package");
+    expect(within(select).getAllByRole("option")).toHaveLength(1);
+    expect(screen.getByLabelText("Statement")).toHaveValue("I reviewed the inventory in the attached evidence package and confirm it reflects the assets in scope.");
+    await user.click(screen.getByLabelText("Accurate with changes"));
+    await user.type(screen.getByLabelText("Notes (optional)"), "Retired two laptops");
+    await user.click(screen.getByRole("button", { name: "Save review" }));
+    await waitFor(() =>
+      expect(reports.recordInventoryReview).toHaveBeenCalledWith({ reportId: "r1", outcome: "accurate_with_changes", statement: expect.stringContaining("I reviewed the inventory"), notes: "Retired two laptops" }),
+    );
   });
 });

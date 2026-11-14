@@ -248,6 +248,19 @@ function ScheduleForm({ settings, readOnly, onSaved }: { settings: ScanSettings;
         <Field label="Stale after (days)" htmlFor="s-stale">
           <Input id="s-stale" type="number" min={1} max={365} value={values.stale_after_days} onChange={num("stale_after_days")} required />
         </Field>
+        <Field label="Review every (days)" htmlFor="s-review">
+          <Input id="s-review" type="number" min={7} max={366} value={values.review_every_days} onChange={num("review_every_days")} required />
+        </Field>
+        <Field label="Scope statement" htmlFor="s-scope" className="sm:col-span-2 lg:col-span-4">
+          <textarea
+            id="s-scope"
+            rows={3}
+            maxLength={2000}
+            value={values.scope_statement}
+            onChange={(e) => set("scope_statement", e.target.value)}
+            className="w-full min-w-0 rounded-sm border-[1.5px] border-input bg-surface-raised px-3 py-2 text-[15px] text-text-body focus-visible:border-action focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:outline-none"
+          />
+        </Field>
         <Field label="Daily reserve (%)" htmlFor="s-reserve">
           <Input id="s-reserve" type="number" min={0} max={90} value={values.reserve_pct} onChange={num("reserve_pct")} required />
         </Field>

@@ -348,7 +348,7 @@ export async function fetchScanSettings(tenantId: string): Promise<ScanSettings 
 
 const EDITABLE_SETTINGS = [
   "cycle_weekday", "cycle_time", "retry_time", "timezone", "batch_size", "max_active_runs", "runs_per_minute",
-  "daily_run_limit", "reserve_pct", "run_grace_minutes", "provider", "data_lake_inventory", "stale_after_days",
+  "daily_run_limit", "reserve_pct", "run_grace_minutes", "provider", "data_lake_inventory", "stale_after_days", "review_every_days", "scope_statement",
 ] as const;
 
 // Only the editable columns; updated_at and updated_by are set by the database trigger.

@@ -70,7 +70,7 @@ export function AlertsCard() {
       </div>
       <p className="m-0 text-sm text-text-muted">
         A webhook (Teams, Slack or any JSON endpoint) and/or an email through Resend when a cycle closes below the coverage
-        threshold, a query returns an error, or the collector stops running. The webhook URL and the Resend key are stored
+        threshold, a query returns an error, the collector stops running, or the inventory review is overdue. The webhook URL and the Resend key are stored
         encrypted in Supabase Vault and never shown again.
       </p>
       {status.loading && !s ? <Skeleton className="h-24 w-full" /> : null}
@@ -89,7 +89,7 @@ export function AlertsCard() {
           </dd>
           <dt className="text-text-muted">Fires when</dt>
           <dd className="m-0 text-text-strong">
-            coverage below {s.coverage_threshold}% · collector silent for {s.stale_minutes} min · query errors
+            coverage below {s.coverage_threshold}% · collector silent for {s.stale_minutes} min · query errors · inventory review overdue
           </dd>
           <dt className="text-text-muted">Delivery</dt>
           <dd className="m-0 text-text-strong">

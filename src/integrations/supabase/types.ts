@@ -601,6 +601,44 @@ isOneToOne: false
       referencedColumns: ["title_id"]
     }
                   ]
+                },"inventory_reviews": {
+                  Row: {
+                    "id": string,"notes": string | null,"outcome": string,"report_id": string,"reviewed_at": string,"reviewed_by": string,"reviewer_email": string,"statement": string,"tenant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "id"?: string,"notes"?: string | null,"outcome": string,"report_id": string,"reviewed_at"?: string,"reviewed_by": string,"reviewer_email": string,"statement": string,"tenant_id": string
+                  }
+                  Update: {
+                    "id"?: string,"notes"?: string | null,"outcome"?: string,"report_id"?: string,"reviewed_at"?: string,"reviewed_by"?: string,"reviewer_email"?: string,"statement"?: string,"tenant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "inventory_reviews_report_id_fkey"
+      columns: ["report_id"]
+isOneToOne: false
+      referencedRelation: "audit_reports"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inventory_reviews_report_id_fkey"
+      columns: ["report_id"]
+isOneToOne: false
+      referencedRelation: "v_audit_reports"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inventory_reviews_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "inventory_reviews_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"local_overrides": {
                   Row: {
                     "attention_level": Database["public"]['Enums']["attention_level"] | null,"category_slug": string,"created_at": string,"created_by": string | null,"note": string | null,"title_id": string
@@ -1093,14 +1131,14 @@ isOneToOne: false
                   ]
                 },"scan_settings": {
                   Row: {
-                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"run_grace_minutes": number,"runs_per_minute": number,"scope_statement": string,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
+                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"review_every_days": number,"run_grace_minutes": number,"runs_per_minute": number,"scope_statement": string,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"review_every_days"?: number,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"review_every_days"?: number,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -2325,6 +2363,11 @@ isOneToOne: false
 "insert_cycle_tasks":
 { Args: { "p_computer_id"?: string,"p_cycle_id": string }; Returns: number
                            },
+"inventory_review_status":
+{ Args: { "p_tenant_id": string }; Returns: {
+              "due_at": string,"last_reviewed_at": string,"last_reviewer": string,"overdue": boolean
+            }[]
+                           },
 "invoke_alerts":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -2458,6 +2501,9 @@ isOneToOne: false
                            },
 "record_dispatch":
 { Args: { "p_endpoint_ids": (string)[],"p_priority": boolean,"p_provider": Database["public"]['Enums']["query_provider"],"p_query_id": string,"p_sophos_run_id": string,"p_task_ids": (string)[],"p_tenant_id": string }; Returns: string
+                           },
+"record_inventory_review":
+{ Args: { "p_notes"?: string,"p_outcome": string,"p_report_id": string,"p_statement": string }; Returns: string
                            },
 "refresh_skipped_tasks":
 { Args: { "p_tenant_id": string }; Returns: number

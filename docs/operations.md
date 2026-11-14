@@ -257,6 +257,16 @@ SAML SSO needs a Supabase project on the Pro plan and cannot run on the local st
    First check with a test login where the mapped attributes land (the identity data or `raw_user_meta_data.custom_claims`) and write the trigger against that.
 4. Then turn off email sign-ups so only SSO users get in.
 
+## Audit evidence and reviews
+
+**Reports** keeps evidence packages (never deleted). A tenant admin records the periodic inventory review there (PCI DSS 12.5.1, ISO 27001 A.5.9):
+
+- **Record review** needs a package of the same tenant generated in the last 7 days. It stores the admin email, the time, the outcome (accurate, accurate with changes), a statement and notes. Reviews cannot be changed or deleted.
+- **Scans > Schedule > Review every (days)** sets the cadence (default 90, from 7 to 366). The next review is due that many days after the last review (after the tenant creation date when there was none).
+- The Reports page shows an **Overdue** badge, and the alert `review_overdue` ("Inventory review overdue since YYYY-MM-DD") is sent once per due date through the alert channels of Settings > Alerts.
+- **Scans > Schedule > Scope statement** is the text written into `scope.txt` of each package.
+- Each package and each review adds a row to the audit log (`audit_report`, `inventory_review`).
+
 ## Tests
 
 | Command | What |

@@ -58,7 +58,8 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 | Vulnerabilities | CVEs per installed version with severity, CVSS, known exploited (KEV), EPSS, "fixed in" version and the OS they apply to; "may apply" when a version cannot be compared |
 | Policies | Firewall-style rule table with drag and drop, live preview, title tester, draft and publish, version history, documentation of exceptions, export and import |
 | Changes | Added, updated and removed software, policy class changes and new CVEs |
-| Alerts | Webhook and email: low collection coverage, query errors, a stopped collector, new unsanctioned software, known exploited CVEs |
+| Reports | Evidence packages for auditors (dated ZIP with a SHA-256 manifest), periodic inventory review recorded by a tenant admin against a recent package, overdue review alert |
+| Alerts | Webhook and email: low collection coverage, query errors, a stopped collector, new unsanctioned software, known exploited CVEs, overdue inventory review |
 | Access | Magic-link sign-in, roles (admin, operator, viewer), access by email or domain, invitations |
 | Protection | Rate limits on the gateway, sign-in and email (one configuration file) |
 

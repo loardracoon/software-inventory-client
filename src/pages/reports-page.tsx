@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorLine } from "@/components/shared/error-line";
 import { Field, NativeSelect } from "@/components/shared/filters";
 import { PageHeader } from "@/components/shared/page-header";
+import { InventoryReviewCard } from "@/features/reports/review-card";
 import { useCanEditContext } from "@/features/inventory/computer-context";
 import { downloadAuditReport, fetchAuditReports, fetchScopeTags, generateAuditReport } from "@/features/reports/api";
 import { useTenant } from "@/features/tenants/tenant-context";
@@ -103,6 +104,7 @@ export function ReportsPage() {
       ) : (
         <p className="m-0 text-sm text-text-muted">Only admins and operators can download packages, because they contain user names.</p>
       )}
+      {tenantId ? <InventoryReviewCard tenantId={tenantId} reports={reports.data ?? []} /> : null}
       {reports.error ? <ErrorLine message={reports.error} /> : null}
       {reports.data && reports.data.length === 0 ? (
         <EmptyState title="No packages yet" description="Generated packages appear here and are never deleted." />
