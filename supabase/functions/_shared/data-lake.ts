@@ -8,6 +8,8 @@ export const FUSION_GRAPHQL_URL = "https://api.taegis.sophos.com/graphql";
 // One inventory snapshot is written over a few minutes; rows this close to the newest belong to it.
 export const SNAPSHOT_SPREAD_MS = 600_000;
 export const HOSTS_PER_SEARCH = 20;
+// A host reports many patches, so its patchstate search takes fewer hosts.
+export const HOSTS_PER_PATCH_SEARCH = 10;
 export const MAX_SEARCH_ROWS = 10_000;
 
 const PAGE_SIZE = 1000;
@@ -55,6 +57,18 @@ export function softwareInfoQl(endpointIds: string[], w: SearchWindow): string {
     `from softwareinfo where normalizer = 'sophos-xdr-it-hygiene-ingestor' and host_id in (${hosts}) ` +
     `earliest='${w.earliest}' latest='${w.latest}' | fields host_id, time, product.name, product.version, ` +
     `product.vendor_name, product.uid, product.type_id, product.path, product.source, product.url_string, original_data`
+  );
+}
+
+export function patchStateQl(endpointIds: string[], w: SearchWindow): string {
+  if (endpointIds.length === 0 || endpointIds.length > HOSTS_PER_PATCH_SEARCH) {
+    throw new DataLakeError(`need 1 to ${HOSTS_PER_PATCH_SEARCH} endpoint ids, got ${endpointIds.length}`);
+  }
+  for (const id of endpointIds) if (!UUID.test(id)) throw new DataLakeError("endpoint id is not a UUID");
+  const hosts = endpointIds.map((id) => `'${id}'`).join(", ");
+  return (
+    `from patchstate where normalizer = 'sophos-xdr-it-hygiene-ingestor' and host_id in (${hosts}) ` +
+    `earliest='${w.earliest}' latest='${w.latest}' | fields host_id, time, kb_article.title, kb_article.install_time, kb_article.uid, original_data`
   );
 }
 
@@ -125,6 +139,26 @@ export function toExtensionRows(rows: DataLakeRow[]): RawRow[] {
       username: original(row).username ?? null,
       browser_type: typeof p.source === "string" ? p.source.toLowerCase() : null,
       update_url: p.url_string ?? null,
+    });
+  }
+  return out;
+}
+
+// install_time is epoch milliseconds or an ISO string; a row with no uid, title or KB has no identity.
+export function toPatchRows(rows: DataLakeRow[]): RawRow[] {
+  const out: RawRow[] = [];
+  for (const row of rows) {
+    const k = row.kb_article && typeof row.kb_article === "object" ? (row.kb_article as Record<string, unknown>) : {};
+    const title = str(k.title);
+    const kb = title?.match(/KB\d+/i)?.[0].toUpperCase() ?? null;
+    const uid = str(k.uid) ?? kb ?? title;
+    if (!uid) continue;
+    out.push({
+      uid,
+      kb,
+      title,
+      installed_at: isNum(k.install_time) ? new Date(k.install_time).toISOString() : str(k.install_time),
+      installed_by: str(original(row).InstalledBy),
     });
   }
   return out;

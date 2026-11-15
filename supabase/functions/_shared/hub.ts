@@ -77,6 +77,7 @@ export type HubVulnerability = {
   seq?: number;
 };
 
+export type EolPage = { items: { product_key: string; slug: string; seq: number; releases: unknown[] }[]; next_since: number; has_more: boolean };
 export type VulnerabilityPage = { items: HubVulnerability[]; next_seq: number; has_more: boolean };
 
 export type TitleSubmission = {
@@ -153,6 +154,19 @@ export class HubClient {
     }
     if (typeof page?.next_seq !== "number") throw new HubError(200, "/vulnerability-changes", "response has no next_seq");
     return { items: page.items ?? [], next_seq: page.next_seq, has_more: page.has_more === true };
+  }
+
+  // null = the Hub has no end-of-life feed yet (before phase H10).
+  async eolChanges(since: number, limit = 1000): Promise<EolPage | null> {
+    let page: Partial<EolPage>;
+    try {
+      page = (await this.request("GET", `/eol-changes?since=${since}&limit=${limit}`)) as Partial<EolPage>;
+    } catch (error) {
+      if (error instanceof HubError && error.status === 404) return null;
+      throw error;
+    }
+    if (typeof page?.next_since !== "number") throw new HubError(200, "/eol-changes", "response has no next_since");
+    return { items: page.items ?? [], next_since: page.next_since, has_more: page.has_more === true };
   }
 
   // Sends in batches of 500; returns how many titles were accepted and whether the OS families went with

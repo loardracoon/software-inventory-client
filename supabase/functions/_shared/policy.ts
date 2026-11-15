@@ -4,7 +4,7 @@
 // except that the app evaluates each installed version instead of the title's newest version.
 
 export type PolicyClass = "core_system" | "sanctioned_app" | "tolerated_app" | "unsanctioned_app";
-export type PolicyField = "vendor" | "name" | "category" | "subcategory" | "version" | "external_id" | "cvss" | "kev" | "epss";
+export type PolicyField = "vendor" | "name" | "category" | "subcategory" | "version" | "external_id" | "cvss" | "kev" | "epss" | "eol";
 export type PolicyOperator =
   "equals" | "not_equals" | "contains" | "not_contains" | "starts_with" | "ends_with" | "regex" | "in" | "not_in" | "gt" | "gte" | "lt" | "lte" | "between";
 export type RuleMatch = "all" | "any";
@@ -46,6 +46,8 @@ export type PolicyInput = {
   max_cvss?: number | null;
   kev?: boolean | null;
   max_epss?: number | null;
+  // Stage 3: the release of this installed version is end of life (no vendor support).
+  eol?: boolean | null;
 };
 
 export type Evaluation = {
@@ -86,6 +88,7 @@ export const FIELD_TYPE: Record<PolicyField, FieldType> = {
   cvss: "number",
   kev: "boolean",
   epss: "number",
+  eol: "boolean",
 };
 
 // Allowed values of the number fields.
@@ -109,6 +112,7 @@ export const FIELD_LABEL: Record<PolicyField, string> = {
   cvss: "Highest CVSS score",
   kev: "Known exploited (CISA KEV)",
   epss: "Highest EPSS probability",
+  eol: "End of life (no vendor support)",
 };
 
 export const OPERATOR_LABEL: Record<PolicyOperator, string> = {
@@ -201,6 +205,8 @@ export function fieldValue(input: PolicyInput, field: PolicyField): string {
       return input.kev ? "true" : "false";
     case "epss":
       return String(input.max_epss ?? 0);
+    case "eol":
+      return input.eol ? "true" : "false";
   }
 }
 

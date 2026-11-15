@@ -42,6 +42,15 @@ describe("HubClient", () => {
     expect(await old.client.vulnerabilityChanges(0)).toBeNull();
   });
 
+  it("reads a page of end-of-life changes; a Hub without the feed (404) gives null; next_since is required", async () => {
+    const item = { product_key: "os:windows", slug: "windows", seq: 7, releases: [{ name: "11-24h2-w", label: "11 24H2 (W)", is_eol: false, eol_from: "2026-10-13", latest_name: "10.0.26100" }] };
+    const { client, calls } = hub(() => json({ items: [item], next_since: 7, has_more: true }));
+    expect(await client.eolChanges(3)).toEqual({ items: [item], next_since: 7, has_more: true });
+    expect(calls[0].url.toString()).toBe("https://hub.example.com/functions/v1/eol-changes?since=3&limit=1000");
+    expect(await hub(() => json({ error: "Not found" }, 404)).client.eolChanges(0)).toBeNull();
+    await expect(hub(() => json({ items: [] })).client.eolChanges(0)).rejects.toThrow("next_since");
+  });
+
   it("sends only the six title fields, 500 per call, descriptions cut at 1,000 characters", async () => {
     const { client, calls } = hub(() => json({ ok: true }));
     const rows = Array.from({ length: 1201 }, (_, i) => ({

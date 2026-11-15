@@ -3,6 +3,7 @@
 //   1 pull   GET dictionary-changes since last_seq, one apply_dictionary_changes transaction per page
 //   1b vulns GET vulnerability-changes since vuln_last_seq, one apply_vulnerability_changes per page
 //            (Phase 10b; a Hub without the feed or a feed error does not fail the sync)
+//   1c eol   GET eol-changes since eol_last_seq, one apply_eol_changes per page (Stage 3; same tolerance)
 //   2 push   unsent hub_submissions to titles-submit with the OS families where each title is installed,
 //            and titles installed on an OS not sent yet; only when sharing is on
 //   3 status GET reclassification-requests for the open requests
@@ -35,6 +36,9 @@ export type HubSyncSummary = {
   vulnRemoved: number;
   vulnLastSeq: number | null;
   vulnError?: string;
+  eolPages: number;
+  eolUpserted: number;
+  eolError?: string;
 };
 
 // Settings (Vault) first; the HUB_URL / HUB_CLIENT_KEY secrets are a fallback. null = not configured.
@@ -62,6 +66,30 @@ export async function hubSyncDue(admin: SupabaseClient): Promise<boolean> {
   if (!data.share_unknown_titles || data.last_error) return false;
   const { count } = await admin.from("hub_submissions").select("id", { count: "exact", head: true }).is("sent_at", null);
   return (count ?? 0) > 0;
+}
+
+async function pullEol(admin: SupabaseClient, state: HubState, summary: HubSyncSummary, logs: LogBuffer, timeLeft: () => number) {
+  try {
+    const { data, error } = await admin.from("hub_connection").select("eol_last_seq").eq("id", 1).maybeSingle();
+    if (error) throw new Error(`Could not read the end-of-life sequence: ${error.message}`);
+    let since = Number(data?.eol_last_seq ?? 0);
+    for (let more = true; more && summary.eolPages < MAX_PAGES && timeLeft() > MIN_TIME_LEFT_MS; ) {
+      const page = await state.hub.eolChanges(since);
+      if (!page) {
+        logs.add("info", "The Dictionary Hub has no end-of-life feed yet");
+        return;
+      }
+      const { data: counts, error: applyError } = await admin.rpc("apply_eol_changes", { p_items: page.items, p_next_since: page.next_since });
+      if (applyError) throw new Error(`Could not apply end-of-life changes: ${applyError.message}`);
+      summary.eolPages++;
+      summary.eolUpserted += (counts as { upserted: number }).upserted;
+      since = Math.max(since, page.next_since);
+      more = page.has_more && page.next_since > 0;
+    }
+  } catch (error) {
+    summary.eolError = errorMessage(error);
+    logs.add("warn", `End-of-life sync failed: ${summary.eolError}`);
+  }
 }
 
 async function pullVulnerabilities(admin: SupabaseClient, state: HubState, summary: HubSyncSummary, logs: LogBuffer, timeLeft: () => number) {
@@ -106,6 +134,8 @@ export async function runHubSync(admin: SupabaseClient, state: HubState, logs: L
     vulnUpserted: 0,
     vulnRemoved: 0,
     vulnLastSeq: null,
+    eolPages: 0,
+    eolUpserted: 0,
   };
   try {
     // 1 pull
@@ -130,6 +160,9 @@ export async function runHubSync(admin: SupabaseClient, state: HubState, logs: L
 
     // 1b vulnerabilities
     await pullVulnerabilities(admin, state, summary, logs, timeLeft);
+
+    // 1c end of life
+    await pullEol(admin, state, summary, logs, timeLeft);
 
     // 2 push: metadata and OS families only (hub.ts copies the allowed fields)
     while (state.share && timeLeft() > MIN_TIME_LEFT_MS) {

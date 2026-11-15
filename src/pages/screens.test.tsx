@@ -19,6 +19,7 @@ import { ComputerDetailPage } from "./computer-detail-page";
 import { ComputersPage } from "./computers-page";
 import { csvToImportRows, parseCsv } from "@/features/inventory/computer-context";
 import { OverviewPage } from "./overview-page";
+import { RemediationPage } from "./remediation-page";
 import { ReportsPage } from "./reports-page";
 import { ScansPage } from "./scans-page";
 import { SoftwarePage } from "./software-page";
@@ -30,6 +31,8 @@ vi.mock("@/features/vulns/api", async (original) => ({
   ...(await original<typeof import("@/features/vulns/api")>()),
   fetchVulnOverview: vi.fn(async () => ({ vulns: 0, critical: 0, high: 0, kev: 0, titles: 0, kev_installations: 0, kev_computers: 0, possible: 0, possible_titles: 0, cached: 0, synced_at: null, evaluated_at: null })),
   fetchTitleVulns: vi.fn(async () => []),
+  fetchOverdueSummary: vi.fn(async () => ({ overdue: 2, critical: 1, high: 1 })),
+  fetchFindings: vi.fn(async () => ({ rows: [], rowCount: 0 })),
   fetchVulnEvents: vi.fn(async () => ({ rows: [], rowCount: 0 })),
 }));
 vi.mock("@/features/audit/api", async (original) => ({
@@ -629,8 +632,14 @@ describe("Scans", () => {
     run_grace_minutes: 10,
     provider: "live_endpoint_search",
     data_lake_inventory: false,
+    data_lake_patches: false,
+    patch_stale_days: 60,
     stale_after_days: 30,
     review_every_days: 90,
+    sla_critical_days: 15,
+    sla_high_days: 30,
+    sla_medium_days: 90,
+    sla_low_days: 180,
     scope_statement: "Scope text",
     updated_at: "2026-10-26T12:00:00Z",
     updated_by: null,
@@ -665,6 +674,18 @@ describe("Scans", () => {
     await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ stale_after_days: 45 })));
   });
 
+  it("saves the four remediation deadlines", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
+    renderAt("/scans", "/scans", <ScansPage />);
+    const critical = await screen.findByLabelText("Critical fix within (days)");
+    expect(critical).toHaveValue(15);
+    await user.clear(critical);
+    await user.type(critical, "7");
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ sla_critical_days: 7, sla_high_days: 30, sla_medium_days: 90, sla_low_days: 180 })));
+  });
+
   it("saves the review cadence and the scope statement", async () => {
     const user = userEvent.setup();
     vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
@@ -678,6 +699,21 @@ describe("Scans", () => {
     await user.type(scope, "New scope");
     await user.click(screen.getByRole("button", { name: "Save schedule" }));
     await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ review_every_days: 30, scope_statement: "New scope" })));
+  });
+
+  it("saves the patch switch and the patch stale days", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchScanSettings).mockResolvedValue(settings);
+    renderAt("/scans", "/scans", <ScansPage />);
+    const sw = await screen.findByRole("switch", { name: "Collect Windows patch state from the Sophos Data Lake" });
+    expect(sw).not.toBeChecked();
+    await user.click(sw);
+    const days = screen.getByLabelText("Patch considered stale after (days)");
+    expect(days).toHaveValue(60);
+    await user.clear(days);
+    await user.type(days, "45");
+    await user.click(screen.getByRole("button", { name: "Save schedule" }));
+    await waitFor(() => expect(api.saveScanSettings).toHaveBeenCalledWith("t1", expect.objectContaining({ data_lake_patches: true, patch_stale_days: 45 })));
   });
 
   it("has a Data Lake switch that saves, and the provider select has no Data Lake option", async () => {
@@ -930,5 +966,197 @@ describe("Inventory review", () => {
     await waitFor(() =>
       expect(reports.recordInventoryReview).toHaveBeenCalledWith({ reportId: "r1", outcome: "accurate_with_changes", statement: expect.stringContaining("I reviewed the inventory"), notes: "Retired two laptops" }),
     );
+  });
+});
+
+describe("End of life (Stage 3)", () => {
+  const titleRow = (over: Record<string, unknown>) => ({
+    title_id: "x7", kind: "program", source: "programs", canonical_name: "7-Zip", vendor: "Igor Pavlov", external_id: null, category_slug: null, level1_name: null,
+    level2_name: null, attention_level: null, origin: null, method: null, confidence: null, computers: 3, versions: 2, latest_version: "26.05",
+    first_seen: "2026-10-05T13:00:00Z", total_count: 1, ...over,
+  });
+
+  it("software: shows the support status and filters by it from the URL and the select", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.searchTitles).mockResolvedValue({
+      rows: [titleRow({ support_status: "eol", eol_from: "2024-06-01" }), titleRow({ title_id: "x8", canonical_name: "Git", support_status: "ending_soon", eol_from: "2027-01-10" }), titleRow({ title_id: "x9", canonical_name: "Plain" })] as never,
+      rowCount: 3,
+    });
+    renderAt("/software?support=eol", "/software", <SoftwarePage />);
+
+    const row = async (name: string) => (await screen.findByRole("link", { name })).closest("tr")!;
+    expect(within(await row("7-Zip")).getByText("End of life")).toBeInTheDocument();
+    expect(within(await row("7-Zip")).getByText("since 2024-06-01")).toBeInTheDocument();
+    expect(within(await row("Git")).getByText("Ends 2027-01-10")).toBeInTheDocument();
+    expect(within(await row("Plain")).queryByText(/End of life|Ends/)).toBeNull();
+    expect(lastFilters(api.searchTitles).support).toBe("eol");
+    await user.selectOptions(screen.getByLabelText("Support"), "ending_soon");
+    await waitFor(() => expect(lastFilters(api.searchTitles).support).toBe("ending_soon"));
+  });
+
+  it("computers: shows the OS support status and filters by it", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchComputers).mockResolvedValue({
+      rows: [
+        { ...computer, id: "e1", hostname: "EOL-01", os_eol_status: "eol", os_eol_from: "2025-10-14", os_eol_release: "10-22h2" },
+        { ...computer, id: "s1", hostname: "SOON-01", os_eol_status: "ending_soon", os_eol_from: "2026-12-01", os_eol_release: "11-24h2-w" },
+        { ...computer, id: "u1", hostname: "UNKNOWN-01", os_eol_status: null, os_eol_from: null, os_eol_release: null },
+      ],
+      rowCount: 3,
+    });
+    renderAt("/computers?support=eol", "/computers", <ComputersPage />);
+
+    const cell = async (host: string) => (await screen.findByRole("link", { name: host })).closest("tr")!;
+    expect(within(await cell("EOL-01")).getByText("End of life")).toBeInTheDocument();
+    expect(within(await cell("SOON-01")).getByText("Ends 2026-12-01")).toBeInTheDocument();
+    expect(within(await cell("UNKNOWN-01")).queryByText(/End of life|Ends/)).toBeNull();
+    expect(screen.getByRole("columnheader", { name: /OS support/ })).toBeInTheDocument();
+    expect(lastFilters(api.fetchComputers).support).toBe("eol");
+    await user.selectOptions(screen.getByLabelText("OS support"), "ending_soon");
+    await waitFor(() => expect(lastFilters(api.fetchComputers).support).toBe("ending_soon"));
+  });
+
+  it("overview: the Unsupported card links to the filtered lists", async () => {
+    vi.mocked(api.fetchOverviewStats).mockResolvedValue({
+      computers: 5, computers_by_platform: {}, coverage_never: 0, coverage_stale: 0, coverage_current: 5, coverage_pct: null, titles: 9, extension_installs: 0,
+      distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0,
+      eol_titles: 4, ending_soon_titles: 2, eol_computers: 1, ending_soon_computers: 3,
+    } as never);
+    renderAt("/", "/", <OverviewPage />);
+
+    expect(await screen.findByRole("heading", { name: "Unsupported software and systems" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Software past end of life/ })).toHaveAttribute("href", "/software?support=eol");
+    expect(screen.getByRole("link", { name: /Software past end of life/ })).toHaveTextContent("4");
+    expect(screen.getByRole("link", { name: /Software ending within 90 days/ })).toHaveAttribute("href", "/software?support=ending_soon");
+    expect(screen.getByRole("link", { name: /Computers with an unsupported OS/ })).toHaveAttribute("href", "/computers?support=eol");
+    expect(screen.getByRole("link", { name: /Computers with an unsupported OS/ })).toHaveTextContent("1");
+    expect(screen.getByRole("link", { name: /OS ending within 90 days/ })).toHaveAttribute("href", "/computers?support=ending_soon");
+  });
+
+  it("title page: each version shows its support status", async () => {
+    vi.mocked(api.fetchTitle).mockResolvedValue({
+      title: { id: "x7", kind: "program", source: "programs", canonical_name: "7-Zip", vendor: "Igor Pavlov", external_id: null, first_seen_at: "2026-10-01T00:00:00Z" },
+      classification: null,
+      spellings: [],
+    } as never);
+    const none = { critical: 0, high: 0, medium: 0, low: 0, kev: 0, possible: 0, top: [] };
+    vi.mocked(api.fetchTitleVersions).mockResolvedValue([
+      { version: "26.05", computers: 2, policy_class: null, vulns: none, support_status: "supported", eol_from: null, release: "26" },
+      { version: "23.01", computers: 1, policy_class: null, vulns: none, support_status: "eol", eol_from: "2024-06-01", release: "23" },
+    ] as never);
+    renderAt("/software/x7", "/software/:titleId", <SoftwareTitlePage />);
+
+    const list = await screen.findByRole("list", { name: "Computers per version" });
+    expect(within(within(list).getByText("23.01").closest("li")!).getByText("End of life")).toBeInTheDocument();
+    expect(within(within(list).getByText("26.05").closest("li")!).queryByText(/End of life/)).toBeNull();
+  });
+
+  it("computer detail: shows the OS support next to the system", async () => {
+    vi.mocked(api.fetchComputer).mockResolvedValue({ ...computer, cycle_status: "collected", os_eol_status: "ending_soon", os_eol_from: "2026-12-01", os_eol_release: "11-24h2-w" } as api.ComputerRow);
+    vi.mocked(api.fetchHardware).mockResolvedValue([] as never);
+    vi.mocked(api.fetchComputerTasks).mockResolvedValue([]);
+    renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />);
+    expect(await screen.findByText(/OS support: Ends 2026-12-01/)).toBeInTheDocument();
+  });
+});
+
+describe("Remediation (Stage 3)", () => {
+  const finding = (over: Record<string, unknown>) => ({
+    id: 1, tenant_id: "t1", title_id: "x7", canonical_name: "7-Zip", version: "23.01", product_key: "k", vuln_id: "CVE-1", severity: "CRITICAL", cvss_score: 9.8,
+    kev: true, kev_due: null, first_seen_at: "2026-10-01T00:00:00Z", due_at: new Date(Date.now() - 3 * 86_400_000).toISOString(), resolved_at: null, status: "overdue",
+    days_open: 40, computers: 3, ...over,
+  });
+
+  it("lists findings with days overdue, links to the title and filters by status", async () => {
+    const user = userEvent.setup();
+    vi.mocked(vulns.fetchFindings).mockResolvedValue({
+      rows: [finding({}), finding({ id: 2, vuln_id: "CVE-2", severity: "HIGH", kev: false, status: "open", due_at: new Date(Date.now() + 5.5 * 86_400_000).toISOString() })] as never,
+      rowCount: 2,
+    });
+    renderAt("/remediation", "/remediation", <RemediationPage />);
+
+    const row = async (cve: string) => (await screen.findByText(cve)).closest("tr")!;
+    expect(within(await row("CVE-1")).getByText("3 days overdue")).toBeInTheDocument();
+    expect(within(await row("CVE-1")).getByText("KEV")).toBeInTheDocument();
+    expect(within(await row("CVE-2")).getByText("6 days left")).toBeInTheDocument();
+    expect(within(await row("CVE-1")).getByRole("link", { name: "7-Zip" })).toHaveAttribute("href", "/software/x7");
+    await user.selectOptions(screen.getByLabelText("Status"), "overdue");
+    await waitFor(() => expect(vi.mocked(vulns.fetchFindings).mock.calls.at(-1)?.[0]).toMatchObject({ status: "overdue" }));
+    await user.selectOptions(screen.getByLabelText("Exploited"), "kev");
+    await waitFor(() => expect(vi.mocked(vulns.fetchFindings).mock.calls.at(-1)?.[0]).toMatchObject({ kev: true }));
+  });
+
+  it("exports the visible findings as CSV", async () => {
+    const user = userEvent.setup();
+    vi.mocked(vulns.fetchFindings).mockResolvedValue({ rows: [finding({})] as never, rowCount: 1 });
+    renderAt("/remediation", "/remediation", <RemediationPage />);
+    await screen.findByText("CVE-1");
+    await user.click(screen.getByRole("button", { name: /Export CSV/ }));
+    expect(vi.mocked(audit.downloadCsv).mock.calls.at(-1)?.[0]).toContain("CVE-1,7-Zip,23.01,CRITICAL,true,overdue");
+  });
+
+  it("overview: shows the overdue count and links to the screen", async () => {
+    vi.mocked(vulns.fetchVulnOverview).mockResolvedValueOnce({ vulns: 5, critical: 1, high: 1, kev: 1, titles: 2, kev_installations: 3, kev_computers: 2, possible: 0, possible_titles: 0, cached: 9, synced_at: null, evaluated_at: null });
+    vi.mocked(api.fetchOverviewStats).mockResolvedValue({ computers: 3, computers_by_platform: {}, coverage_never: 0, coverage_stale: 0, coverage_current: 3, coverage_pct: null, titles: 1, extension_installs: 0, distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0 } as never);
+    renderAt("/", "/", <OverviewPage />);
+    const stat = (await screen.findByText("Overdue vulnerabilities")).closest("a")!;
+    expect(stat).toHaveAttribute("href", "/remediation");
+    expect(within(stat).getByText("2")).toBeInTheDocument();
+    expect(within(stat).getByText("1 critical · 1 high")).toBeInTheDocument();
+  });
+});
+
+describe("Patch state (Stage 3)", () => {
+  it("computers: shows the last patch and filters the stale ones", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchComputers).mockResolvedValue({
+      rows: [
+        { ...computer, id: "p1", hostname: "PATCHED-01", last_patch_at: "2026-11-05", patch_status: "current" },
+        { ...computer, id: "p2", hostname: "STALE-01", last_patch_at: "2026-06-01", patch_status: "stale" },
+        { ...computer, id: "p3", hostname: "NODATA-01", last_patch_at: null, patch_status: "unknown" },
+      ],
+      rowCount: 3,
+    } as never);
+    renderAt("/computers?patch=stale", "/computers", <ComputersPage />);
+
+    const cell = async (host: string) => (await screen.findByRole("link", { name: host })).closest("tr")!;
+    expect(within(await cell("PATCHED-01")).getByText("2026-11-05")).toBeInTheDocument();
+    expect(within(await cell("STALE-01")).getByText("2026-06-01")).toBeInTheDocument();
+    expect(within(await cell("STALE-01")).getByText("Stale")).toBeInTheDocument();
+    expect(within(await cell("NODATA-01")).queryByText("Stale")).toBeNull();
+    expect(screen.getByRole("columnheader", { name: /Last patch/ })).toBeInTheDocument();
+    expect(lastFilters(api.fetchComputers).patch).toBe("stale");
+    await user.selectOptions(screen.getByLabelText("Patches"), "current");
+    await waitFor(() => expect(lastFilters(api.fetchComputers).patch).toBe("current"));
+  });
+
+  it("computer detail: lists the patches, newest first", async () => {
+    vi.mocked(api.fetchComputer).mockResolvedValue({ ...computer, cycle_status: "collected" } as api.ComputerRow);
+    vi.mocked(api.fetchComputerTasks).mockResolvedValue([]);
+    const patch = (item_key: string, kb: string, installed_at: string | null, installed_by: string | null) => ({
+      domain: "patches", item_key, attrs: { kb, title: `Update ${kb}`, installed_at, installed_by }, valid_from: "2026-11-01T00:00:00Z", valid_to: null,
+    });
+    vi.mocked(api.fetchHardware).mockResolvedValue([patch("a", "KB1", "2026-09-01T00:00:00Z", null), patch("b", "KB2", "2026-11-03T08:00:00Z", "SYSTEM"), patch("c", "KB3", null, null)] as never);
+    renderAt("/computers/c1", "/computers/:id", <ComputerDetailPage />);
+
+    const card = (await screen.findByRole("heading", { name: "Patches" })).closest("[data-slot='card']") as HTMLElement;
+    const rows = within(card).getAllByRole("row").slice(1);
+    expect(rows.map((r) => within(r).getAllByRole("cell")[0].textContent)).toEqual(["KB2", "KB1", "KB3"]);
+    expect(within(rows[0]).getByText("Update KB2")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("SYSTEM")).toBeInTheDocument();
+    expect(within(rows[0]).getByText("2026-11-03")).toBeInTheDocument();
+  });
+
+  it("overview: shows the computers without a recent patch", async () => {
+    vi.mocked(api.fetchOverviewStats).mockResolvedValue({
+      computers: 5, computers_by_platform: {}, coverage_never: 0, coverage_stale: 0, coverage_current: 5, coverage_pct: null, titles: 9, extension_installs: 0,
+      distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0,
+      patch_tracked_computers: 4, patch_stale_computers: 2,
+    } as never);
+    renderAt("/", "/", <OverviewPage />);
+    const stat = await screen.findByRole("link", { name: /Computers without a recent patch/ });
+    expect(stat).toHaveAttribute("href", "/computers?patch=stale");
+    expect(stat).toHaveTextContent("2");
+    expect(stat).toHaveTextContent("of 4 with patch data");
   });
 });

@@ -175,16 +175,24 @@ function graphql({ query = "", variables = {} }, tenantId) {
 // Data Lake (SOPHOS_FUSION_URL=http://host.docker.internal:54999/fusion/graphql): one program and one browser
 // extension for every host_id in the softwareinfo query text; the search completes on creation.
 let fusionHosts = [];
+let fusionPatches = false;
 let fusionSearches = 0;
 function fusion({ query, variables }) {
   if (query.includes("getOrCreateSearch")) {
     // The text of the ql travels in variables.input.text.
+    fusionPatches = variables.input.text.startsWith("from patchstate");
     fusionHosts = (variables.input.text.match(/host_id in \(([^)]*)\)/)?.[1].match(/[0-9a-f-]{36}/gi)) ?? [];
     return { data: { getOrCreateSearch: { urn: `urn:mock:search:${++fusionSearches}`, status: "COMPLETE", outcome: { success: "ALL" }, overThreshold: false } } };
   }
   if (query.includes("searchResults")) {
     const time = Date.now() - 3600_000;
-    const values = fusionHosts.flatMap((host_id) => [
+    // patchstate: two patches per host, the first by KB number in the title.
+    const values = fusionPatches
+      ? fusionHosts.flatMap((host_id) => [
+          { host_id, time, kb_article: { title: "Security Update for Windows (KB5034441)", uid: "mock-kb-1", install_time: time - 5 * 86_400_000 }, original_data: JSON.stringify({ InstalledBy: "SYSTEM" }) },
+          { host_id, time, kb_article: { title: "Cumulative Update 2026-10", uid: "mock-kb-2", install_time: time - 40 * 86_400_000 } },
+        ])
+      : fusionHosts.flatMap((host_id) => [
       { host_id, time, "product.name": "Mock App", product: { name: "Mock App", version: "1.0", vendor_name: "Mock Vendor", uid: "{MOCK-APP}", type_id: "TYPE_ID_APPLICATION" }, original_data: JSON.stringify({ installDate: "20261001" }) },
       { host_id, time, product: { name: "Mock Extension", version: "2.0", uid: "mockextensionid", type_id: "TYPE_ID_BROWSER_EXTENSION", source: "CHROME", path: "C:\ext" }, original_data: JSON.stringify({ username: "mock" }) },
     ]);

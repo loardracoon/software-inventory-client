@@ -268,6 +268,19 @@ export function normalizeDisks(rows: RawRow[]): HardwareItem[] {
   }));
 }
 
+// Windows patches (Data Lake patchstate): one item per patch uid; the installer is kept but does not version.
+export function normalizePatches(rows: RawRow[]): HardwareItem[] {
+  const byUid = new Map<string, RawRow>();
+  for (const r of rows) {
+    const uid = text(r.uid);
+    if (uid && !byUid.has(uid)) byUid.set(uid, r);
+  }
+  return [...byUid.entries()].map(([uid, r]) => {
+    const attrs = { kb: text(r.kb), title: text(r.title), installed_at: text(r.installed_at), installed_by: text(r.installed_by) };
+    return { item_key: uid, attrs, tracked: [attrs.kb, attrs.title, attrs.installed_at] };
+  });
+}
+
 export function normalize(domain: string, platform: string, queryName: string, rows: RawRow[], queryVersion = 1): Normalized {
   switch (domain) {
     case "programs":
@@ -282,6 +295,8 @@ export function normalize(domain: string, platform: string, queryName: string, r
       return { kind: "hardware", items: normalizeHardware(rows) };
     case "disks":
       return { kind: "hardware", items: normalizeDisks(rows) };
+    case "patches":
+      return { kind: "hardware", items: normalizePatches(rows) };
     default:
       throw new Error(`No normalizer for domain ${domain}`);
   }

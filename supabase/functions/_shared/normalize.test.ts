@@ -247,3 +247,26 @@ describe("hashItems", () => {
     expect(() => normalize("users", "windows", "inv.users", [])).toThrow();
   });
 });
+
+describe("normalizePatches (Stage 3)", () => {
+  const rows: RawRow[] = [
+    { uid: "u-1", kb: "KB5034441", title: "Security Update (KB5034441)", installed_at: "2026-10-01T00:00:00Z", installed_by: "SYSTEM" },
+    { uid: "u-1", kb: "KB5034441", title: "Security Update (KB5034441)", installed_at: "2026-10-01T00:00:00Z", installed_by: "SYSTEM" },
+    { uid: "u-2", kb: null, title: "Cumulative Update", installed_at: null, installed_by: null },
+  ];
+
+  it("keys every patch by uid, drops duplicates and keeps the fields as attrs", () => {
+    const n = normalize("patches", "windows", "dl.patches", rows);
+    expect(n.kind).toBe("hardware");
+    expect(n.items.map((i) => i.item_key)).toEqual(["u-1", "u-2"]);
+    expect(n.items[0].attrs).toEqual({ kb: "KB5034441", title: "Security Update (KB5034441)", installed_at: "2026-10-01T00:00:00Z", installed_by: "SYSTEM" });
+    expect(n.items[0].tracked).toEqual(["KB5034441", "Security Update (KB5034441)", "2026-10-01T00:00:00Z"]);
+  });
+
+  it("changes the row hash when the install time changes, not the installer", async () => {
+    const hash = async (r: RawRow) => (await hashItems(normalize("patches", "windows", "dl.patches", [r]))).items[0].row_hash;
+    const base = { uid: "u", kb: "KB1", title: "T", installed_at: "a", installed_by: "x" };
+    expect(await hash({ ...base, installed_by: "y" })).toBe(await hash(base));
+    expect(await hash({ ...base, installed_at: "b" })).not.toBe(await hash(base));
+  });
+});

@@ -22,6 +22,7 @@ import { ClassBadge } from "@/features/policy/class-badge";
 import { CLASS_INFO, CLASS_ORDER, classFromParam } from "@/features/policy/classes";
 import { SaveSearchButton } from "@/features/saved-searches/save-search-button";
 import { VULN_FILTERS, vulnFromParam } from "@/features/vulns/api";
+import { SUPPORT_FILTERS, SupportBadge, supportFromParam } from "@/components/shared/support-status";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { endOfDayIso, formatDate, formatNumber } from "@/lib/format";
 import { KIND_LABEL, label, PLATFORM_LABEL, SOURCE_LABEL } from "@/lib/labels";
@@ -117,6 +118,7 @@ function columns(canContribute: boolean, requested: Set<string>, reclassify: (ro
         return <AttentionIcons scope="title" categories={category ? [category] : []} vulns={vulns} />;
       },
     },
+    { id: "support", header: "Support", enableSorting: false, cell: ({ row }) => <SupportBadge status={row.original.support_status} from={row.original.eol_from} /> },
     { accessorKey: "computers", header: "Computers", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "versions", header: "Versions", cell: ({ getValue }) => formatNumber(getValue() as number) },
     { accessorKey: "latest_version", header: "Newest", enableSorting: false, cell: ({ getValue }) => (getValue() as string | null) ?? "—" },
@@ -169,6 +171,7 @@ export function SoftwarePage() {
   const installedOn = params.get("on") ?? "";
   const policy = classFromParam(params.get("policy"));
   const vuln = vulnFromParam(params.get("vuln"));
+  const support = supportFromParam(params.get("support"));
   const [requested, setRequested] = useState<Set<string>>(new Set());
   const [reclassifying, setReclassifying] = useState<ReclassifyTarget | null>(null);
 
@@ -220,8 +223,9 @@ export function SoftwarePage() {
       asOf: installedOn ? endOfDayIso(installedOn) : null,
       policy: policy ? [policy] : [],
       vuln,
+      support,
     }),
-    [selectedTenantId, query, kind, category, attention, source, platform, user, versionBelow, installedOn, policy, vuln],
+    [selectedTenantId, query, kind, category, attention, source, platform, user, versionBelow, installedOn, policy, vuln, support],
   );
 
   const fetchPage = useCallback(async (request: ServerPageRequest<SoftwareFilters>) => {
@@ -290,6 +294,9 @@ export function SoftwarePage() {
         </Field>
         <Field label="Vulnerabilities" htmlFor="software-vuln">
           <NativeSelect id="software-vuln" value={vuln} onChange={(v) => setParam("vuln", v)} options={VULN_FILTERS} />
+        </Field>
+        <Field label="Support" htmlFor="software-support">
+          <NativeSelect id="software-support" value={support} onChange={(v) => setParam("support", v)} options={SUPPORT_FILTERS.map((f) => ({ value: f.value, label: f.label }))} />
         </Field>
         <Field label="Platform" htmlFor="software-platform">
           <NativeSelect

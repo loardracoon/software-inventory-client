@@ -5,12 +5,15 @@ import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import {
   DataLakeClient,
   DataLakeOverLimitError,
+  HOSTS_PER_PATCH_SEARCH,
   HOSTS_PER_SEARCH,
   latestSnapshots,
+  patchStateQl,
   searchWindow,
   snapshotTime,
   softwareInfoQl,
   toExtensionRows,
+  toPatchRows,
   toProgramRows,
   UUID,
   type DataLakeRow,
@@ -38,7 +41,7 @@ export async function syncDataLake(
 ): Promise<{ searches: number; rawResults: number }> {
   const out = { searches: 0, rawResults: 0 };
   const last = tenant.data_lake_attempt_at ? Date.parse(tenant.data_lake_attempt_at) : null;
-  if (!tenant.scan_settings?.data_lake_inventory || (last !== null && now - last < DATA_LAKE_RETRY_MS)) return out;
+  if (!(tenant.scan_settings?.data_lake_inventory || tenant.scan_settings?.data_lake_patches) || (last !== null && now - last < DATA_LAKE_RETRY_MS)) return out;
 
   // Stamped first: a failing tenant is tried again in an hour, not every tick.
   await admin.from("tenants").update({ data_lake_attempt_at: new Date(now).toISOString() }).eq("id", tenant.id);
@@ -51,11 +54,12 @@ export async function syncDataLake(
       if (stored.error) throw new Error(stored.error.message);
       return (stored.data as number) ?? 0;
     };
-    // Over the row limit, search each half, down to one host.
-    const fill = async (batch: Target[]): Promise<void> => {
+    // Over the row limit, search each half, down to one host. `patches` picks the patchstate search (and its domain).
+    const fill = async (batch: Target[], patches: boolean): Promise<void> => {
       let result: { urn: string; rows: DataLakeRow[] };
+      const ql = patches ? patchStateQl : softwareInfoQl;
       try {
-        result = await client.search(softwareInfoQl(batch.map((t) => t.sophos_endpoint_id), searchWindow(now)), Date.now() + timeLeft() - SEARCH_MARGIN_MS);
+        result = await client.search(ql(batch.map((t) => t.sophos_endpoint_id), searchWindow(now)), Date.now() + timeLeft() - SEARCH_MARGIN_MS);
       } catch (error) {
         if (!(error instanceof DataLakeOverLimitError)) throw error;
         if (batch.length === 1) {
@@ -64,8 +68,8 @@ export async function syncDataLake(
           return;
         }
         const half = Math.ceil(batch.length / 2);
-        await fill(batch.slice(0, half));
-        await fill(batch.slice(half));
+        await fill(batch.slice(0, half), patches);
+        await fill(batch.slice(half), patches);
         return;
       }
       const snapshots = latestSnapshots(result.rows);
@@ -74,8 +78,8 @@ export async function syncDataLake(
         const host = snapshots.get(t.sophos_endpoint_id);
         if (!host?.length) continue;
         // A host that reported: an empty domain is real (e.g. Chrome removed), so it gets an item too.
-        for (const domain of t.domains) {
-          const mapped = domain === "programs" ? toProgramRows(host) : domain === "extensions" ? toExtensionRows(host) : [];
+        for (const domain of t.domains.filter((d) => (d === "patches") === patches)) {
+          const mapped = domain === "patches" ? toPatchRows(host) : domain === "programs" ? toProgramRows(host) : domain === "extensions" ? toExtensionRows(host) : [];
           items.push({ computer_id: t.computer_id, domain, collected_at: snapshotTime(host), rows: mapped });
         }
       }
@@ -96,7 +100,10 @@ export async function syncDataLake(
         await store(null, bad, []);
       }
       const good = targets.filter((t) => UUID.test(t.sophos_endpoint_id));
-      if (good.length) await fill(good);
+      const inventory = good.map((t) => ({ ...t, domains: t.domains.filter((d) => d !== "patches") })).filter((t) => t.domains.length > 0);
+      if (inventory.length) await fill(inventory, false);
+      const wantPatches = good.map((t) => ({ ...t, domains: t.domains.filter((d) => d === "patches") })).filter((t) => t.domains.length > 0);
+      for (let i = 0; i < wantPatches.length; i += HOSTS_PER_PATCH_SEARCH) await fill(wantPatches.slice(i, i + HOSTS_PER_PATCH_SEARCH), true);
     }
   } catch (error) {
     logs.add("warn", `Data Lake search failed for ${tenant.name}: ${error instanceof Error ? error.message : String(error)}`, null, tenant.id);

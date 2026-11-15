@@ -68,7 +68,7 @@ select public.ingest_snapshot(pg_temp.raw_les('20000000-0000-0000-0000-000000000
 select ok('data_lake' = any (enum_range(null::public.query_provider)::text[]), 'query_provider has data_lake');
 select results_eq(
   $$select name, version, enabled from public.query_catalog where name like 'dl.%' and platform = 'windows' order by name$$,
-  $$values ('dl.extensions', 1, false), ('dl.programs', 2, false)$$, 'dl.programs v2 and dl.extensions v1 exist, disabled');
+  $$values ('dl.extensions', 1, false), ('dl.patches', 1, false), ('dl.programs', 2, false)$$, 'dl.programs v2, dl.extensions v1 and dl.patches v1 exist, disabled');
 select is((select count(*)::int from public.current_queries() where name like 'dl.%'), 0, 'Data Lake queries are never scheduled');
 select throws_ok($$update public.scan_settings set provider = 'data_lake'$$, '23514', null, 'data_lake is not a Live Endpoint Search provider');
 

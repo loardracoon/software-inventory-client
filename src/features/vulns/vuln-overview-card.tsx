@@ -6,7 +6,7 @@ import { Eyebrow } from "@/components/shared/eyebrow";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
 import { cn } from "@/lib/utils";
-import { fetchVulnOverview } from "./api";
+import { fetchOverdueSummary, fetchVulnOverview } from "./api";
 
 function Stat({ to, value, label, detail, alert }: { to: string; value: number; label: string; detail?: string; alert?: boolean }) {
   return (
@@ -21,6 +21,7 @@ function Stat({ to, value, label, detail, alert }: { to: string; value: number; 
 // Overview: known CVEs that affect installed versions (Phase 10b).
 export function VulnOverviewCard({ tenantId }: { tenantId: string | null }) {
   const data = useLoad(`vuln-overview:${tenantId ?? "all"}`, () => fetchVulnOverview(tenantId));
+  const overdue = useLoad(`vuln-overdue:${tenantId ?? "all"}`, () => fetchOverdueSummary(tenantId)).data;
   const v = data.data;
   return (
     <Card className="gap-4 px-6">
@@ -37,12 +38,19 @@ export function VulnOverviewCard({ tenantId }: { tenantId: string | null }) {
         </p>
       ) : null}
       {v && v.cached > 0 ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
           <Stat
             to="/software?vuln=kev"
             value={v.kev}
             label="Known exploited CVEs"
             detail={`${formatNumber(v.kev_installations)} installation${v.kev_installations === 1 ? "" : "s"} on ${formatNumber(v.kev_computers)} computer${v.kev_computers === 1 ? "" : "s"}`}
+            alert
+          />
+          <Stat
+            to="/remediation"
+            value={overdue?.overdue ?? 0}
+            label="Overdue vulnerabilities"
+            detail={`${formatNumber(overdue?.critical ?? 0)} critical · ${formatNumber(overdue?.high ?? 0)} high`}
             alert
           />
           <Stat to="/software?vuln=critical" value={v.critical} label="Critical CVEs" alert />

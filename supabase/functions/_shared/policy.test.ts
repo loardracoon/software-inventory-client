@@ -141,6 +141,18 @@ describe("vulnerability fields (Phase 10b)", () => {
     expect(t({ field: "kev", operator: "equals", value: "false" })).toBe(true);
   });
 
+  it("end of life is yes or no (Stage 3)", () => {
+    const unsupported = { ...acrobat, eol: true };
+    expect(t({ field: "eol", operator: "equals", value: "true" }, unsupported)).toBe(true);
+    expect(t({ field: "eol", operator: "equals", value: "true" })).toBe(false);
+    expect(t({ field: "eol", operator: "not_equals", value: "true" })).toBe(true);
+    expect(t({ field: "eol", operator: "equals", value: "false" })).toBe(true);
+    expect(validateCondition({ field: "eol", operator: "equals", value: "maybe" })).toMatch(/yes or no/);
+    expect(validateCondition({ field: "eol", operator: "contains", value: "true" })).toMatch(/does not apply/);
+    expect(validateCondition({ field: "eol", operator: "equals", value: "true" })).toBeNull();
+    expect(conditionText({ field: "eol", operator: "equals", value: "true" })).toBe("End of life (no vendor support) is yes");
+  });
+
   it("validate the number range and the yes/no value", () => {
     expect(validateCondition({ field: "cvss", operator: "gte", value: "11" })).toMatch(/0 to 10/);
     expect(validateCondition({ field: "epss", operator: "gte", value: "50" })).toMatch(/0 to 1/);

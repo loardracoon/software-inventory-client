@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildEvidence, type ReportData } from "../_shared/evidence.ts";
 import { zipEvidence } from "./zip.ts";
 
-const data: ReportData = { computers: [], software: [], vulnerabilities: [], exceptions: [], coverage: {}, policy: null, scope_statement: "s", users_masked: false };
+const data: ReportData = { computers: [], software: [], vulnerabilities: [], exceptions: [], patches: [], coverage: {}, policy: null, remediation: {}, scope_statement: "s", users_masked: false };
 
 describe("zipEvidence", () => {
   it("download again is identical", async () => {

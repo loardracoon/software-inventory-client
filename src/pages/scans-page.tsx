@@ -251,6 +251,18 @@ function ScheduleForm({ settings, readOnly, onSaved }: { settings: ScanSettings;
         <Field label="Review every (days)" htmlFor="s-review">
           <Input id="s-review" type="number" min={7} max={366} value={values.review_every_days} onChange={num("review_every_days")} required />
         </Field>
+        <Field label="Critical fix within (days)" htmlFor="s-sla-critical">
+          <Input id="s-sla-critical" type="number" min={1} max={365} value={values.sla_critical_days} onChange={num("sla_critical_days")} required />
+        </Field>
+        <Field label="High fix within (days)" htmlFor="s-sla-high">
+          <Input id="s-sla-high" type="number" min={1} max={365} value={values.sla_high_days} onChange={num("sla_high_days")} required />
+        </Field>
+        <Field label="Medium fix within (days)" htmlFor="s-sla-medium">
+          <Input id="s-sla-medium" type="number" min={1} max={365} value={values.sla_medium_days} onChange={num("sla_medium_days")} required />
+        </Field>
+        <Field label="Low fix within (days)" htmlFor="s-sla-low">
+          <Input id="s-sla-low" type="number" min={1} max={365} value={values.sla_low_days} onChange={num("sla_low_days")} required />
+        </Field>
         <Field label="Scope statement" htmlFor="s-scope" className="sm:col-span-2 lg:col-span-4">
           <textarea
             id="s-scope"
@@ -291,6 +303,16 @@ function ScheduleForm({ settings, readOnly, onSaved }: { settings: ScanSettings;
             <p className="m-0 text-xs text-text-muted">Windows computers that Live Endpoint Search has never collected get their programs and Chrome and Edge extensions from the daily Data Lake snapshot. Live Endpoint Search takes over at its first collection. Turning it off keeps the rows already collected.</p>
           </div>
         </div>
+        <div className="flex items-start gap-3 sm:col-span-2">
+          <Switch id="s-patches" checked={values.data_lake_patches} onCheckedChange={(v) => set("data_lake_patches", v)} />
+          <div className="flex flex-col gap-1">
+            <label htmlFor="s-patches" className="text-sm font-semibold text-text-strong">Collect Windows patch state from the Sophos Data Lake</label>
+            <p className="m-0 text-xs text-text-muted">Every Windows computer gets its installed patches (KB number, title, install date) from the Data Lake, including computers Live Endpoint Search collects. Turning it off keeps the rows already collected.</p>
+          </div>
+        </div>
+        <Field label="Patch considered stale after (days)" htmlFor="s-patch-stale">
+          <Input id="s-patch-stale" type="number" min={1} max={365} value={values.patch_stale_days} onChange={num("patch_stale_days")} required />
+        </Field>
       </fieldset>
       <p className="m-0 text-xs text-text-muted">
         Last changed {formatDateTime(settings.updated_at)}. Times use the tenant time zone. Live Endpoint Search allows 1,000 runs a day per tenant; the REST API 500.

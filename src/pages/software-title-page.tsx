@@ -24,6 +24,7 @@ import { TitleClassificationActions, TitleRequestsCard } from "@/features/dictio
 import { CHANGE_COLUMNS_WITH_COMPUTER } from "@/features/inventory/change-columns";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { AttentionIcons, type VulnCounts } from "@/components/shared/attention-icons";
+import { SupportBadge } from "@/components/shared/support-status";
 import { ClassBadge } from "@/features/policy/class-badge";
 import { TitleVulnsCard } from "@/features/vulns/title-vulns-card";
 import { VulnSummary } from "@/features/vulns/vuln-badges";
@@ -137,6 +138,7 @@ export function SoftwareTitlePage() {
                   </span>
                   <span className="text-text-muted">{formatNumber(v.computers)}</span>
                 </span>
+                {v.support_status === "eol" || v.support_status === "ending_soon" ? <SupportBadge status={v.support_status} from={v.eol_from} /> : null}
                 {v.policy_class || hasVulns(v.vulns) ? (
                   <span className="flex flex-wrap items-center gap-2">
                     {v.policy_class ? <ClassBadge cls={v.policy_class} size="sm" /> : null}

@@ -139,3 +139,56 @@ describe("syncDataLake", () => {
     expect(f.logs).toEqual([{ level: "warn", message: "Data Lake: 1 computer(s) of Acme have an endpoint id that is not a UUID; they are skipped" }]);
   });
 });
+
+describe("syncDataLake patches (Stage 3)", () => {
+  const patch = (host: string, time: number, uid: string) => ({ host_id: host, time, kb_article: { title: `Update (${uid})`, uid, install_time: time } });
+  const PATCH_ROWS = [patch(W1, 1000, "KB1"), patch(W1, 1000, "KB2"), patch(W2, 2000, "KB3")];
+  const answer = async (ql: string) => (ql.startsWith("from patchstate") ? { urn: "urn:p", rows: PATCH_ROWS } : { urn: "urn:i", rows: ROWS });
+  const both = [
+    { computer_id: "c1", sophos_endpoint_id: W1, domains: ["programs", "patches"] },
+    { computer_id: "c2", sophos_endpoint_id: W2, domains: ["patches"] },
+  ];
+  const storesOf = (f: ReturnType<typeof fake>) =>
+    f.calls.filter((c) => c.fn === "store_data_lake_results").map((c) => ({ urn: c.args.p_search_urn, checked: c.args.p_checked, items: c.args.p_results.map((i: any) => `${i.computer_id}:${i.domain}:${i.rows.length}`) }));
+
+  it("runs when only the patch setting is on", async () => {
+    const f = fake([[both[1]], []], answer);
+    const t = tenant({ scan_settings: { data_lake_inventory: false, data_lake_patches: true } as never });
+    await f.run(t);
+    expect(f.searches).toHaveLength(1);
+    expect(f.searches[0]).toContain("from patchstate");
+  });
+
+  it("searches patchstate for patch targets and softwareinfo for the others, one store each", async () => {
+    const f = fake([both, []], answer);
+    expect(await f.run(tenant())).toEqual({ searches: 2, rawResults: 6 });
+    expect(f.searches.map((q) => q.split(" ")[1])).toEqual(["softwareinfo", "patchstate"]);
+    expect(storesOf(f)).toEqual([
+      { urn: "urn:i", checked: ["c1"], items: ["c1:programs:1"] },
+      { urn: "urn:p", checked: ["c1", "c2"], items: ["c1:patches:2", "c2:patches:1"] },
+    ]);
+  });
+
+  it("sends at most 10 hosts per patch search", async () => {
+    const many = Array.from({ length: 12 }, (_, i) => ({ computer_id: `c${i}`, sophos_endpoint_id: `${String(i).padStart(8, "0")}-1111-1111-1111-111111111111`, domains: ["patches"] }));
+    const f = fake([many, []], async () => ({ urn: "u", rows: [] }));
+    await f.run(tenant());
+    expect(f.searches.map((q) => (q.match(/'[0-9a-f-]{36}'/g) ?? []).length)).toEqual([10, 2]);
+  });
+
+  it("splits a patch batch over the row limit down to one host", async () => {
+    const f = fake([[both[0], both[1]], []], async (ql) => {
+      if (ql.includes(W1) && ql.includes(W2)) throw new DataLakeOverLimitError();
+      return { urn: ql.includes(W1) ? "urn:1" : "urn:2", rows: PATCH_ROWS.filter((r) => ql.includes(r.host_id)) };
+    });
+    await f.run(tenant());
+    const patchStores = storesOf(f).filter((s) => s.items.some((i) => i.includes("patches")));
+    expect(patchStores.map((s) => s.urn)).toEqual(["urn:1", "urn:2"]);
+  });
+
+  it("a host with no patch rows gets no item but is marked checked", async () => {
+    const f = fake([[both[1]], []], async () => ({ urn: "u", rows: [] }));
+    await f.run(tenant());
+    expect(storesOf(f)).toEqual([{ urn: "u", checked: ["c2"], items: [] }]);
+  });
+});

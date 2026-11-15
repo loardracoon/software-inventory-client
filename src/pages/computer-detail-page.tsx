@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CategoryTag, categoryFromRow } from "@/components/shared/category-tag";
@@ -243,6 +244,11 @@ export function ComputerDetailPage() {
 
   const system = hardware.data?.find((h) => h.domain === "hardware")?.attrs as Record<string, string | null> | undefined;
   const disks = (hardware.data ?? []).filter((h) => h.domain === "disks");
+  // Windows patches from the Data Lake, newest install first; rows with no date go last.
+  const patches = (hardware.data ?? [])
+    .filter((h) => h.domain === "patches")
+    .map((h) => h.attrs as Record<string, string | null>)
+    .sort((a, b) => (b.installed_at ?? "").localeCompare(a.installed_at ?? ""));
 
   return (
     <>
@@ -255,6 +261,9 @@ export function ComputerDetailPage() {
               {[c.os_name, c.os_version].filter(Boolean).join(" ")} · User {c.user_masked ? "hidden" : (c.associated_user ?? "—")} · Last seen{" "}
               {c.last_seen_at ? formatDateTime(c.last_seen_at) : "—"} · Last collected {c.last_collected_at ? formatDateTime(c.last_collected_at) : "never"}
               {c.data_lake_snapshot_at ? ` · Data Lake snapshot ${formatDateTime(c.data_lake_snapshot_at)}` : null}
+              {c.os_eol_status === "eol" || c.os_eol_status === "ending_soon"
+                ? ` · OS support: ${c.os_eol_status === "eol" ? `End of life${c.os_eol_from ? ` since ${c.os_eol_from}` : ""}` : `Ends ${c.os_eol_from ?? "soon"}`}`
+                : null}
               <br />
               Owner {c.owner ?? "—"} · Department {c.department ?? "—"} · Criticality {c.criticality ?? "—"} · Scope {c.scope_tags?.length ? c.scope_tags.join(", ") : "—"}
             </>
@@ -350,6 +359,34 @@ export function ComputerDetailPage() {
             ))}
           </ul>
         </Card>
+        {patches.length > 0 ? (
+          <Card className="gap-4 px-6 lg:col-span-2">
+            <h2 className="m-0">
+              <Eyebrow>Patches</Eyebrow>
+            </h2>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>KB</TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Installed</TableHead>
+                  <TableHead>Installed by</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {patches.slice(0, 100).map((p, i) => (
+                  <TableRow key={i}>
+                    <TableCell className="font-mono">{p.kb ?? "—"}</TableCell>
+                    <TableCell>{p.title ?? "—"}</TableCell>
+                    <TableCell>{p.installed_at ? p.installed_at.slice(0, 10) : "—"}</TableCell>
+                    <TableCell>{p.installed_by ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            {patches.length > 100 ? <p className="m-0 text-xs text-text-muted">Showing the newest 100 of {patches.length} patches.</p> : null}
+          </Card>
+        ) : null}
       </div>
 
       <Tabs defaultValue="extensions">

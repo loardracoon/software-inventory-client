@@ -20,6 +20,7 @@ export type ScanSettingsRow = {
   run_grace_minutes: number;
   provider: ProviderName;
   data_lake_inventory?: boolean;
+  data_lake_patches?: boolean;
 };
 
 export type TenantRow = {

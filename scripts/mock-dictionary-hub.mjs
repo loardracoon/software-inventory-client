@@ -157,6 +157,20 @@ http
       return send(res, 200, { items: page, next_seq: page.length ? page[page.length - 1].seq : since, has_more: changed.length > limit });
     }
 
+    // End of life (Stage 3): a fixed feed. Windows 11 24H2 Pro ends in 2026-12-01, Enterprise in 2027-10-12; 7-Zip 23 is end of life.
+    if (route === "GET /eol-changes") {
+      const since = Number(url.searchParams.get("since") ?? 0);
+      const items = [
+        { product_key: "os:windows", slug: "windows", seq: 3, releases: [
+          { name: "11-24h2-w", label: "11 24H2 (W)", is_eol: false, eol_from: "2026-12-01", latest_name: "10.0.26100" },
+          { name: "11-24h2-e", label: "11 24H2 (E)", is_eol: false, eol_from: "2027-10-12", latest_name: "10.0.26100" }] },
+        { product_key: "program|igor pavlov|7-zip", slug: "7-zip", seq: 5, releases: [
+          { name: "23", label: "23", is_eol: true, eol_from: "2024-06-01", latest_name: "23.01" },
+          { name: "26", label: "26", is_eol: false, eol_from: null, latest_name: "26.05" }] },
+      ].filter((i) => i.seq > since);
+      return send(res, 200, { items, next_since: items.length ? items[items.length - 1].seq : since, has_more: false });
+    }
+
     if (route === "POST /titles-submit") {
       const titles = body?.titles;
       if (!Array.isArray(titles) || titles.length > 500) return send(res, 400, { error: "titles must be an array of at most 500" });

@@ -103,6 +103,44 @@ export function OverviewPage() {
         </Card>
       ) : null}
 
+      {s && s.computers > 0 ? (
+        <Card className="gap-4 px-6">
+          <h2 className="m-0">
+            <Eyebrow>Unsupported software and systems</Eyebrow>
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {(
+              [
+                ["Software past end of life", s.eol_titles ?? 0, "/software?support=eol", true],
+                ["Software ending within 90 days", s.ending_soon_titles ?? 0, "/software?support=ending_soon", false],
+                ["Computers with an unsupported OS", s.eol_computers ?? 0, "/computers?support=eol", true],
+                ["OS ending within 90 days", s.ending_soon_computers ?? 0, "/computers?support=ending_soon", false],
+              ] as const
+            ).map(([name, value, to, alert]) => (
+              <Link key={name} to={to} className="flex flex-col gap-0.5 rounded-md border border-border-subtle p-3 no-underline hover:bg-surface-subtle">
+                <span className={cn("text-2xl font-semibold", alert && value > 0 ? "text-text-critical" : "text-text-strong")}>{formatNumber(value)}</span>
+                <span className="text-sm text-text-strong">{name}</span>
+              </Link>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      {s && (s.patch_tracked_computers ?? 0) > 0 ? (
+        <Card className="gap-4 px-6">
+          <h2 className="m-0">
+            <Eyebrow>Patches</Eyebrow>
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Link to="/computers?patch=stale" className="flex flex-col gap-0.5 rounded-md border border-border-subtle p-3 no-underline hover:bg-surface-subtle">
+              <span className={cn("text-2xl font-semibold", (s.patch_stale_computers ?? 0) > 0 ? "text-text-critical" : "text-text-strong")}>{formatNumber(s.patch_stale_computers ?? 0)}</span>
+              <span className="text-sm text-text-strong">Computers without a recent patch</span>
+              <span className="text-xs text-text-muted">of {formatNumber(s.patch_tracked_computers ?? 0)} with patch data</span>
+            </Link>
+          </div>
+        </Card>
+      ) : null}
+
       {s && s.computers > 0 ? <PolicyCard tenantId={selectedTenantId} /> : null}
       {s && s.computers > 0 ? <VulnOverviewCard tenantId={selectedTenantId} /> : null}
 

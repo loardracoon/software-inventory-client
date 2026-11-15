@@ -32,6 +32,13 @@ export type OverviewStats = {
   coverage_stale: number;
   coverage_current: number;
   coverage_pct: number | null;
+  // End of life (Stage 3): software titles with a version past or within 90 days of its end, and computers by OS status.
+  eol_titles?: number;
+  ending_soon_titles?: number;
+  eol_computers?: number;
+  ending_soon_computers?: number;
+  patch_tracked_computers?: number;
+  patch_stale_computers?: number;
   titles: number;
   extension_installs: number;
   distinct_extensions: number;
@@ -89,6 +96,8 @@ export type ComputerFilters = {
   status: "all" | "collected" | "retry_scheduled" | "error";
   platform: Platform | "";
   coverage: "" | "never" | "stale" | "current";
+  support: "" | "eol" | "ending_soon" | "supported"; // OS end-of-life status
+  patch: "" | "current" | "stale" | "unknown"; // patch status from the Data Lake
   category: string; // level-1 slug among attention categories
   search: string;
   criticality: "" | "low" | "medium" | "high" | "critical";
@@ -105,6 +114,8 @@ export async function fetchComputers(filters: ComputerFilters, request: PageRequ
   if (filters.status !== "all") q = q.eq("cycle_status", filters.status);
   if (filters.platform) q = q.eq("platform", filters.platform);
   if (filters.coverage) q = q.eq("coverage_status", filters.coverage);
+  if (filters.support) q = q.eq("os_eol_status", filters.support);
+  if (filters.patch) q = q.eq("patch_status", filters.patch);
   if (filters.category) q = q.contains("attention_level1_slugs", [filters.category]);
   if (filters.criticality) q = q.eq("criticality", filters.criticality);
   if (filters.scope.trim()) q = q.contains("scope_tags", [filters.scope.trim()]);
@@ -206,6 +217,8 @@ export type SoftwareFilters = {
   policy: Database["public"]["Enums"]["policy_class"][];
   // Known vulnerabilities (Phase 10b): any | kev | critical | high (critical or high); "" = no filter.
   vuln?: string;
+  // End of life (Stage 3): eol | ending_soon | supported; "" = no filter.
+  support?: string;
 };
 
 const TITLE_SORT = new Set(["computers", "versions", "first_seen", "canonical_name", "vulns"]);
@@ -226,6 +239,7 @@ export async function searchTitles(filters: SoftwareFilters, request: PageReques
       ...(filters.asOf ? { p_as_of: filters.asOf } : {}),
       ...(filters.policy.length ? { p_policy: filters.policy } : {}),
       ...(filters.vuln ? { p_vuln: filters.vuln } : {}),
+      ...(filters.support ? { p_support: filters.support } : {}),
       p_sort: sort && TITLE_SORT.has(sort.id) ? sort.id : "computers",
       p_desc: sort ? sort.desc : true,
       p_limit: request.pageSize,
@@ -348,7 +362,8 @@ export async function fetchScanSettings(tenantId: string): Promise<ScanSettings 
 
 const EDITABLE_SETTINGS = [
   "cycle_weekday", "cycle_time", "retry_time", "timezone", "batch_size", "max_active_runs", "runs_per_minute",
-  "daily_run_limit", "reserve_pct", "run_grace_minutes", "provider", "data_lake_inventory", "stale_after_days", "review_every_days", "scope_statement",
+  "daily_run_limit", "reserve_pct", "run_grace_minutes", "provider", "data_lake_inventory", "data_lake_patches", "patch_stale_days", "stale_after_days", "review_every_days", "scope_statement",
+  "sla_critical_days", "sla_high_days", "sla_medium_days", "sla_low_days",
 ] as const;
 
 // Only the editable columns; updated_at and updated_by are set by the database trigger.

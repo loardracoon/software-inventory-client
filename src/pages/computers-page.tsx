@@ -15,6 +15,7 @@ import { asScanStatus, StatusBadge } from "@/components/shared/status-badge";
 import { CRITICALITY_OPTIONS, ImportContextButton, useCanEditContext } from "@/features/inventory/computer-context";
 import { fetchComputers, fetchNeedsAttention, type ComputerFilters, type ComputerRow } from "@/features/inventory/api";
 import { useTenant } from "@/features/tenants/tenant-context";
+import { SUPPORT_FILTERS, SupportBadge } from "@/components/shared/support-status";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { label, PLATFORM_LABEL } from "@/lib/labels";
 import { useLoad } from "@/lib/use-load";
@@ -110,6 +111,21 @@ const COLUMNS: ServerColumnDef<ComputerRow>[] = [
   },
   { accessorKey: "coverage_status", header: "Coverage", cell: ({ row }) => <CoverageStatus row={row.original} /> },
   {
+    accessorKey: "last_patch_at",
+    header: "Last patch",
+    enableSorting: false,
+    cell: ({ row }) =>
+      row.original.last_patch_at ? (
+        <span className="flex items-center gap-2">
+          {row.original.last_patch_at}
+          {row.original.patch_status === "stale" ? <Badge color="high" soft>Stale</Badge> : null}
+        </span>
+      ) : (
+        <span className="text-text-muted">—</span>
+      ),
+  },
+  { accessorKey: "os_eol_status", header: "OS support", enableSorting: false, cell: ({ row }) => <SupportBadge status={row.original.os_eol_status} from={row.original.os_eol_from} /> },
+  {
     accessorKey: "cycle_status",
     header: "Cycle status",
     cell: ({ row }) => (
@@ -166,6 +182,14 @@ export function ComputersPage() {
     const c = params.get("coverage");
     return c === "never" || c === "stale" || c === "current" ? c : "";
   });
+  const [support, setSupport] = useState<ComputerFilters["support"]>(() => {
+    const v = params.get("support");
+    return v === "eol" || v === "ending_soon" || v === "supported" ? v : "";
+  });
+  const [patch, setPatch] = useState<ComputerFilters["patch"]>(() => {
+    const v = params.get("patch");
+    return v === "current" || v === "stale" || v === "unknown" ? v : "";
+  });
   const attention = useLoad(`attention:${selectedTenantId ?? "all"}`, () => fetchNeedsAttention(selectedTenantId, 50));
 
   const level1 = useMemo(() => {
@@ -175,8 +199,8 @@ export function ComputersPage() {
   }, [attention.data]);
 
   const filters = useMemo<ComputerFilters>(
-    () => ({ tenantId: selectedTenantId, status, platform, coverage, category, search, criticality, scope, owner }),
-    [selectedTenantId, status, platform, coverage, category, search, criticality, scope, owner],
+    () => ({ tenantId: selectedTenantId, status, platform, coverage, support, patch, category, search, criticality, scope, owner }),
+    [selectedTenantId, status, platform, coverage, support, patch, category, search, criticality, scope, owner],
   );
   // A new function reloads the table after an import.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -235,6 +259,22 @@ export function ComputersPage() {
               { value: "never", label: "Never inventoried" },
               { value: "stale", label: "Stale" },
               { value: "current", label: "Current" },
+            ]}
+          />
+        </Field>
+        <Field label="OS support" htmlFor="computer-support" className="w-48">
+          <NativeSelect id="computer-support" value={support} onChange={(v) => setSupport(v as ComputerFilters["support"])} options={SUPPORT_FILTERS.map((f) => ({ value: f.value, label: f.value === "" ? "All" : f.label }))} />
+        </Field>
+        <Field label="Patches" htmlFor="computer-patch" className="w-48">
+          <NativeSelect
+            id="computer-patch"
+            value={patch}
+            onChange={(v) => setPatch(v as ComputerFilters["patch"])}
+            options={[
+              { value: "", label: "All" },
+              { value: "current", label: "Recently patched" },
+              { value: "stale", label: "No recent patch" },
+              { value: "unknown", label: "No patch data" },
             ]}
           />
         </Field>

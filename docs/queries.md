@@ -317,6 +317,24 @@ Sophos writes one full snapshot per computer per day. The app keeps only the row
 
 **Source rule:** a computer is a target only when it is a Windows computer and has no applied Live Endpoint Search snapshot of that domain. At its first Live Endpoint Search collection, Live Endpoint Search takes over without change events. The Data Lake has no Firefox extensions, no Store (AppX) apps, no macOS or Linux data and no install locations. The console shows "Data Lake snapshot <date>" in the header of a computer while it has open Data Lake rows.
 
+## Data Lake (patchstate)
+
+Windows patches (hotfixes) come from the Data Lake too. There is no Live Endpoint Search source for them, so the source rule above does not apply: with the switch **Collect Windows patch state from the Sophos Data Lake** on (Scans › Schedule), every live Windows computer is a target, also the ones Live Endpoint Search collects. The search takes 10 computers at a time (a computer reports many patches) and uses the same 26-hour window, the same split on the 10,000-row limit and the same "no rows, no snapshot" rule as `softwareinfo`.
+
+```
+from patchstate where normalizer = 'sophos-xdr-it-hygiene-ingestor' and host_id in ('<endpoint id>', ...) earliest='<start>' latest='<end>' | fields host_id, time, kb_article.title, kb_article.install_time, kb_article.uid, original_data
+```
+
+| Column | Source |
+| --- | --- |
+| `uid` (the item key) | `kb_article.uid`, else the KB number, else the title (a row with none of them is dropped) |
+| `kb` | the first `KB` followed by digits in `kb_article.title` (upper case), else empty |
+| `title` | `kb_article.title` |
+| `installed_at` | `kb_article.install_time` (epoch milliseconds are written as an ISO time) |
+| `installed_by` | `original_data.InstalledBy` |
+
+Patches are kept over time like disks: one open row per uid; a later snapshot without a patch closes it. A change of the KB, title or install time makes a new version; the installer does not. The query row `dl.patches` in the catalog is a reference only and is never scheduled. The console shows the last patch of a computer (the newest `installed_at` that is an ISO date) and calls it stale when it is older than **Patch considered stale after (days)** (default 60). A computer with no patch data is "unknown", never stale.
+
 ## What is collected and what is not
 
 **Collected:** names, versions, publishers and install locations of software; extension IDs, update URLs and

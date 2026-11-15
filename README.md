@@ -58,6 +58,7 @@ all the others. Server repository: **<https://github.com/loardracoon/software-in
 | Vulnerabilities | CVEs per installed version with severity, CVSS, known exploited (KEV), EPSS, "fixed in" version and the OS they apply to; "may apply" when a version cannot be compared |
 | Policies | Firewall-style rule table with drag and drop, live preview, title tester, draft and publish, version history, documentation of exceptions, export and import |
 | Changes | Added, updated and removed software, policy class changes and new CVEs |
+| Remediation | Known vulnerabilities as findings with due dates by severity (tenant deadlines) or the CISA date, overdue first, CSV export, overdue alert; end-of-life status of software and operating systems on the Software, Computers and Overview screens; Windows patch state from the Data Lake (last patch, stale filter, Patches card) |
 | Reports | Evidence packages for auditors (dated ZIP with a SHA-256 manifest), periodic inventory review recorded by a tenant admin against a recent package, overdue review alert |
 | Alerts | Webhook and email: low collection coverage, query errors, a stopped collector, new unsanctioned software, known exploited CVEs, overdue inventory review |
 | Access | Magic-link sign-in, roles (admin, operator, viewer), access by email or domain, invitations |

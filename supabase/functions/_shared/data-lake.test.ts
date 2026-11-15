@@ -8,7 +8,9 @@ import {
   latestSnapshots,
   searchWindow,
   snapshotTime,
+  patchStateQl,
   softwareInfoQl,
+  toPatchRows,
   toExtensionRows,
   toProgramRows,
   type DataLakeRow,
@@ -185,5 +187,33 @@ describe("DataLakeClient", () => {
   it("times out while the search is running", async () => {
     const { dl } = setup((query) => ({ data: { [query.includes("getOrCreateSearch") ? "getOrCreateSearch" : "search"]: status("ALL", "RUNNING") } }));
     await expect(dl.search("q", Date.now() - 1)).rejects.toThrow("timed out");
+  });
+});
+
+describe("patch state (Stage 3)", () => {
+  it("patchStateQl builds the exact query, 10 hosts at most, UUIDs only", () => {
+    expect(patchStateQl([H1, H2], W)).toBe(
+      `from patchstate where normalizer = 'sophos-xdr-it-hygiene-ingestor' and host_id in ('${H1}', '${H2}') earliest='${W.earliest}' latest='${W.latest}' | fields host_id, time, kb_article.title, kb_article.install_time, kb_article.uid, original_data`,
+    );
+    expect(() => patchStateQl(["x' or '1'='1"], W)).toThrow(DataLakeError);
+    expect(() => patchStateQl([], W)).toThrow(DataLakeError);
+    expect(() => patchStateQl(Array.from({ length: 10 }, () => H1), W)).not.toThrow();
+    expect(() => patchStateQl(Array.from({ length: 11 }, () => H1), W)).toThrow(DataLakeError);
+  });
+
+  it("toPatchRows reads the KB number, time and installer, and drops rows with no identity", () => {
+    const patch = (kb: Record<string, unknown> | undefined, original: unknown = null): DataLakeRow => ({ host_id: H1, time: NEW, kb_article: kb, original_data: original });
+    expect(
+      toPatchRows([
+        patch({ title: "Security Update for Windows (KB5034441)", install_time: NEW, uid: "u-1" }, JSON.stringify({ InstalledBy: "SYSTEM" })),
+        patch({ title: "Cumulative Update", install_time: "2026-10-01T00:00:00Z", uid: "u-2" }),
+        patch({ title: "Orphan" }),
+        patch(undefined),
+      ]),
+    ).toEqual([
+      { uid: "u-1", kb: "KB5034441", title: "Security Update for Windows (KB5034441)", installed_at: new Date(NEW).toISOString(), installed_by: "SYSTEM" },
+      { uid: "u-2", kb: null, title: "Cumulative Update", installed_at: "2026-10-01T00:00:00Z", installed_by: null },
+      { uid: "Orphan", kb: null, title: "Orphan", installed_at: null, installed_by: null },
+    ]);
   });
 });

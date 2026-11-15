@@ -6,8 +6,10 @@ export type ReportData = {
   software: Record<string, unknown>[];
   vulnerabilities: Record<string, unknown>[];
   exceptions: Record<string, unknown>[];
+  patches: Record<string, unknown>[];
   coverage: unknown;
   policy: unknown;
+  remediation: unknown;
   scope_statement: string | null;
   users_masked: boolean;
 };
@@ -50,10 +52,11 @@ export function toCsv(header: string[], rows: unknown[][]): string {
 }
 
 const COLUMNS = {
-  "computers.csv": ["hostname", "sophos_endpoint_id", "platform", "os_name", "os_version", "os_build", "associated_user", "owner", "department", "criticality", "scope_tags", "last_seen_at", "inventoried_at", "inventory_source", "coverage_status"],
-  "software.csv": ["hostname", "kind", "source", "canonical_name", "vendor", "version", "category", "attention_level", "policy_class", "first_seen"],
-  "vulnerabilities.csv": ["canonical_name", "version", "vuln_id", "severity", "cvss_score", "kev", "kev_due", "epss", "fixed_in", "first_seen_at", "computers"],
+  "computers.csv": ["hostname", "sophos_endpoint_id", "platform", "os_name", "os_version", "os_build", "associated_user", "owner", "department", "criticality", "scope_tags", "last_seen_at", "inventoried_at", "inventory_source", "coverage_status", "os_eol_status", "os_eol_from", "last_patch_at", "patch_status"],
+  "software.csv": ["hostname", "kind", "source", "canonical_name", "vendor", "version", "category", "attention_level", "policy_class", "support_status", "eol_from", "first_seen"],
+  "vulnerabilities.csv": ["canonical_name", "version", "vuln_id", "severity", "cvss_score", "kev", "kev_due", "epss", "fixed_in", "first_seen_at", "computers", "due_at", "status"],
   "exceptions.csv": ["name", "reason", "review_by", "owner"],
+  "patches.csv": ["hostname", "kb", "title", "installed_at", "installed_by"],
 } as const;
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {
@@ -61,7 +64,7 @@ async function sha256Hex(bytes: Uint8Array): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// files = the eight content files and manifest.json last; manifest.files lists the eight (a file cannot hash itself).
+// files = the content files and manifest.json last; manifest.files lists the content files (a file cannot hash itself).
 export async function buildEvidence(
   data: ReportData,
   meta: EvidenceMeta,
@@ -79,8 +82,10 @@ export async function buildEvidence(
     csv("software.csv", data.software),
     csv("vulnerabilities.csv", data.vulnerabilities),
     csv("exceptions.csv", data.exceptions),
+    csv("patches.csv", data.patches ?? []), // an older database function may not send it yet
     text("coverage.json", pretty(data.coverage)),
     text("policy.json", pretty(data.policy)),
+    text("remediation.json", pretty(data.remediation)),
     text("scope.txt", [data.scope_statement ?? "", "", `Tenant: ${meta.tenant.name}`, `Inventory as of: ${meta.asOf}`, `Scope tag: ${meta.scopeTag ?? "none (all computers)"}`, ""].join("\r\n")),
     text("data.json", pretty(data)),
   ];

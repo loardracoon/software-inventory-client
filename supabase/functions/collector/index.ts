@@ -32,6 +32,7 @@ import { hubSyncDue, loadHub, runHubSync, type HubSyncSummary } from "../_shared
 import { ingestPending, type IngestSummary } from "../_shared/ingest.ts";
 import { runPolicyEvaluation, type PolicyRunSummary, type RpcClient } from "../_shared/policy-run.ts";
 import { runVulnEvaluation, type VulnRunSummary } from "../_shared/vuln-run.ts";
+import { runEolEvaluation, type EolRunSummary } from "../_shared/eol-run.ts";
 import { adminClient, authorize, corsHeaders, errorMessage, HttpError, json, loadSophosClient, LogBuffer } from "../_shared/edge.ts";
 import { advanceProbes, loadTenants, newProbeSummary, sophosTenantOf, startProbes, type TenantRow } from "../_shared/probe-runner.ts";
 import { createQueryProvider, readAllResults, type ProviderName } from "../_shared/query-provider.ts";
@@ -96,6 +97,7 @@ Deno.serve(async (req) => {
     ingest: null as IngestSummary | null,
     hubSync: null as HubSyncSummary | null,
     vulns: null as VulnRunSummary | null,
+    eol: null as EolRunSummary | null,
     policy: null as PolicyRunSummary | null,
     stoppedEarly: false,
     problems: [] as string[],
@@ -422,6 +424,16 @@ Deno.serve(async (req) => {
         for (const message of summary.vulns.errors) problem(`Vulnerability matching: ${message}`, null, "warn");
       } catch (error) {
         problem(`Vulnerability matching failed: ${errorMessage(error)}`, null, "warn");
+      }
+    }
+
+    // 6e. end of life (before the policy: its eol field reads the matches)
+    if (step("eol")) {
+      try {
+        summary.eol = await runEolEvaluation(admin as unknown as RpcClient, { timeLeft });
+        for (const message of summary.eol.errors) problem(`End-of-life matching: ${message}`, null, "warn");
+      } catch (error) {
+        problem(`End-of-life matching failed: ${errorMessage(error)}`, null, "warn");
       }
     }
 

@@ -373,14 +373,14 @@ isOneToOne: false
                   ]
                 },"computers": {
                   Row: {
-                    "associated_user": string | null,"context_updated_at": string | null,"context_updated_by": string | null,"created_at": string,"criticality": string | null,"data_lake_checked_at": string | null,"department": string | null,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"owner": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"scope_tags": (string)[],"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
+                    "associated_user": string | null,"context_updated_at": string | null,"context_updated_by": string | null,"created_at": string,"criticality": string | null,"data_lake_checked_at": string | null,"department": string | null,"endpoint_type": string | null,"health": string | null,"hostname": string,"id": string,"last_collected_at": string | null,"last_seen_at": string | null,"missing_syncs": number,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_eol_from": string | null,"os_eol_release": string | null,"os_eol_status": string | null,"os_name": string | null,"os_version": string | null,"owner": string | null,"platform": Database["public"]['Enums']["platform"],"retired_at": string | null,"scope_tags": (string)[],"sophos_endpoint_id": string,"tenant_id": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "associated_user"?: string | null,"context_updated_at"?: string | null,"context_updated_by"?: string | null,"created_at"?: string,"criticality"?: string | null,"data_lake_checked_at"?: string | null,"department"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"owner"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"scope_tags"?: (string)[],"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
+                    "associated_user"?: string | null,"context_updated_at"?: string | null,"context_updated_by"?: string | null,"created_at"?: string,"criticality"?: string | null,"data_lake_checked_at"?: string | null,"department"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname": string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_eol_from"?: string | null,"os_eol_release"?: string | null,"os_eol_status"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"owner"?: string | null,"platform": Database["public"]['Enums']["platform"],"retired_at"?: string | null,"scope_tags"?: (string)[],"sophos_endpoint_id": string,"tenant_id": string,"updated_at"?: string
                   }
                   Update: {
-                    "associated_user"?: string | null,"context_updated_at"?: string | null,"context_updated_by"?: string | null,"created_at"?: string,"criticality"?: string | null,"data_lake_checked_at"?: string | null,"department"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"owner"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"scope_tags"?: (string)[],"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
+                    "associated_user"?: string | null,"context_updated_at"?: string | null,"context_updated_by"?: string | null,"created_at"?: string,"criticality"?: string | null,"data_lake_checked_at"?: string | null,"department"?: string | null,"endpoint_type"?: string | null,"health"?: string | null,"hostname"?: string,"id"?: string,"last_collected_at"?: string | null,"last_seen_at"?: string | null,"missing_syncs"?: number,"online"?: boolean | null,"online_checked_at"?: string | null,"os_build"?: string | null,"os_eol_from"?: string | null,"os_eol_release"?: string | null,"os_eol_status"?: string | null,"os_name"?: string | null,"os_version"?: string | null,"owner"?: string | null,"platform"?: Database["public"]['Enums']["platform"],"retired_at"?: string | null,"scope_tags"?: (string)[],"sophos_endpoint_id"?: string,"tenant_id"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     {
@@ -447,6 +447,46 @@ isOneToOne: false
       referencedColumns: ["category_slug"]
     }
                   ]
+                },"eol_cache": {
+                  Row: {
+                    "hub_seq": number,"product_key": string,"releases": NonNullable<Json>,"slug": string,"synced_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "hub_seq"?: number,"product_key": string,"releases"?: NonNullable<Json>,"slug": string,"synced_at"?: string
+                  }
+                  Update: {
+                    "hub_seq"?: number,"product_key"?: string,"releases"?: NonNullable<Json>,"slug"?: string,"synced_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"eol_eval_state": {
+                  Row: {
+                    "changed_at": string | null,"evaluated_at": string,"tenant_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "changed_at"?: string | null,"evaluated_at"?: string,"tenant_id": string
+                  }
+                  Update: {
+                    "changed_at"?: string | null,"evaluated_at"?: string,"tenant_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "eol_eval_state_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: true
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "eol_eval_state_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: true
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"hardware_versions": {
                   Row: {
                     "attrs": NonNullable<Json>,"computer_id": string,"domain": Database["public"]['Enums']["inventory_domain"],"id": string,"item_key": string,"row_hash": string,"snapshot_id": string | null,"tenant_id": string,"valid_from": string,"valid_to": string | null
@@ -487,14 +527,14 @@ isOneToOne: false
                   ]
                 },"hub_connection": {
                   Row: {
-                    "configured_at": string | null,"configured_by": string | null,"failures": number,"id": number,"key_hint": string | null,"key_secret_id": string | null,"last_attempt_at": string | null,"last_error": string | null,"last_seq": number,"next_attempt_at": string | null,"share_unknown_titles": boolean,"synced_at": string | null,"url": string | null,"vuln_last_seq": number
+                    "configured_at": string | null,"configured_by": string | null,"eol_last_seq": number,"failures": number,"id": number,"key_hint": string | null,"key_secret_id": string | null,"last_attempt_at": string | null,"last_error": string | null,"last_seq": number,"next_attempt_at": string | null,"share_unknown_titles": boolean,"synced_at": string | null,"url": string | null,"vuln_last_seq": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "configured_at"?: string | null,"configured_by"?: string | null,"failures"?: number,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_attempt_at"?: string | null,"last_error"?: string | null,"last_seq"?: number,"next_attempt_at"?: string | null,"share_unknown_titles"?: boolean,"synced_at"?: string | null,"url"?: string | null,"vuln_last_seq"?: number
+                    "configured_at"?: string | null,"configured_by"?: string | null,"eol_last_seq"?: number,"failures"?: number,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_attempt_at"?: string | null,"last_error"?: string | null,"last_seq"?: number,"next_attempt_at"?: string | null,"share_unknown_titles"?: boolean,"synced_at"?: string | null,"url"?: string | null,"vuln_last_seq"?: number
                   }
                   Update: {
-                    "configured_at"?: string | null,"configured_by"?: string | null,"failures"?: number,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_attempt_at"?: string | null,"last_error"?: string | null,"last_seq"?: number,"next_attempt_at"?: string | null,"share_unknown_titles"?: boolean,"synced_at"?: string | null,"url"?: string | null,"vuln_last_seq"?: number
+                    "configured_at"?: string | null,"configured_by"?: string | null,"eol_last_seq"?: number,"failures"?: number,"id"?: number,"key_hint"?: string | null,"key_secret_id"?: string | null,"last_attempt_at"?: string | null,"last_error"?: string | null,"last_seq"?: number,"next_attempt_at"?: string | null,"share_unknown_titles"?: boolean,"synced_at"?: string | null,"url"?: string | null,"vuln_last_seq"?: number
                   }
                   Relationships: [
                     
@@ -1131,14 +1171,14 @@ isOneToOne: false
                   ]
                 },"scan_settings": {
                   Row: {
-                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"max_active_runs": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"review_every_days": number,"run_grace_minutes": number,"runs_per_minute": number,"scope_statement": string,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
+                    "batch_size": number,"cycle_time": string,"cycle_weekday": number,"daily_run_limit": number,"data_lake_inventory": boolean,"data_lake_patches": boolean,"max_active_runs": number,"patch_stale_days": number,"provider": Database["public"]['Enums']["query_provider"],"reserve_pct": number,"retry_time": string,"review_every_days": number,"run_grace_minutes": number,"runs_per_minute": number,"scope_statement": string,"sla_critical_days": number,"sla_high_days": number,"sla_low_days": number,"sla_medium_days": number,"stale_after_days": number,"tenant_id": string,"timezone": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"review_every_days"?: number,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"data_lake_patches"?: boolean,"max_active_runs"?: number,"patch_stale_days"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"review_every_days"?: number,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"sla_critical_days"?: number,"sla_high_days"?: number,"sla_low_days"?: number,"sla_medium_days"?: number,"stale_after_days"?: number,"tenant_id": string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"max_active_runs"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"review_every_days"?: number,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "batch_size"?: number,"cycle_time"?: string,"cycle_weekday"?: number,"daily_run_limit"?: number,"data_lake_inventory"?: boolean,"data_lake_patches"?: boolean,"max_active_runs"?: number,"patch_stale_days"?: number,"provider"?: Database["public"]['Enums']["query_provider"],"reserve_pct"?: number,"retry_time"?: string,"review_every_days"?: number,"run_grace_minutes"?: number,"runs_per_minute"?: number,"scope_statement"?: string,"sla_critical_days"?: number,"sla_high_days"?: number,"sla_low_days"?: number,"sla_medium_days"?: number,"stale_after_days"?: number,"tenant_id"?: string,"timezone"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1329,6 +1369,62 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"title_version_eol": {
+                  Row: {
+                    "computed_at": string,"eol_from": string | null,"product_key": string,"release": string,"status": string,"tenant_id": string,"title_id": string,"version": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "computed_at"?: string,"eol_from"?: string | null,"product_key": string,"release": string,"status": string,"tenant_id": string,"title_id": string,"version"?: string
+                  }
+                  Update: {
+                    "computed_at"?: string,"eol_from"?: string | null,"product_key"?: string,"release"?: string,"status"?: string,"tenant_id"?: string,"title_id"?: string,"version"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "title_version_eol_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_eol_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_eol_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "title_version_eol_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "title_version_eol_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "title_version_eol_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "title_version_eol_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
+    }
+                  ]
                 },"title_version_policy": {
                   Row: {
                     "class": Database["public"]['Enums']["policy_class"],"evaluated_at": string,"policy_version": number,"rule_id": string | null,"tenant_id": string,"title_id": string,"version": string
@@ -1491,6 +1587,62 @@ isOneToOne: true
 isOneToOne: true
       referencedRelation: "v_tenant_overview"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"vuln_findings": {
+                  Row: {
+                    "due_at": string,"first_seen_at": string,"id": number,"product_key": string,"resolved_at": string | null,"severity": string | null,"tenant_id": string,"title_id": string,"version": string,"vuln_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "due_at": string,"first_seen_at": string,"id"?: never,"product_key": string,"resolved_at"?: string | null,"severity"?: string | null,"tenant_id": string,"title_id": string,"version"?: string,"vuln_id": string
+                  }
+                  Update: {
+                    "due_at"?: string,"first_seen_at"?: string,"id"?: never,"product_key"?: string,"resolved_at"?: string | null,"severity"?: string | null,"tenant_id"?: string,"title_id"?: string,"version"?: string,"vuln_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "vuln_findings_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vuln_findings_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
     }
                   ]
                 },"vuln_match_events": {
@@ -1792,7 +1944,7 @@ isOneToOne: false
                   ]
                 },"v_computer_list": {
                   Row: {
-                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"coverage_status": string | null,"criticality": string | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"department": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"inventoried_at": string | null,"inventory_source": string | null,"last_collected_at": string | null,"last_error": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_name": string | null,"os_version": string | null,"owner": string | null,"packages": number | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"scope_tags": (string)[],"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
+                    "associated_user": string | null,"attention": Json | null,"attention_level1_slugs": (string)[] | null,"attention_slugs": (string)[] | null,"coverage_status": string | null,"criticality": string | null,"cycle_status": string | null,"data_lake_snapshot_at": string | null,"department": string | null,"endpoint_type": string | null,"extensions": number | null,"health": string | null,"hostname": string,"id": string,"inventoried_at": string | null,"inventory_source": string | null,"last_collected_at": string | null,"last_error": string | null,"last_patch_at": string | null,"last_seen_at": string | null,"next_attempt_at": string | null,"online": boolean | null,"online_checked_at": string | null,"os_build": string | null,"os_eol_from": string | null,"os_eol_release": string | null,"os_eol_status": string | null,"os_name": string | null,"os_version": string | null,"owner": string | null,"packages": number | null,"patch_status": string | null,"platform": Database["public"]['Enums']["platform"],"programs": number | null,"retired_at": string | null,"scope_tags": (string)[],"tenant_id": string,"user_masked": boolean | null,"vulns": Json | null
                   }
                   ComputedFields: never
                   Relationships: [
@@ -2128,6 +2280,56 @@ isOneToOne: false
       referencedColumns: ["title_id"]
     }
                   ]
+                },"v_vuln_findings": {
+                  Row: {
+                    "canonical_name": string,"computers": number | null,"cvss_score": number | null,"days_open": number | null,"due_at": string,"first_seen_at": string,"id": number,"kev": boolean | null,"kev_due": string | null,"product_key": string,"resolved_at": string | null,"severity": string | null,"status": string | null,"tenant_id": string,"title_id": string,"version": string,"vuln_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "vuln_findings_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "tenants"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vuln_findings_tenant_id_fkey"
+      columns: ["tenant_id"]
+isOneToOne: false
+      referencedRelation: "v_tenant_overview"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "software_titles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_classification"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_products"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "title_summary"
+      referencedColumns: ["title_id"]
+    },{
+      foreignKeyName: "vuln_findings_title_id_fkey"
+      columns: ["title_id"]
+isOneToOne: false
+      referencedRelation: "v_title_summary"
+      referencedColumns: ["title_id"]
+    }
+                  ]
                 }
           }
           Functions: {
@@ -2154,6 +2356,9 @@ isOneToOne: false
                            },
 "apply_dictionary_changes":
 { Args: { "p_categories": Json,"p_entries": Json,"p_next_seq": number }; Returns: Json
+                           },
+"apply_eol_changes":
+{ Args: { "p_items": Json,"p_next_since": number }; Returns: Json
                            },
 "apply_hardware_snapshot":
 { Args: { "p_items": Json,"prev": Omit<Database["public"]['Tables']["snapshots"]['Row'], Database["public"]['Tables']["snapshots"]['ComputedFields']>,"s": Omit<Database["public"]['Tables']["snapshots"]['Row'], Database["public"]['Tables']["snapshots"]['ComputedFields']> }; Returns: string
@@ -2264,6 +2469,29 @@ isOneToOne: false
 { Args: { "p_tenant_id": string }; Returns: {
               "due": number,"due_priority": number,"name": string,"platform": Database["public"]['Enums']["platform"],"query_id": string,"sql": string,"version": number
             }[]
+                           },
+"eol_cache_get":
+{ Args: { "p_product_keys": (string)[] }; Returns: {
+              "product_key": string,"releases": Json
+            }[]
+                           },
+"eol_due_tenants":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "tenant_id": string
+            }[]
+                           },
+"eol_inputs":
+{ Args: { "p_after_title"?: string,"p_after_version"?: string,"p_limit"?: number,"p_tenant_id": string }; Returns: {
+              "product_key": string,"title_id": string,"version": string
+            }[]
+                           },
+"eol_os_inputs":
+{ Args: { "p_tenant_id": string }; Returns: {
+              "computer_id": string,"os_build": string,"os_name": string,"os_version": string,"platform": Database["public"]['Enums']["platform"]
+            }[]
+                           },
+"eol_replace":
+{ Args: { "p_computers": Json,"p_tenant_id": string,"p_titles": Json }; Returns: Json
                            },
 "export_audit_log":
 { Args: { "p_from": string,"p_to": string }; Returns: {
@@ -2426,7 +2654,7 @@ isOneToOne: false
                            },
 "policy_eval_inputs":
 { Args: { "p_after_title"?: string,"p_after_version"?: string,"p_limit"?: number,"p_only_new"?: boolean,"p_tenant_id": string }; Returns: {
-              "category_name": string,"category_slug": string,"external_id": string,"kev": boolean,"kind": Database["public"]['Enums']["title_kind"],"max_cvss": number,"max_epss": number,"name": string,"subcategory_name": string,"subcategory_slug": string,"title_id": string,"vendor": string,"version": string
+              "category_name": string,"category_slug": string,"eol": boolean,"external_id": string,"kev": boolean,"kind": Database["public"]['Enums']["title_kind"],"max_cvss": number,"max_epss": number,"name": string,"subcategory_name": string,"subcategory_slug": string,"title_id": string,"vendor": string,"version": string
             }[]
                            },
 "policy_evaluation_finished":
@@ -2452,7 +2680,7 @@ isOneToOne: false
                            },
 "policy_preview_inputs":
 { Args: { "p_tenant_id": string }; Returns: {
-              "category_name": string,"category_slug": string,"computers": number,"current_class": Database["public"]['Enums']["policy_class"],"current_rule_id": string,"external_id": string,"installations": number,"kev": boolean,"kind": Database["public"]['Enums']["title_kind"],"max_cvss": number,"max_epss": number,"name": string,"subcategory_name": string,"subcategory_slug": string,"title_id": string,"vendor": string,"version": string
+              "category_name": string,"category_slug": string,"computers": number,"current_class": Database["public"]['Enums']["policy_class"],"current_rule_id": string,"eol": boolean,"external_id": string,"installations": number,"kev": boolean,"kind": Database["public"]['Enums']["title_kind"],"max_cvss": number,"max_epss": number,"name": string,"subcategory_name": string,"subcategory_slug": string,"title_id": string,"vendor": string,"version": string
             }[]
                            },
 "policy_publish":
@@ -2533,8 +2761,8 @@ isOneToOne: false
 { Args: { "p_tenant_id"?: string }; Returns: string[]
                            },
 "search_titles":
-{ Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_policy"?: (Database["public"]['Enums']["policy_class"])[],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string,"p_vuln"?: string }; Returns: {
-              "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"max_cvss": number,"method": string,"mixed_versions": boolean,"origin": string,"policy_class": Database["public"]['Enums']["policy_class"],"policy_rule_lineage_id": string,"policy_rule_name": string,"product_key": string,"source": string,"spellings": number,"title_id": string,"total_count": number,"vendor": string,"versions": number,"vuln_top": Json,"vulns": number,"vulns_critical": number,"vulns_high": number,"vulns_kev": number,"vulns_low": number,"vulns_medium": number,"vulns_possible": number
+{ Args: { "p_as_of"?: string,"p_attention"?: (Database["public"]['Enums']["attention_level"])[],"p_category"?: string,"p_desc"?: boolean,"p_kind"?: Database["public"]['Enums']["title_kind"],"p_limit"?: number,"p_offset"?: number,"p_platform"?: Database["public"]['Enums']["platform"],"p_policy"?: (Database["public"]['Enums']["policy_class"])[],"p_query"?: string,"p_sort"?: string,"p_source"?: string,"p_support"?: string,"p_tenant_id"?: string,"p_user"?: string,"p_version_below"?: string,"p_vuln"?: string }; Returns: {
+              "attention_level": Database["public"]['Enums']["attention_level"],"canonical_name": string,"category_slug": string,"computers": number,"confidence": number,"eol_from": string,"external_id": string,"first_seen": string,"kind": Database["public"]['Enums']["title_kind"],"latest_version": string,"level1_name": string,"level2_name": string,"max_cvss": number,"method": string,"mixed_versions": boolean,"origin": string,"policy_class": Database["public"]['Enums']["policy_class"],"policy_rule_lineage_id": string,"policy_rule_name": string,"product_key": string,"source": string,"spellings": number,"support_status": string,"title_id": string,"total_count": number,"vendor": string,"versions": number,"vuln_top": Json,"vulns": number,"vulns_critical": number,"vulns_high": number,"vulns_kev": number,"vulns_low": number,"vulns_medium": number,"vulns_possible": number
             }[]
                            },
 "set_alert_settings":
@@ -2567,6 +2795,9 @@ isOneToOne: false
 "title_group_ids":
 { Args: { "p_title_id": string }; Returns: (string)[]
                            },
+"title_version_eol_input":
+{ Args: { "p_tenant_id": string,"p_title_id": string,"p_version": string }; Returns: boolean
+                           },
 "title_version_vuln_inputs":
 { Args: { "p_tenant_id": string,"p_title_id": string,"p_version": string }; Returns: {
               "kev": boolean,"max_cvss": number,"max_epss": number
@@ -2574,7 +2805,7 @@ isOneToOne: false
                            },
 "title_versions":
 { Args: { "p_tenant_id"?: string,"p_title_id": string }; Returns: {
-              "computers": number,"policy_class": Database["public"]['Enums']["policy_class"],"version": string,"vulns": Json
+              "computers": number,"eol_from": string,"policy_class": Database["public"]['Enums']["policy_class"],"release": string,"support_status": string,"version": string,"vulns": Json
             }[]
                            },
 "title_vulns":
@@ -2596,6 +2827,9 @@ isOneToOne: false
 "version_key":
 { Args: { "v": string }; Returns: (number)[]
                            },
+"vuln_due_at":
+{ Args: { "p_first_seen": string,"p_kev_due": string,"p_severity": string,"p_tenant_id": string }; Returns: string
+                           },
 "vuln_due_tenants":
 { Args: Record<PropertyKey, never>; Returns: {
               "tenant_id": string
@@ -2605,6 +2839,12 @@ isOneToOne: false
 { Args: { "p_after_title"?: string,"p_after_version"?: string,"p_limit"?: number,"p_tenant_id": string }; Returns: {
               "platforms": (string)[],"product_key": string,"title_id": string,"version": string
             }[]
+                           },
+"vuln_finding_open":
+{ Args: { "p_first_seen": string,"p_product_key": string,"p_tenant_id": string,"p_title_id": string,"p_version": string,"p_vuln_id": string }; Returns: undefined
+                           },
+"vuln_findings_backfill":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "vuln_finish_eval":
 { Args: { "p_changed"?: boolean,"p_run_id": string,"p_tenant_id": string }; Returns: Json
@@ -2627,7 +2867,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id"|"cvss"|"kev"|"epss","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest"|"data_lake","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
+            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages"|"patches","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id"|"cvss"|"kev"|"epss"|"eol","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest"|"data_lake","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -2747,7 +2987,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages"],"platform": ["windows", "macos", "linux"],"policy_class": ["core_system", "sanctioned_app", "tolerated_app", "unsanctioned_app"],"policy_field": ["vendor", "name", "category", "subcategory", "version", "external_id", "cvss", "kev", "epss"],"policy_operator": ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "regex", "in", "not_in", "gt", "gte", "lt", "lte", "between"],"policy_status": ["draft", "published", "archived"],"query_provider": ["live_endpoint_search", "live_discover_rest", "data_lake"],"rule_match": ["all", "any"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
+            "app_role": ["admin", "operator", "viewer"],"attention_level": ["info", "review", "not_allowed"],"change_type": ["added", "removed", "updated"],"cycle_status": ["open", "closed", "complete"],"inventory_domain": ["hardware", "disks", "programs", "extensions", "ide_extensions", "packages", "patches"],"platform": ["windows", "macos", "linux"],"policy_class": ["core_system", "sanctioned_app", "tolerated_app", "unsanctioned_app"],"policy_field": ["vendor", "name", "category", "subcategory", "version", "external_id", "cvss", "kev", "epss", "eol"],"policy_operator": ["equals", "not_equals", "contains", "not_contains", "starts_with", "ends_with", "regex", "in", "not_in", "gt", "gte", "lt", "lte", "between"],"policy_status": ["draft", "published", "archived"],"query_provider": ["live_endpoint_search", "live_discover_rest", "data_lake"],"rule_match": ["all", "any"],"run_status": ["running", "finished", "failed"],"task_status": ["pending", "dispatched", "collected", "no_response", "retry_scheduled", "missed", "error", "skipped"],"title_kind": ["program", "extension", "ide_extension", "package"]
           }
         }
 } as const
