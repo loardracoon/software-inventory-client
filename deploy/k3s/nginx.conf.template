@@ -34,6 +34,7 @@ limit_req_zone $rl_key zone=auth_strict:10m rate=${RL_AUTH_STRICT_RATE};
 limit_req_zone $rl_key zone=auth:10m rate=${RL_AUTH_RATE};
 limit_req_zone $rl_key zone=rest:10m rate=${RL_REST_RATE};
 limit_req_zone $rl_key zone=functions:10m rate=${RL_FUNCTIONS_RATE};
+limit_req_zone $rl_key zone=mcp:10m rate=${RL_MCP_RATE};
 limit_conn_zone $rl_key zone=per_ip:10m;
 limit_req_status 429;
 limit_conn_status 429;
@@ -78,6 +79,16 @@ server {
     limit_req zone=rest burst=${RL_REST_BURST} nodelay;
     client_max_body_size ${RL_BODY_REST};
     proxy_pass http://rest:3000/;
+  }
+
+  # MCP server for AI assistants (Phase 11): its own limit, small bodies, no long streams (the server is
+  # stateless and answers JSON; GET is refused by the function).
+  location = /functions/v1/mcp {
+    limit_req zone=mcp burst=${RL_MCP_BURST} nodelay;
+    client_max_body_size 256k;
+    proxy_pass http://functions:9000/mcp;
+    proxy_read_timeout 180s;
+    proxy_send_timeout 180s;
   }
 
   location /functions/v1/ {

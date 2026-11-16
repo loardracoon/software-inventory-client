@@ -383,6 +383,7 @@ These limits protect the app against too many requests and against guessing of s
 | Other Auth calls, for each address | `RL_AUTH_RATE`, `RL_AUTH_BURST` | `120r/m`, `60` |
 | Database API, for each address | `RL_REST_RATE`, `RL_REST_BURST` | `30r/s`, `120` |
 | Edge Functions, for each address | `RL_FUNCTIONS_RATE`, `RL_FUNCTIONS_BURST` | `10r/s`, `60` |
+| MCP server (AI assistants), for each address | `RL_MCP_RATE`, `RL_MCP_BURST` | `2r/s`, `20` |
 | Open connections, for each address | `RL_CONN_PER_IP` | `60` |
 | Largest request body | `RL_BODY_AUTH`, `RL_BODY_REST`, `RL_BODY_FUNCTIONS` | `64k`, `2m`, `10m` |
 | Auth limits for each address (needs the header) | `GOTRUE_RATE_LIMIT_HEADER` and `_OTP`, `_VERIFY`, `_TOKEN_REFRESH` | `X-Real-IP`, `10`, `15`, `60` (in 5 minutes) |

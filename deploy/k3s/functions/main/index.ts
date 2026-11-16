@@ -2,6 +2,8 @@
 // verified here unless the function is listed in NO_VERIFY_JWT (the functions with verify_jwt = false in
 // supabase/config.toml, which authenticate callers themselves).
 
+import { workerEnvs } from "../_shared/worker-env.ts";
+
 declare const EdgeRuntime: {
   userWorkers: {
     create(options: Record<string, unknown>): Promise<{ fetch(req: Request): Promise<Response> }>;
@@ -32,8 +34,10 @@ async function validJwt(token: string): Promise<boolean> {
   }
 }
 
-// Workers get the environment without the JWT secret.
-const workerEnv = Object.entries(Deno.env.toObject()).filter(([k]) => k !== "JWT_SECRET" && k !== "NO_VERIFY_JWT");
+// Workers get the environment without the JWT secret. The one exception is the mcp function, which signs a
+// short-lived JWT for the user behind a personal token (docs/phases/client-11-mcp.md); it gets the secret as
+// MCP_JWT_SECRET, the same name the hosted project uses as a function secret.
+const envs = workerEnvs(Deno.env.toObject());
 
 Deno.serve(async (req) => {
   const name = new URL(req.url).pathname.split("/")[1] ?? "";
@@ -54,7 +58,7 @@ Deno.serve(async (req) => {
       workerTimeoutMs: 150_000,
       noModuleCache: false,
       importMapPath: null,
-      envVars: workerEnv,
+      envVars: envs.forWorker(name),
     });
     return await worker.fetch(req);
   } catch (error) {

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/shared/page-header";
 import { AuditLogLink } from "@/features/audit/audit-log-link";
 import { AlertsCard } from "@/features/alerts/alerts-card";
 import { HubCard } from "@/features/dictionary/hub-card";
+import { McpCard } from "@/features/mcp/mcp-card";
 import { QueriesCard } from "@/features/queries/queries-card";
 import { SophosConnectionCard } from "@/features/sophos/sophos-connection-card";
 import { useTenant } from "@/features/tenants/tenant-context";
@@ -15,7 +16,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Administration" title="Settings" description="Sophos connection, users, queries, dictionary and alerts." />
+      <PageHeader eyebrow="Administration" title="Settings" description="Sophos connection, users, queries, dictionary, alerts and AI assistants." />
       <AuditLogLink />
       <SophosConnectionCard
         onSynced={() => {
@@ -28,6 +29,7 @@ export function SettingsPage() {
       <QueriesCard />
       <HubCard />
       <AlertsCard />
+      <McpCard />
     </>
   );
 }

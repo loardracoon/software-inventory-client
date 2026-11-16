@@ -2333,6 +2333,27 @@ isOneToOne: false
                 }
           }
           Functions: {
+"get_mcp_settings":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "enabled": boolean,"show_usernames": boolean,"updated_at": string
+            }[]
+                           },
+"mcp_token_create":
+{ Args: { "p_days"?: number,"p_name": string,"p_scope": Database["public"]["Enums"]["mcp_scope"] }; Returns: {
+              "expires_at": string,"id": string,"token": string
+            }[]
+                           },
+"mcp_token_list":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"email": string,"expires_at": string,"id": string,"last_used_at": string,"name": string,"revoked_at": string,"scope": Database["public"]["Enums"]["mcp_scope"],"token_hint": string,"user_id": string
+            }[]
+                           },
+"mcp_token_revoke":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"set_mcp_settings":
+{ Args: { "p_enabled": boolean,"p_show_usernames": boolean }; Returns: undefined
+                           },
             "_apply_computer_context":
 { Args: { "p_criticality": string,"p_department": string,"p_ids": (string)[],"p_owner": string,"p_tags": (string)[] }; Returns: number
                            },
@@ -2867,7 +2888,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages"|"patches","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id"|"cvss"|"kev"|"epss"|"eol","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest"|"data_lake","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
+            "app_role": "admin"|"operator"|"viewer","attention_level": "info"|"review"|"not_allowed","change_type": "added"|"removed"|"updated","cycle_status": "open"|"closed"|"complete","mcp_scope": "read"|"policy_draft","inventory_domain": "hardware"|"disks"|"programs"|"extensions"|"ide_extensions"|"packages"|"patches","platform": "windows"|"macos"|"linux","policy_class": "core_system"|"sanctioned_app"|"tolerated_app"|"unsanctioned_app","policy_field": "vendor"|"name"|"category"|"subcategory"|"version"|"external_id"|"cvss"|"kev"|"epss"|"eol","policy_operator": "equals"|"not_equals"|"contains"|"not_contains"|"starts_with"|"ends_with"|"regex"|"in"|"not_in"|"gt"|"gte"|"lt"|"lte"|"between","policy_status": "draft"|"published"|"archived","query_provider": "live_endpoint_search"|"live_discover_rest"|"data_lake","rule_match": "all"|"any","run_status": "running"|"finished"|"failed","task_status": "pending"|"dispatched"|"collected"|"no_response"|"retry_scheduled"|"missed"|"error"|"skipped","title_kind": "program"|"extension"|"ide_extension"|"package"
           }
           CompositeTypes: {
             [_ in never]: never

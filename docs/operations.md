@@ -221,6 +221,7 @@ All limits are in one file per deployment: **`deploy/k3s/app/rate-limits.env`** 
 | `RL_AUTH_RATE` / `_BURST` | `120r/m` / `60` | Gateway, per address: other Auth calls (session refresh, user) and `/mail/` |
 | `RL_REST_RATE` / `_BURST` | `30r/s` / `120` | Gateway, per address: the database API (a screen sends 10 to 30 requests at once) |
 | `RL_FUNCTIONS_RATE` / `_BURST` | `10r/s` / `60` | Gateway, per address: Edge Functions (Sync now, Scan now, exports, policy evaluation) |
+| `RL_MCP_RATE` / `_BURST` | `2r/s` / `20` | Gateway, per address: MCP server for AI assistants (`/functions/v1/mcp`) |
 | `RL_CONN_PER_IP` | `60` | Gateway: open connections per address |
 | `RL_BODY_AUTH` / `RL_BODY_REST` / `RL_BODY_FUNCTIONS` | `64k` / `2m` / `10m` | Gateway: largest request body (HTTP 413 above) |
 | `GOTRUE_RATE_LIMIT_HEADER` | `X-Real-IP` | Auth: the header with the client address. **Without it GoTrue applies none of its per-address limits** (checked in the GoTrue source); the gateway sets it |

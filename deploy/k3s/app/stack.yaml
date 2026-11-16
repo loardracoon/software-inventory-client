@@ -176,7 +176,7 @@ spec:
             - { name: SUPABASE_URL, value: "http://kong:8000" }
             # Large writes (evidence packages) skip the gateway's body limit.
             - { name: INTERNAL_REST_URL, value: "http://rest:3000" }
-            - { name: NO_VERIFY_JWT, value: "sync-computers,probe-capabilities,collector,hub-sync,alerts" }
+            - { name: NO_VERIFY_JWT, value: "sync-computers,probe-capabilities,collector,hub-sync,alerts,mcp" }
             - { name: JWT_SECRET, valueFrom: { secretKeyRef: { name: supabase, key: JWT_SECRET } } }
             - { name: SUPABASE_ANON_KEY, valueFrom: { secretKeyRef: { name: supabase, key: ANON_KEY } } }
             - { name: SUPABASE_SERVICE_ROLE_KEY, valueFrom: { secretKeyRef: { name: supabase, key: SERVICE_ROLE_KEY } } }

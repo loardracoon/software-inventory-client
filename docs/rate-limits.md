@@ -55,6 +55,7 @@ second. Each address has its own counter.
 | `RL_REST_BURST` | `120` | The same path | Keep it at least 4 times the number of users that open a page together |
 | `RL_FUNCTIONS_RATE` | `10r/s` | `/functions/v1/`: Edge Functions: Sync now, Scan now, exports, policy evaluation | Raise it if scripts call the functions often. Calls from the database jobs do not count |
 | `RL_FUNCTIONS_BURST` | `60` | The same path | Keep it large enough for a CSV export or a sync that makes several calls |
+| `RL_MCP_RATE` / `RL_MCP_BURST` | `2r/s` / `20` | `/functions/v1/mcp`: the MCP server for AI assistants (Phase 11) | One assistant answer sends a few tool calls; raise the burst if an assistant gets 429 during a report |
 
 ## Gateway: connections and size
 

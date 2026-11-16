@@ -435,3 +435,8 @@ verify_jwt = false
 # alerts checks x-collector-secret (pg_cron alerts-tick) or an admin JWT itself.
 [functions.alerts]
 verify_jwt = false
+
+# mcp takes a personal token (Bearer eimcp_…), not a JWT, and resolves it itself (Phase 11). It signs a
+# 5-minute user JWT with MCP_JWT_SECRET (set it as a function secret on hosted projects).
+[functions.mcp]
+verify_jwt = false
