@@ -26,6 +26,9 @@ export interface McpData {
   view<T = unknown>(name: string, eq?: { column: string; value: string }): Promise<QueryResult<T[]>>;
   // A page of a view with filters, order and the exact total.
   list<T = unknown>(name: string, options: ListOptions): Promise<QueryResult<T[]>>;
+  // Builds and stores an evidence package as the user (M3, audit-report/generate.ts). The package stays in the
+  // app; only its id and hash come back, so it runs with an unmasked JWT (the SQL check needs an admin or operator).
+  createEvidence?(body: { tenant_id: string; as_of: string; scope_tag: string | null }): Promise<QueryResult<{ report_id: string; manifest_sha256: string }>>;
 }
 
 export type McpCaller = { userId: string; tokenId: string | null; scope: "read" | "policy_draft"; showUsernames: boolean };
@@ -640,5 +643,285 @@ export async function needsAttention(data: McpData, caller: McpCaller, args: Rec
     }),
     rowCount: rows.length,
     tenantId,
+  };
+}
+
+// Reports (M3) ----------------------------------------------------------------------------------------
+// Structured data for the assistant to write the report; every list is capped so a report fits a context.
+
+const REPORT_TOP = 20;
+const DAY_MS = 86_400_000;
+
+function periodArgs(args: Record<string, unknown>, defaultDays: number): { since: string; until: string } {
+  const until = dateArg(args.until, "until") ?? new Date().toISOString();
+  const since = dateArg(args.since, "since") ?? new Date(Date.parse(until) - defaultDays * DAY_MS).toISOString();
+  if (Date.parse(since) > Date.parse(until)) throw new ToolError("since must be before until");
+  if (Date.parse(until) - Date.parse(since) > 92 * DAY_MS) throw new ToolError("A report covers at most 92 days");
+  return { since, until };
+}
+
+// Counts rows of a view through the exact count of a one-row page.
+async function countRows(data: McpData, view: string, filters: Filter[], what: string): Promise<number> {
+  const r = await data.list(view, { filters, limit: 1, offset: 0, count: true });
+  orThrow(r, what);
+  return Number(r.count ?? 0);
+}
+
+function tenantFilter(tenantId: string | null): Filter[] {
+  return tenantId ? [{ op: "eq", column: "tenant_id", value: tenantId }] : [];
+}
+
+// A tenant is needed (policy, evidence); with one visible tenant it is that one.
+async function oneTenant(data: McpData, value: unknown): Promise<{ id: string; name: string }> {
+  const tenantId = tenantArg(value);
+  const tenants = orThrow(await data.view<TenantRow>("v_tenant_overview", tenantId ? { column: "id", value: tenantId } : undefined), "tenants") ?? [];
+  if (tenantId && tenants.length === 0) throw new ToolError("Tenant not found or not visible to you");
+  if (tenants.length !== 1) throw new ToolError(`This report is per tenant: pass tenant_id (${tenants.map((t) => `${t.name}: ${t.id}`).join("; ")})`);
+  return { id: tenants[0].id, name: tenants[0].name };
+}
+
+export const REPORT_WEEKLY_DESCRIPTION =
+  "Data for a weekly inventory report (default: the last 7 days; since/until for another period, up to 92 days): " +
+  "fleet totals, scan cycle coverage, change totals by type and kind with the most frequent added and removed " +
+  "titles, new CVE matches, policy class changes, attention categories and the 8-week change trend. Write the " +
+  "report from it; every list is capped at 20 rows and says its total.";
+
+type ChangeRow = { change: string; kind: string; title_id: string; canonical_name: string; computer_id: string };
+
+export async function reportWeekly(data: McpData, caller: McpCaller, args: Record<string, unknown>): Promise<ToolOutput> {
+  const tenantId = tenantArg(args.tenant_id);
+  const { since, until } = periodArgs(args, 7);
+  const window: Filter[] = [...tenantFilter(tenantId), { op: "gte", column: "detected_at", value: since }, { op: "lte", column: "detected_at", value: until }];
+  const stats = orThrow(await data.rpc<Record<string, unknown>>("overview_stats", { p_tenant_id: tenantId }), "overview");
+  const cycles = orThrow(await data.rpc<Record<string, unknown>[]>("cycle_overview", { p_tenant_id: tenantId }), "scan cycles") ?? [];
+  const trend = orThrow(await data.rpc<Record<string, unknown>[]>("weekly_changes", { p_tenant_id: tenantId, p_weeks: 8 }), "weekly changes") ?? [];
+  // Up to 2,000 changes of the period are summarised here; the total says when there were more.
+  const changesPage = await data.list<ChangeRow>("v_change_log", { filters: window, order: { column: "detected_at", ascending: false }, limit: 1000, offset: 0, count: true });
+  const changes = orThrow(changesPage, "changes") ?? [];
+  const more = Number(changesPage.count ?? 0) > changes.length
+    ? orThrow(await data.list<ChangeRow>("v_change_log", { filters: window, order: { column: "detected_at", ascending: false }, limit: 1000, offset: 1000 }), "changes") ?? []
+    : [];
+  const all = [...changes, ...more];
+  const byType: Record<string, Record<string, number>> = {};
+  const titles = new Map<string, { title_id: string; name: string; kind: string; change: string; computers: Set<string> }>();
+  for (const c of all) {
+    byType[c.change] ??= {};
+    byType[c.change][c.kind] = (byType[c.change][c.kind] ?? 0) + 1;
+    const key = `${c.change}|${c.title_id}`;
+    const t = titles.get(key) ?? { title_id: c.title_id, name: c.canonical_name, kind: c.kind, change: c.change, computers: new Set<string>() };
+    t.computers.add(c.computer_id);
+    titles.set(key, t);
+  }
+  const top = (change: string) =>
+    [...titles.values()]
+      .filter((t) => t.change === change)
+      .sort((a, b) => b.computers.size - a.computers.size || a.name.localeCompare(b.name))
+      .slice(0, REPORT_TOP)
+      .map((t) => ({ title_id: t.title_id, name: t.name, kind: t.kind, computers: t.computers.size }));
+  const vulnPage = await data.list<Record<string, unknown>>("v_vuln_events", { filters: window, order: { column: "detected_at", ascending: false }, limit: REPORT_TOP, offset: 0, count: true });
+  const vulnEvents = orThrow(vulnPage, "new vulnerabilities") ?? [];
+  const classWindow: Filter[] = [...tenantFilter(tenantId), { op: "gte", column: "changed_at", value: since }, { op: "lte", column: "changed_at", value: until }];
+  const classPage = await data.list<Record<string, unknown>>("v_policy_class_changes", { filters: classWindow, order: { column: "changed_at", ascending: false }, limit: REPORT_TOP, offset: 0, count: true });
+  const classChanges = orThrow(classPage, "class changes") ?? [];
+  const attention = orThrow(await data.rpc<Record<string, unknown>[]>("needs_attention", { p_tenant_id: tenantId, p_limit: REPORT_TOP }), "attention items") ?? [];
+  return {
+    result: envelope(
+      caller,
+      {
+        period: { since, until },
+        fleet: stats,
+        scan_cycles: cycles,
+        changes: {
+          total: Number(changesPage.count ?? all.length),
+          summarised: all.length,
+          by_type_and_kind: byType,
+          top_added: top("added"),
+          top_removed: top("removed"),
+          top_updated: top("updated"),
+        },
+        new_vulnerabilities: {
+          total: Number(vulnPage.count ?? vulnEvents.length),
+          rows: vulnEvents.map((v) => ({ vuln_id: v.vuln_id, severity: v.severity, cvss: v.cvss_score, epss: v.epss, kev_added: v.kev_added, name: v.canonical_name, version: v.version, detected_at: v.detected_at })),
+        },
+        policy_class_changes: {
+          total: Number(classPage.count ?? classChanges.length),
+          rows: classChanges.map((c) => ({ name: c.canonical_name, version: c.version, from: c.from_class, to: c.to_class, rule: c.rule_name, policy_version: c.policy_version, changed_at: c.changed_at })),
+        },
+        attention,
+        trend_8_weeks: trend,
+      },
+      true,
+    ),
+    rowCount: all.length + vulnEvents.length + classChanges.length,
+    tenantId,
+  };
+}
+
+export const REPORT_POLICY_POSTURE_DESCRIPTION =
+  "Data for an application policy posture report (CIS Controls v8.1, Control 2) of one tenant: titles and " +
+  "installations per class, unsanctioned titles with the most computers, tolerated exceptions with their owner " +
+  "and review date (overdue flagged) and the published policy version.";
+
+export async function reportPolicyPosture(data: McpData, caller: McpCaller, args: Record<string, unknown>): Promise<ToolOutput> {
+  const tenant = await oneTenant(data, args.tenant_id);
+  const overview = orThrow(await data.rpc<Record<string, unknown>>("policy_overview", { p_tenant_id: tenant.id }), "policy overview") ?? {};
+  const published = overview.published && typeof overview.published === "object" ? { ...(overview.published as Record<string, unknown>) } : null;
+  // An app user's email is personal data: only when usernames are shown.
+  if (published && !caller.showUsernames) delete published.published_by;
+  const exceptions = Array.isArray(overview.exceptions) ? (overview.exceptions as Record<string, unknown>[]) : [];
+  const unsanctioned = orThrow(
+    await data.rpc<TitleRow[]>("search_titles", { p_tenant_id: tenant.id, p_policy: ["unsanctioned_app"], p_sort: "computers", p_desc: true, p_limit: REPORT_TOP, p_offset: 0 }),
+    "unsanctioned titles",
+  ) ?? [];
+  return {
+    result: envelope(
+      caller,
+      {
+        tenant,
+        published_policy: published,
+        classes: overview.classes ?? [],
+        totals: {
+          titles: overview.total_titles,
+          installations: overview.total_installations,
+          not_evaluated_titles: overview.not_evaluated_titles,
+          titles_by_default_class: overview.default_titles,
+          unsanctioned_installations: overview.unsanctioned_installations,
+          unsanctioned_computers: overview.unsanctioned_computers,
+        },
+        unsanctioned_titles: {
+          total: Number(unsanctioned[0]?.total_count ?? 0),
+          rows: unsanctioned.map((r) => ({ title_id: r.title_id, name: r.canonical_name, vendor: r.vendor, kind: r.kind, category: r.level2_name, computers: r.computers, rule: r.policy_rule_name })),
+        },
+        exceptions_due: {
+          note: "Tolerated rules whose review date is past, missing or within 30 days",
+          overdue: exceptions.filter((e) => e.overdue === true).length,
+          rows: exceptions.map((e) => ({ rule: e.name, owner: e.owner, review_by: e.review_by, overdue: e.overdue })),
+        },
+      },
+      true,
+    ),
+    rowCount: unsanctioned.length + exceptions.length,
+    tenantId: tenant.id,
+  };
+}
+
+export const REPORT_COVERAGE_DESCRIPTION =
+  "Data for an inventory coverage report: the weekly scan cycle per tenant, computers by coverage (current, " +
+  "stale, never inventoried) with the stale and never-inventoried ones listed, offline computers, the Sophos API " +
+  "budget, and the inventory review status (CIS 1.1 / ISO 27001 A.5.9) per tenant.";
+
+export async function reportCoverage(data: McpData, caller: McpCaller, args: Record<string, unknown>): Promise<ToolOutput> {
+  const tenantId = tenantArg(args.tenant_id);
+  const active: Filter[] = [...tenantFilter(tenantId), { op: "is_null", column: "retired_at" }];
+  const counts: Record<string, number> = {};
+  for (const status of COVERAGE) counts[status] = await countRows(data, "v_computer_list", [...active, { op: "eq", column: "coverage_status", value: status }], "coverage");
+  counts.offline = await countRows(data, "v_computer_list", [...active, { op: "eq", column: "online", value: false }], "online status");
+  const gaps = orThrow(
+    await data.list<ComputerRow>("v_computer_list", {
+      filters: [...active, { op: "in", column: "coverage_status", values: ["stale", "never"] }],
+      order: { column: "inventoried_at", ascending: true },
+      limit: REPORT_TOP,
+      offset: 0,
+    }),
+    "computers without a current inventory",
+  ) ?? [];
+  const cycles = orThrow(await data.rpc<Record<string, unknown>[]>("cycle_overview", { p_tenant_id: tenantId }), "scan cycles") ?? [];
+  const budget = orThrow(await data.rpc<Record<string, unknown>[]>("budget_overview", { p_tenant_id: tenantId }), "API budget") ?? [];
+  const tenants = orThrow(await data.view<TenantRow>("v_tenant_overview", tenantId ? { column: "id", value: tenantId } : undefined), "tenants") ?? [];
+  if (tenantId && tenants.length === 0) throw new ToolError("Tenant not found or not visible to you");
+  const reviews = [];
+  for (const t of tenants.slice(0, 20)) {
+    const row = (orThrow(await data.rpc<Record<string, unknown>[]>("inventory_review_status", { p_tenant_id: t.id }), "inventory review") ?? [])[0] ?? null;
+    if (row && !caller.showUsernames) delete row.last_reviewer;
+    reviews.push({ tenant_id: t.id, tenant: t.name, ...(row ?? { last_reviewed_at: null }) });
+  }
+  return {
+    result: envelope(
+      caller,
+      {
+        computers_by_coverage: counts,
+        without_current_inventory: gaps.map((c) => ({
+          computer_id: c.id,
+          hostname: c.hostname,
+          platform: c.platform,
+          coverage_status: c.coverage_status,
+          inventoried_at: c.inventoried_at,
+          last_seen_at: c.last_seen_at,
+          online: c.online,
+          cycle_status: c.cycle_status,
+          last_error: c.last_error,
+        })),
+        scan_cycles: cycles,
+        sophos_api_budget: budget,
+        inventory_reviews: reviews,
+      },
+      true,
+    ),
+    rowCount: gaps.length + cycles.length,
+    tenantId,
+  };
+}
+
+export const LIST_EVIDENCE_PACKAGES_DESCRIPTION =
+  "Evidence packages already generated for a tenant (newest first): id, as-of date, scope tag, size, the " +
+  "SHA-256 of the manifest and whether users were masked. Download them in the console (Reports).";
+
+export async function listEvidencePackages(data: McpData, caller: McpCaller, args: Record<string, unknown>): Promise<ToolOutput> {
+  const tenant = await oneTenant(data, args.tenant_id);
+  const { limit, offset } = pageArgs({ limit: args.limit ?? 20, offset: args.offset });
+  const r = await data.list<Record<string, unknown>>("v_audit_reports", {
+    filters: [{ op: "eq", column: "tenant_id", value: tenant.id }],
+    order: { column: "generated_at", ascending: false },
+    limit,
+    offset,
+    count: true,
+  });
+  const rows = orThrow(r, "evidence packages") ?? [];
+  return {
+    result: envelope(caller, {
+      tenant,
+      page: page(Number(r.count ?? rows.length), limit, offset, rows.length),
+      packages: rows.map((p) => ({
+        report_id: p.id,
+        as_of: p.as_of,
+        scope_tag: p.scope_tag,
+        generated_at: p.generated_at,
+        ...(caller.showUsernames ? { generated_by: p.generated_by_email } : {}),
+        archive_bytes: p.archive_bytes,
+        manifest_sha256: p.manifest_sha256,
+        users_masked: p.users_masked,
+      })),
+    }),
+    rowCount: rows.length,
+    tenantId: tenant.id,
+  };
+}
+
+export const CREATE_EVIDENCE_PACKAGE_DESCRIPTION =
+  "Generate an audit evidence package (ZIP with the inventory as of a date, its changes, policy and " +
+  "vulnerability state, and a SHA-256 manifest) for one tenant, stored and audited in the app. Admins and " +
+  "operators only. Returns the report id and manifest hash; the ZIP is downloaded in the console (Reports), it " +
+  "never goes to the assistant. Create one only when the user asks for it.";
+
+export async function createEvidencePackage(data: McpData, caller: McpCaller, args: Record<string, unknown>): Promise<ToolOutput> {
+  const tenant = await oneTenant(data, args.tenant_id);
+  const asOf = dateArg(args.as_of, "as_of");
+  if (asOf && Date.parse(asOf) > Date.now() + 60_000) throw new ToolError("as_of cannot be in the future");
+  const scopeTag = textArg(args.scope_tag, 100);
+  if (!data.createEvidence) throw new ToolError("Evidence packages are not available here");
+  const r = await data.createEvidence({ tenant_id: tenant.id, as_of: asOf ?? new Date().toISOString(), scope_tag: scopeTag });
+  if (r.error) throw new ToolError(`Could not create the package: ${r.error.message}`);
+  const out = r.data ?? { report_id: null, manifest_sha256: null };
+  return {
+    result: envelope(caller, {
+      tenant,
+      report_id: out.report_id,
+      manifest_sha256: out.manifest_sha256,
+      as_of: asOf ?? "now",
+      scope_tag: scopeTag,
+      download: "Console › Reports, select the tenant; the package is listed with this id and hash",
+    }),
+    rowCount: 1,
+    tenantId: tenant.id,
   };
 }

@@ -7,12 +7,23 @@ import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import { McpServer } from "npm:@modelcontextprotocol/sdk@1.32.2/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "npm:@modelcontextprotocol/sdk@1.32.2/server/webStandardStreamableHttp.js";
 import { z } from "npm:zod@3.25.76";
-import { adminClient } from "../_shared/edge.ts";
+import { adminClient, errorMessage, HttpError } from "../_shared/edge.ts";
+import { generateEvidencePackage } from "../audit-report/generate.ts";
 import { bearerToken, sha256, signJwt, toPgHex, userClaims } from "../_shared/mcp/auth.ts";
 import { auditArguments, auditError, type McpAuditRow } from "../_shared/mcp/audit.ts";
 import {
   ATTENTION,
   CHANGE_TYPES,
+  CREATE_EVIDENCE_PACKAGE_DESCRIPTION,
+  createEvidencePackage,
+  LIST_EVIDENCE_PACKAGES_DESCRIPTION,
+  listEvidencePackages,
+  REPORT_COVERAGE_DESCRIPTION,
+  REPORT_POLICY_POSTURE_DESCRIPTION,
+  REPORT_WEEKLY_DESCRIPTION,
+  reportCoverage,
+  reportPolicyPosture,
+  reportWeekly,
   COMPUTER_SORT,
   COVERAGE,
   FINDING_STATUS,
@@ -48,7 +59,7 @@ import {
   type ToolOutput,
 } from "../_shared/mcp/tools.ts";
 
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type, accept, mcp-protocol-version, mcp-session-id",
@@ -70,11 +81,18 @@ async function audit(admin: Admin, row: McpAuditRow): Promise<void> {
   if (error) console.error(`mcp_audit insert failed: ${error.message}`);
 }
 
-function userData(jwt: string): McpData {
-  const client = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+// readJwt carries mcp_mask while usernames are hidden; fullJwt (no claim) is used only to build the evidence
+// package, whose content stays in the app (only its id and hash reach the assistant).
+function asUserClient(jwt: string) {
+  return createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
     auth: { persistSession: false, autoRefreshToken: false },
     global: { headers: { Authorization: `Bearer ${jwt}` } },
   });
+}
+
+function userData(admin: Admin, userId: string, jwt: string, fullJwt: string): McpData {
+  const client = asUserClient(jwt);
+  const fullClient = asUserClient(fullJwt);
   return {
     async rpc(name, args) {
       const { data, error } = await client.rpc(name, args ?? {});
@@ -100,6 +118,26 @@ function userData(jwt: string): McpData {
       if (options.order) query = query.order(options.order.column, { ascending: options.order.ascending, nullsFirst: false });
       const { data, error, count } = await query.range(options.offset, options.offset + options.limit - 1);
       return { data, error, count };
+    },
+    async createEvidence(body) {
+      // In process, not over HTTP: audit-report checks callers with GoTrue's getUser, which refuses this JWT.
+      try {
+        const { data: found } = await admin.auth.admin.getUserById(userId);
+        const asOf = new Date(body.as_of);
+        if (Number.isNaN(asOf.getTime())) return { data: null, error: { message: "as_of is not a valid date" } };
+        const result = await generateEvidencePackage({
+          asUser: fullClient,
+          admin,
+          user: { id: userId, email: found?.user?.email ?? null },
+          tenantId: body.tenant_id,
+          asOf: asOf.toISOString(),
+          scopeTag: body.scope_tag,
+        });
+        return { data: result, error: null };
+      } catch (error) {
+        if (!(error instanceof HttpError)) console.error(`evidence package failed: ${errorMessage(error)}`);
+        return { data: null, error: { message: error instanceof HttpError ? error.message : "The package could not be built. Try again later." } };
+      }
     },
   };
 }
@@ -140,8 +178,14 @@ function buildServer(admin: Admin, caller: McpCaller, enabled: boolean, data: Mc
     },
   );
   const read = { readOnlyHint: true, openWorldHint: false };
-  const add = (name: string, title: string, description: string, inputSchema: z.ZodRawShape, run: (args: Record<string, unknown>) => Promise<ToolOutput>) =>
-    server.registerTool(name, { title, description, inputSchema, annotations: read }, tool(admin, caller, enabled, name, run));
+  const add = (
+    name: string,
+    title: string,
+    description: string,
+    inputSchema: z.ZodRawShape,
+    run: (args: Record<string, unknown>) => Promise<ToolOutput>,
+    annotations: Record<string, boolean> = read,
+  ) => server.registerTool(name, { title, description, inputSchema, annotations }, tool(admin, caller, enabled, name, run));
 
   const tenantId = z.string().uuid().optional().describe("Tenant id from get_overview; leave empty for all your tenants");
   const limit = z.number().int().min(1).max(MAX_LIMIT).optional().describe(`Rows per page, 1 to ${MAX_LIMIT} (default 50)`);
@@ -253,6 +297,27 @@ function buildServer(admin: Admin, caller: McpCaller, enabled: boolean, data: Mc
     { tenant_id: tenantId, limit: z.number().int().min(1).max(MAX_LIMIT).optional() },
     (a) => needsAttention(data, caller, a),
   );
+
+  // Reports (M3)
+  const since = z.string().max(40).optional().describe("Period start (YYYY-MM-DD or ISO timestamp)");
+  const until = z.string().max(40).optional().describe("Period end (default now)");
+  const oneTenantId = z.string().uuid().optional().describe("Tenant id from get_overview; required when you see more than one tenant");
+  add("report_weekly", "Weekly report", REPORT_WEEKLY_DESCRIPTION, { tenant_id: tenantId, since, until }, (a) => reportWeekly(data, caller, a));
+  add("report_policy_posture", "Policy posture report", REPORT_POLICY_POSTURE_DESCRIPTION, { tenant_id: oneTenantId }, (a) => reportPolicyPosture(data, caller, a));
+  add("report_coverage", "Coverage report", REPORT_COVERAGE_DESCRIPTION, { tenant_id: tenantId }, (a) => reportCoverage(data, caller, a));
+  add("list_evidence_packages", "Evidence packages", LIST_EVIDENCE_PACKAGES_DESCRIPTION, { tenant_id: oneTenantId, limit, offset }, (a) => listEvidencePackages(data, caller, a));
+  add(
+    "create_evidence_package",
+    "Create evidence package",
+    CREATE_EVIDENCE_PACKAGE_DESCRIPTION,
+    {
+      tenant_id: oneTenantId,
+      as_of: z.string().max(40).optional().describe("Inventory as of this date (default now)"),
+      scope_tag: z.string().max(100).optional().describe("Only computers with this scope tag"),
+    },
+    (a) => createEvidencePackage(data, caller, a),
+    { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  );
   return server;
 }
 
@@ -276,8 +341,11 @@ Deno.serve(async (req) => {
 
   const caller: McpCaller = { userId: resolved.user_id, tokenId: resolved.token_id, scope: resolved.scope, showUsernames: resolved.show_usernames };
   // Read JWT: carries mcp_mask while usernames are hidden from assistants, so the database masks them.
-  const readJwt = await signJwt(userClaims(caller.userId, Math.floor(Date.now() / 1000), { mask: !caller.showUsernames }), Deno.env.get("MCP_JWT_SECRET") ?? "");
-  const server = buildServer(admin, caller, resolved.enabled, userData(readJwt));
+  const now = Math.floor(Date.now() / 1000);
+  const secret = Deno.env.get("MCP_JWT_SECRET") ?? "";
+  const readJwt = await signJwt(userClaims(caller.userId, now, { mask: !caller.showUsernames }), secret);
+  const fullJwt = await signJwt(userClaims(caller.userId, now), secret);
+  const server = buildServer(admin, caller, resolved.enabled, userData(admin, caller.userId, readJwt, fullJwt));
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   await server.connect(transport);
   const response = await transport.handleRequest(req);

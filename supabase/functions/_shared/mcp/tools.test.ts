@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   certainVulns,
+  createEvidencePackage,
+  listEvidencePackages,
+  reportCoverage,
+  reportPolicyPosture,
+  reportWeekly,
   getComputer,
   getOverview,
   getSoftwareTitle,
@@ -297,5 +302,89 @@ describe("certain vulnerabilities only", () => {
     );
     const out = await getSoftwareTitle(data, caller, { title_id: TITLE });
     expect(JSON.stringify(out.result.versions)).not.toContain("CVE-2015-0311");
+  });
+});
+
+describe("reports", () => {
+  const two = [...tenants, { ...tenants[0], id: "22222222-2222-2222-2222-222222222222", name: "Beta" }];
+
+  it("report_weekly summarises the period's changes by type, kind and title", async () => {
+    const changes = [
+      { change: "added", kind: "program", title_id: "t1", canonical_name: "Zoom", computer_id: "c1" },
+      { change: "added", kind: "program", title_id: "t1", canonical_name: "Zoom", computer_id: "c2" },
+      { change: "added", kind: "extension", title_id: "t2", canonical_name: "Grammarly", computer_id: "c1" },
+      { change: "removed", kind: "program", title_id: "t3", canonical_name: "7-Zip", computer_id: "c1" },
+    ];
+    const { data, calls } = fakeData(
+      { v_change_log: changes, v_vuln_events: [{ vuln_id: "CVE-1", canonical_name: "Zoom" }], v_policy_class_changes: [] },
+      { overview_stats: { computers: 2 }, cycle_overview: [], weekly_changes: [], needs_attention: [] },
+    );
+    const out = await reportWeekly(data, caller, { since: "2026-11-09", until: "2026-11-16" });
+    expect(out.result.period).toEqual({ since: "2026-11-09", until: "2026-11-16" });
+    expect(out.result.changes).toMatchObject({
+      total: 4,
+      by_type_and_kind: { added: { program: 2, extension: 1 }, removed: { program: 1 } },
+      top_added: [
+        { name: "Zoom", computers: 2 },
+        { name: "Grammarly", computers: 1 },
+      ],
+      top_removed: [{ name: "7-Zip", computers: 1 }],
+    });
+    expect(calls[0].options.filters).toEqual([
+      { op: "gte", column: "detected_at", value: "2026-11-09" },
+      { op: "lte", column: "detected_at", value: "2026-11-16" },
+    ]);
+    expect(out.result.new_vulnerabilities).toMatchObject({ total: 1 });
+  });
+
+  it("report_weekly refuses a reversed or too long period", async () => {
+    await expect(reportWeekly(fakeData().data, caller, { since: "2026-11-16", until: "2026-11-01" })).rejects.toThrow("before until");
+    await expect(reportWeekly(fakeData().data, caller, { since: "2026-01-01", until: "2026-11-01" })).rejects.toThrow("92 days");
+  });
+
+  it("per-tenant reports need tenant_id when several tenants are visible", async () => {
+    await expect(reportPolicyPosture(fakeData({ v_tenant_overview: two }).data, caller, {})).rejects.toThrow("pass tenant_id");
+  });
+
+  it("report_policy_posture hides the publisher's email while usernames are masked", async () => {
+    const overview = {
+      classes: [{ class: "unsanctioned_app", titles: 3, installations: 7 }],
+      exceptions: [{ name: "Legacy CAD", owner: "Eng", review_by: "2026-11-01", overdue: true }],
+      published: { version: 4, published_by: "admin@example.com" },
+    };
+    const rpcs = { policy_overview: overview, search_titles: [{ title_id: "t9", canonical_name: "uTorrent", computers: 2, total_count: 3 }] };
+    const masked = await reportPolicyPosture(fakeData({ v_tenant_overview: tenants }, rpcs).data, caller, {});
+    expect(masked.result.published_policy).toEqual({ version: 4 });
+    expect(masked.result.exceptions_due).toMatchObject({ overdue: 1, rows: [{ rule: "Legacy CAD", overdue: true }] });
+    expect(masked.result.unsanctioned_titles).toMatchObject({ total: 3, rows: [{ name: "uTorrent", computers: 2 }] });
+    const shown = await reportPolicyPosture(fakeData({ v_tenant_overview: tenants }, rpcs).data, { ...caller, showUsernames: true }, {});
+    expect(shown.result.published_policy).toEqual({ version: 4, published_by: "admin@example.com" });
+  });
+
+  it("report_coverage counts computers per coverage status and lists the gaps", async () => {
+    const computers = [
+      { id: "c1", hostname: "A", coverage_status: "current", online: true },
+      { id: "c2", hostname: "B", coverage_status: "stale", online: false },
+      { id: "c3", hostname: "C", coverage_status: "never", online: false },
+    ];
+    const { data } = fakeData({ v_computer_list: computers, v_tenant_overview: tenants }, { cycle_overview: [], budget_overview: [], inventory_review_status: [{ overdue: true, last_reviewer: "x@example.com" }] });
+    const out = await reportCoverage(data, caller, {});
+    expect(out.result.computers_by_coverage).toEqual({ current: 1, stale: 1, never: 1, offline: 2 });
+    expect(out.result.inventory_reviews).toEqual([{ tenant_id: T1, tenant: "Acme", overdue: true }]);
+  });
+
+  it("lists evidence packages and creates one only through the audit-report function", async () => {
+    const pkg = [{ id: "r1", tenant_id: T1, as_of: "2026-11-16", manifest_sha256: "abc", generated_by_email: "a@example.com", users_masked: false }];
+    const listed = await listEvidencePackages(fakeData({ v_tenant_overview: tenants, v_audit_reports: pkg }).data, caller, {});
+    expect(listed.result.packages).toEqual([{ report_id: "r1", as_of: "2026-11-16", scope_tag: undefined, generated_at: undefined, archive_bytes: undefined, manifest_sha256: "abc", users_masked: false }]);
+    const { data } = fakeData({ v_tenant_overview: tenants });
+    await expect(createEvidencePackage(data, caller, {})).rejects.toThrow("not available");
+    const createEvidence = vi.fn(async () => ({ data: { report_id: "r2", manifest_sha256: "def" }, error: null }));
+    const out = await createEvidencePackage({ ...data, createEvidence }, caller, { as_of: "2026-11-15", scope_tag: " lab " });
+    expect(createEvidence).toHaveBeenCalledWith({ tenant_id: T1, as_of: "2026-11-15", scope_tag: "lab" });
+    expect(out.result).toMatchObject({ report_id: "r2", manifest_sha256: "def" });
+    await expect(createEvidencePackage({ ...data, createEvidence }, caller, { as_of: "2999-01-01" })).rejects.toThrow("future");
+    const failing = vi.fn(async () => ({ data: null, error: { message: "Only admins and operators can do this" } }));
+    await expect(createEvidencePackage({ ...data, createEvidence: failing }, caller, {})).rejects.toThrow("Only admins and operators");
   });
 });
