@@ -66,12 +66,12 @@ export function tenantArg(value: unknown): string | null {
   return value.toLowerCase();
 }
 
-function idArg(value: unknown, name: string): string {
+export function idArg(value: unknown, name: string): string {
   if (typeof value !== "string" || !UUID.test(value)) throw new ToolError(`${name} must be an id (UUID) from a previous result`);
   return value.toLowerCase();
 }
 
-function textArg(value: unknown, max = 200): string | null {
+export function textArg(value: unknown, max = 200): string | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== "string") throw new ToolError("Expected text");
   const t = value.trim();
@@ -79,13 +79,13 @@ function textArg(value: unknown, max = 200): string | null {
   return t || null;
 }
 
-function oneOf<T extends string>(value: unknown, allowed: readonly T[], name: string): T | null {
+export function oneOf<T extends string>(value: unknown, allowed: readonly T[], name: string): T | null {
   if (value === undefined || value === null || value === "") return null;
   if (typeof value !== "string" || !(allowed as readonly string[]).includes(value)) throw new ToolError(`${name} must be one of: ${allowed.join(", ")}`);
   return value as T;
 }
 
-function manyOf<T extends string>(value: unknown, allowed: readonly T[], name: string): T[] {
+export function manyOf<T extends string>(value: unknown, allowed: readonly T[], name: string): T[] {
   if (value === undefined || value === null) return [];
   const list = Array.isArray(value) ? value : [value];
   return list.map((v) => oneOf(v, allowed, name)).filter((v): v is T => v !== null);
@@ -97,7 +97,7 @@ function dateArg(value: unknown, name: string): string | null {
   return value;
 }
 
-function boolArg(value: unknown): boolean | null {
+export function boolArg(value: unknown): boolean | null {
   return typeof value === "boolean" ? value : null;
 }
 
@@ -114,17 +114,17 @@ function likeContains(text: string): string {
   return `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
 
-function orThrow<T>(r: QueryResult<T>, what: string): T {
+export function orThrow<T>(r: QueryResult<T>, what: string): T {
   if (r.error) throw new ToolError(`Could not read ${what}: ${r.error.message}`);
   return r.data as T;
 }
 
 // Every result says when it was read and how users are shown, so the assistant can state it.
-function envelope(caller: McpCaller, body: Record<string, unknown>, untrusted = false): Record<string, unknown> {
+export function envelope(caller: McpCaller, body: Record<string, unknown>, untrusted = false): Record<string, unknown> {
   return { as_of: new Date().toISOString(), usernames: caller.showUsernames ? "shown" : "masked", ...(untrusted ? { note: UNTRUSTED } : {}), ...body };
 }
 
-function page(total: number, limit: number, offset: number, returned: number) {
+export function page(total: number, limit: number, offset: number, returned: number) {
   return { total, limit, offset, returned, next_offset: offset + returned < total ? offset + returned : null };
 }
 
@@ -672,7 +672,7 @@ function tenantFilter(tenantId: string | null): Filter[] {
 }
 
 // A tenant is needed (policy, evidence); with one visible tenant it is that one.
-async function oneTenant(data: McpData, value: unknown): Promise<{ id: string; name: string }> {
+export async function oneTenant(data: McpData, value: unknown): Promise<{ id: string; name: string }> {
   const tenantId = tenantArg(value);
   const tenants = orThrow(await data.view<TenantRow>("v_tenant_overview", tenantId ? { column: "id", value: tenantId } : undefined), "tenants") ?? [];
   if (tenantId && tenants.length === 0) throw new ToolError("Tenant not found or not visible to you");

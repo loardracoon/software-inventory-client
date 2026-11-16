@@ -58,8 +58,22 @@ import {
   type McpData,
   type ToolOutput,
 } from "../_shared/mcp/tools.ts";
+import {
+  GET_POLICY_DESCRIPTION,
+  getPolicy,
+  LIST_RISKS_DESCRIPTION,
+  listRisks,
+  RISK_KINDS,
+  SIMULATE_RULE_DESCRIPTION,
+  simulateRule,
+  SUGGEST_RULE_DESCRIPTION,
+  suggestRuleForRisk,
+  TEST_TITLE_DESCRIPTION,
+  testTitleAgainstPolicy,
+} from "../_shared/mcp/policy-tools.ts";
+import { FIELD_TYPE, OPERATORS_BY_TYPE } from "../_shared/policy.ts";
 
-const VERSION = "0.3.0";
+const VERSION = "0.4.0";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type, accept, mcp-protocol-version, mcp-session-id",
@@ -317,6 +331,61 @@ function buildServer(admin: Admin, caller: McpCaller, enabled: boolean, data: Mc
     },
     (a) => createEvidencePackage(data, caller, a),
     { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  );
+
+  // Policy and risks, read only (M4)
+  const fields = Object.keys(FIELD_TYPE) as [string, ...string[]];
+  const operators = [...new Set(Object.values(OPERATORS_BY_TYPE).flat())] as [string, ...string[]];
+  const condition = z.object({
+    field: z.enum(fields),
+    operator: z.enum(operators),
+    value: z.string().max(1000).optional().describe("Text, version, number, category slug, or \"true\"/\"false\" for kev and eol"),
+    value2: z.string().max(200).optional().describe("Upper bound for between"),
+    values: z.array(z.string().max(200)).max(200).optional().describe("For in / not_in"),
+    case_sensitive: z.boolean().optional(),
+  });
+  const rule = z.object({
+    name: z.string().min(1).max(120),
+    class: z.enum(POLICY_CLASSES),
+    match: z.enum(["all", "any"]).optional().describe("all (default) or any of the conditions"),
+    kinds: z.array(z.enum(KINDS)).optional().describe("Default: every kind"),
+    conditions: z.array(condition).min(1).max(20),
+  });
+  const policyChoice = z.enum(["published", "draft"]);
+  add("get_policy", "Application policy", GET_POLICY_DESCRIPTION, { tenant_id: oneTenantId }, (a) => getPolicy(data, caller, a));
+  add(
+    "test_title_against_policy",
+    "Test a title against the policy",
+    TEST_TITLE_DESCRIPTION,
+    { tenant_id: oneTenantId, title_id: titleId, version: z.string().max(200).optional().describe("One installed version; default all"), policy: policyChoice.optional().describe("Default: published") },
+    (a) => testTitleAgainstPolicy(data, caller, a),
+  );
+  add(
+    "simulate_rule",
+    "Simulate a policy rule",
+    SIMULATE_RULE_DESCRIPTION,
+    { tenant_id: oneTenantId, rule, position: z.number().int().min(1).optional().describe("1 = top (default)"), base: policyChoice.optional().describe("Default: draft (or published when there is no draft)") },
+    (a) => simulateRule(data, caller, a),
+  );
+  add(
+    "list_risks",
+    "Risks",
+    LIST_RISKS_DESCRIPTION,
+    { tenant_id: oneTenantId, kinds: z.array(z.enum(RISK_KINDS as [string, ...string[]])).optional() },
+    (a) => listRisks(data, caller, a),
+  );
+  add(
+    "suggest_rule_for_risk",
+    "Suggest a rule for a risk",
+    SUGGEST_RULE_DESCRIPTION,
+    {
+      tenant_id: oneTenantId,
+      kind: z.enum(RISK_KINDS as [string, ...string[]]),
+      title_id: titleId.optional(),
+      rule_id: z.string().uuid().optional().describe("rule_id of an exception risk"),
+      choice: z.enum(["remove", "tolerate", "sanction"]).optional().describe("For title risks; default remove"),
+    },
+    (a) => suggestRuleForRisk(data, caller, a),
   );
   return server;
 }

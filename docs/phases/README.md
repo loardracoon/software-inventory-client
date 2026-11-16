@@ -16,7 +16,7 @@ Prerequisites: a Supabase project (Pro, sa-east-1) linked with `supabase link`; 
 - [x] **Phase 7** — Hub dictionary, reclassification requests, saved searches, exports → `client-07-hub-dictionary.md`
 - [x] **Phase 8** — hardening → `client-08-hardening.md` (SSO documented in `README.md`, not built)
 - [x] **Phase 9** — application policy, CIS v8.1 Control 2 (plan first) → `client-09-application-policy.md`
-- [ ] **Phase 11** — MCP server: queries, reports, policy and risk suggestions (plan first) → `client-11-mcp.md` (M0 lab checks, M1 skeleton, M2 query tools and M3 reports done Nov 16, 2026; notes in the phase file)
+- [ ] **Phase 11** — MCP server: queries, reports, policy and risk suggestions (plan first) → `client-11-mcp.md` (M0 lab checks, M1 skeleton, M2 query tools, M3 reports and M4 policy and risks done Nov 16, 2026; notes in the phase file)
 
 The `hub-*.md` files describe the Hub; they are here so this repo knows the API contract (`hub-H2-client-api.md`).
 
