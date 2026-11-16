@@ -294,7 +294,7 @@ export async function getSoftwareTitle(data: McpData, caller: McpCaller, args: R
           latest_version: s.latest_version,
           first_seen: s.first_seen,
         })),
-        versions,
+        versions: versions.map((v) => ({ ...v, vulns: certainVulns(v.vulns) })),
         vulnerabilities: vulns.slice(0, 100).map((v) => ({
           id: v.vuln_id,
           aliases: v.aliases,
@@ -338,12 +338,36 @@ export async function getSoftwareTitle(data: McpData, caller: McpCaller, args: R
 
 export const LIST_COMPUTERS_DESCRIPTION =
   "List active computers with platform, OS and its end of life, last inventory, coverage (current, stale, " +
-  "never), online status, counts of programs, extensions and packages, attention categories and vulnerabilities. " +
-  "Search matches the hostname. Paged.";
+  "never), online status, counts of programs, extensions and packages, attention categories (with how many " +
+  "titles) and vulnerability counts (certain matches by severity; possible = uncertain matches that never count). " +
+  "Search matches the hostname. Paged. get_computer gives the titles and the top CVEs of one computer.";
 
 type ComputerRow = Record<string, unknown>;
 
-function computerSummary(c: ComputerRow) {
+type VulnTop = { uncertain?: boolean } & Record<string, unknown>;
+type VulnSummary = { top?: VulnTop[] } & Record<string, unknown>;
+
+// The screens' per-computer and per-version CVE summary, for an assistant: "uncertain" matches (no usable
+// version or no bound in the CVE) never count (Phase 10b rule), so they leave the top list and stay only as
+// the "possible" count. Without this, old uncertain Edge CVEs flagged KEV read as open known-exploited ones.
+export function certainVulns(value: unknown, withTop = true): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  const { top, ...counts } = value as VulnSummary;
+  if (!withTop) return counts;
+  return { ...counts, top: (top ?? []).filter((t) => t.uncertain !== true).map(({ uncertain: _u, ...t }) => t) };
+}
+
+type Attention = { slug?: unknown; level1?: unknown; level2?: unknown; attention?: unknown; titles?: unknown[] };
+
+// List rows carry counts only; get_computer gives the titles.
+function attentionSummary(value: unknown, withTitles: boolean): unknown {
+  if (!Array.isArray(value)) return value ?? null;
+  return (value as Attention[]).map((a) =>
+    withTitles ? a : { slug: a.slug, category: a.level2, attention: a.attention, titles: Array.isArray(a.titles) ? a.titles.length : null },
+  );
+}
+
+function computerSummary(c: ComputerRow, detail = false) {
   return {
     computer_id: c.id,
     tenant_id: c.tenant_id,
@@ -369,8 +393,8 @@ function computerSummary(c: ComputerRow) {
     packages: c.packages,
     patch_status: c.patch_status,
     last_patch_at: c.last_patch_at,
-    attention: c.attention,
-    vulnerabilities: c.vulns,
+    attention: attentionSummary(c.attention, detail),
+    vulnerabilities: certainVulns(c.vulns, detail),
   };
 }
 
@@ -400,7 +424,7 @@ export async function listComputers(data: McpData, caller: McpCaller, args: Reco
   });
   const rows = orThrow(r, "computers") ?? [];
   return {
-    result: envelope(caller, { page: page(Number(r.count ?? rows.length), limit, offset, rows.length), computers: rows.map(computerSummary) }, true),
+    result: envelope(caller, { page: page(Number(r.count ?? rows.length), limit, offset, rows.length), computers: rows.map((c) => computerSummary(c)) }, true),
     rowCount: rows.length,
     tenantId,
   };
@@ -409,7 +433,7 @@ export async function listComputers(data: McpData, caller: McpCaller, args: Reco
 // get_computer ---------------------------------------------------------------------------------------
 
 export const GET_COMPUTER_DESCRIPTION =
-  "One computer (computer_id from list_computers): its details, this week's scan tasks, and a page of what is " +
+  "One computer (computer_id from list_computers): its details (attention titles, top certain CVEs), this week's scan tasks, and a page of what is " +
   "installed now (name, version, kind, category, policy class, vulnerabilities, user when shown). Filter the " +
   "installed list by kind or name.";
 
@@ -434,7 +458,7 @@ export async function getComputer(data: McpData, caller: McpCaller, args: Record
     result: envelope(
       caller,
       {
-        computer: computerSummary(computer),
+        computer: computerSummary(computer, true),
         scan_tasks: tasks,
         installed: {
           page: page(Number(r.count ?? installs.length), limit, offset, installs.length),

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  certainVulns,
   getComputer,
   getOverview,
   getSoftwareTitle,
@@ -241,5 +242,60 @@ describe("list_end_of_life and needs_attention", () => {
     const out = await needsAttention(data, caller, { tenant_id: T1 });
     expect(rpcCalls[0]).toEqual({ name: "needs_attention", args: { p_tenant_id: T1, p_limit: 50 } });
     expect(out.result.categories).toEqual([{ category_slug: "remote-access", category: "Remote access", category_group: undefined, attention_level: "review", titles: 2, computers: 5 }]);
+  });
+});
+
+// Production test, Nov 16, 2026: uncertain Edge CVEs from 2015 flagged KEV sat in every computer's top list.
+const vulns = {
+  kev: 0,
+  high: 1,
+  critical: 0,
+  possible: 601,
+  top: [
+    { id: "CVE-2026-126881", kev: false, score: 8.8, title: "Google Chrome", severity: "HIGH", uncertain: false },
+    { id: "CVE-2015-0311", kev: true, score: 9.8, title: "Microsoft Edge", severity: "CRITICAL", uncertain: true },
+  ],
+};
+const attention = [{ slug: "remote-access/remote-desktop-and-support", level1: "Remote access", level2: "Remote desktop and support", titles: ["Chrome Remote Desktop", "AnyDesk"], attention: "review" }];
+
+describe("certain vulnerabilities only", () => {
+  it("drops uncertain matches from the top list and keeps them as the possible count", () => {
+    expect(certainVulns(vulns)).toEqual({
+      kev: 0,
+      high: 1,
+      critical: 0,
+      possible: 601,
+      top: [{ id: "CVE-2026-126881", kev: false, score: 8.8, title: "Google Chrome", severity: "HIGH" }],
+    });
+    expect(certainVulns(vulns, false)).toEqual({ kev: 0, high: 1, critical: 0, possible: 601 });
+    expect(certainVulns(null)).toBeNull();
+  });
+
+  it("list_computers returns counts only, for every row", async () => {
+    const rows = [1, 2, 3].map((n) => ({ id: `pc${n}`, hostname: `PC${n}`, vulns, attention }));
+    const out = await listComputers(fakeData({ v_computer_list: rows }).data, caller, {});
+    const computers = out.result.computers as { vulnerabilities: Record<string, unknown>; attention: unknown[] }[];
+    for (const c of computers) {
+      expect(c.vulnerabilities).toEqual({ kev: 0, high: 1, critical: 0, possible: 601 });
+      expect(c.attention).toEqual([{ slug: "remote-access/remote-desktop-and-support", category: "Remote desktop and support", attention: "review", titles: 2 }]);
+    }
+    expect(JSON.stringify(out.result)).not.toContain("CVE-2015-0311");
+  });
+
+  it("get_computer keeps the titles and the certain top CVEs", async () => {
+    const { data } = fakeData({ v_computer_list: [{ id: PC, tenant_id: T1, hostname: "PC1", vulns, attention }], v_installation_details: [] }, { computer_cycle_tasks: [] });
+    const out = await getComputer(data, caller, { computer_id: PC });
+    const computer = out.result.computer as { vulnerabilities: { top: { id: string }[] }; attention: unknown[] };
+    expect(computer.vulnerabilities.top.map((t) => t.id)).toEqual(["CVE-2026-126881"]);
+    expect(computer.attention).toEqual(attention);
+  });
+
+  it("get_software_title filters each version's summary", async () => {
+    const { data } = fakeData(
+      { v_title_summary: [{ tenant_id: T1, title_id: TITLE, canonical_name: "Microsoft Edge" }], v_installation_details: [] },
+      { title_versions: [{ version: "142.0", computers: 4, vulns }], title_vulns: [], title_group_ids: [TITLE] },
+    );
+    const out = await getSoftwareTitle(data, caller, { title_id: TITLE });
+    expect(JSON.stringify(out.result.versions)).not.toContain("CVE-2015-0311");
   });
 });
