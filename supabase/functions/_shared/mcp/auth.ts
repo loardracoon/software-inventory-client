@@ -49,9 +49,12 @@ export type UserJwtClaims = {
   // Read JWT while usernames are hidden from assistants: my_tenant_roles() then reports 'viewer', so every
   // view and screen RPC masks users (migration *_mcp_masking.sql).
   mcp_mask?: true;
+  // The token behind the call: audit_log rows say "via mcp", and only policy_draft may change the draft.
+  mcp_token?: string;
+  mcp_scope?: "read" | "policy_draft";
 };
 
-export function userClaims(userId: string, nowSeconds: number, options: { mask?: boolean; ttlSeconds?: number } = {}): UserJwtClaims {
+export function userClaims(userId: string, nowSeconds: number, options: { mask?: boolean; ttlSeconds?: number; token?: { id: string; scope: "read" | "policy_draft" } } = {}): UserJwtClaims {
   const ttl = options.ttlSeconds ?? USER_JWT_TTL_SECONDS;
   return {
     sub: userId,
@@ -61,6 +64,8 @@ export function userClaims(userId: string, nowSeconds: number, options: { mask?:
     exp: nowSeconds + ttl,
     amr: [{ method: "mcp_token", timestamp: nowSeconds }],
     ...(options.mask ? { mcp_mask: true as const } : {}),
+    // The database marks audit_log rows "via mcp" and limits writes by these (Phase 11 M5).
+    ...(options.token ? { mcp_token: options.token.id, mcp_scope: options.token.scope } : {}),
   };
 }
 

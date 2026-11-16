@@ -3,7 +3,7 @@
 // access, roles and masking are the database's. mcp/index.ts registers the tools with their input schemas.
 // Lists are paged on the server (limit ≤ 200) and always say how many rows exist.
 
-export type QueryResult<T = unknown> = { data: T | null; error: { message: string } | null; count?: number | null };
+export type QueryResult<T = unknown> = { data: T | null; error: { message: string; code?: string } | null; count?: number | null };
 
 export type Filter =
   | { op: "eq"; column: string; value: string | number | boolean }
@@ -29,6 +29,9 @@ export interface McpData {
   // Builds and stores an evidence package as the user (M3, audit-report/generate.ts). The package stays in the
   // app; only its id and hash come back, so it runs with an unmasked JWT (the SQL check needs an admin or operator).
   createEvidence?(body: { tenant_id: string; as_of: string; scope_tag: string | null }): Promise<QueryResult<{ report_id: string; manifest_sha256: string }>>;
+  // A draft RPC as the user (M5): unmasked (the admin check needs the real role) and marked with the token, so
+  // the database applies the assistant limits and audits "via mcp". Returns no usernames.
+  write?<T = unknown>(name: string, args: Record<string, unknown>): Promise<QueryResult<T>>;
 }
 
 export type McpCaller = { userId: string; tokenId: string | null; scope: "read" | "policy_draft"; showUsernames: boolean };

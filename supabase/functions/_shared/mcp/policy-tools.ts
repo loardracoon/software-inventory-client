@@ -27,7 +27,7 @@ const TOP = 20;
 const PREVIEW_CAP = 20_000; // policy_preview_inputs returns at most this many (title, version) pairs
 const CLASS_RANK: Record<PolicyClass, number> = { core_system: 0, sanctioned_app: 1, tolerated_app: 2, unsanctioned_app: 3 };
 
-type RuleRow = PolicyRule & {
+export type RuleRow = PolicyRule & {
   lineage_id: string;
   position: number;
   owner: string | null;
@@ -37,34 +37,34 @@ type RuleRow = PolicyRule & {
   review_by: string | null;
   alert_on_new: boolean;
 };
-type PolicyDoc = { version: number; status: string; default_class: PolicyClass; published_at: string | null; published_by: string | null; evaluated_at: string | null; rules: RuleRow[] };
-type PolicyState = { published: PolicyDoc | null; draft: PolicyDoc | null; versions: Record<string, unknown>[]; can_edit: boolean };
+export type PolicyDoc = { version: number; status: string; default_class: PolicyClass; published_at: string | null; published_by: string | null; evaluated_at: string | null; rules: RuleRow[] };
+export type PolicyState = { published: PolicyDoc | null; draft: PolicyDoc | null; versions: Record<string, unknown>[]; can_edit: boolean };
 export type PreviewInput = PolicyInput & { title_id: string; version: string; computers: number; installations: number; current_class: PolicyClass | null; current_rule_id: string | null };
 
-async function policyState(data: McpData, tenantId: string): Promise<PolicyState> {
+export async function policyState(data: McpData, tenantId: string): Promise<PolicyState> {
   const state = orThrow(await data.rpc<PolicyState>("policy_get", { p_tenant_id: tenantId }), "the policy");
   if (!state) throw new ToolError("No policy for this tenant");
   return state;
 }
 
-async function previewInputs(data: McpData, tenantId: string): Promise<PreviewInput[]> {
+export async function previewInputs(data: McpData, tenantId: string): Promise<PreviewInput[]> {
   return orThrow(await data.rpc<PreviewInput[]>("policy_preview_inputs", { p_tenant_id: tenantId }), "installed software") ?? [];
 }
 
 // The rules the evaluator runs; the lineage id is the rule id (as in the console).
-function evaluatorRules(doc: PolicyDoc | null): PolicyRule[] {
+export function evaluatorRules(doc: PolicyDoc | null): PolicyRule[] {
   return (doc?.rules ?? []).map((r) => ({ ...r, id: r.lineage_id }));
 }
 
 // "draft" falls back to the published policy when there is no draft; `which` says which one was used.
-function pickDoc(state: PolicyState, wanted: "published" | "draft"): { doc: PolicyDoc; which: "published" | "draft" } {
+export function pickDoc(state: PolicyState, wanted: "published" | "draft"): { doc: PolicyDoc; which: "published" | "draft" } {
   const which = wanted === "draft" && state.draft ? "draft" : "published";
   const doc = which === "draft" ? state.draft : state.published;
   if (!doc) throw new ToolError(wanted === "draft" ? "This tenant has no policy yet" : "This tenant has no published policy yet");
   return { doc, which };
 }
 
-function ruleView(r: RuleRow) {
+export function ruleView(r: RuleRow) {
   return {
     rule_id: r.lineage_id,
     position: r.position,
@@ -204,23 +204,22 @@ export type Simulation = {
   shadowed: boolean;
 };
 
-// Before = the base policy as is; after = the same rules with the proposed one at `position` (1 = top).
-export function simulate(doc: PolicyDoc, which: "published" | "draft", rule: ProposedRule, position: number, inputs: PreviewInput[]): Simulation {
-  const before = evaluatorRules(doc);
-  const at = Math.min(Math.max(1, position), before.length + 1) - 1;
-  const proposed: PolicyRule = { ...rule, id: "proposed", enabled: true };
-  const after = [...before.slice(0, at), proposed, ...before.slice(at)];
+export type Impact = Omit<Simulation, "base" | "position" | "shadowed"> & { focus_matches: number };
+
+// Evaluates every installed (title, version) under two rule lists and counts the class changes. focusId names
+// the rule of interest in `after` (the proposed or changed rule): focus_matches counts the versions it decides.
+export function compareRules(before: PolicyRule[], after: PolicyRule[], defaultClass: PolicyClass, focusId: string | null, inputs: PreviewInput[]): Impact {
   const transitions = new Map<string, { from: PolicyClass; to: PolicyClass; versions: number; installations: number }>();
   const titles = new Map<string, Simulation["top_changed_titles"][number]>();
   let changedPairs = 0;
   let changedInstallations = 0;
-  let matchedProposed = 0;
+  let focusMatches = 0;
   let more = 0;
   let less = 0;
   for (const p of inputs) {
-    const a = evaluate(before, p, doc.default_class);
-    const b = evaluate(after, p, doc.default_class);
-    if (b.ruleId === "proposed") matchedProposed++;
+    const a = evaluate(before, p, defaultClass);
+    const b = evaluate(after, p, defaultClass);
+    if (focusId !== null && b.ruleId === focusId) focusMatches++;
     if (a.class === b.class) continue;
     changedPairs++;
     changedInstallations += p.installations;
@@ -238,8 +237,6 @@ export function simulate(doc: PolicyDoc, which: "published" | "draft", rule: Pro
     titles.set(tk, title);
   }
   return {
-    base: { which, version: doc.version, default_class: doc.default_class },
-    position: at + 1,
     pairs_evaluated: inputs.length,
     truncated: inputs.length >= PREVIEW_CAP,
     changed_pairs: changedPairs,
@@ -248,8 +245,23 @@ export function simulate(doc: PolicyDoc, which: "published" | "draft", rule: Pro
     more_restrictive: more,
     less_restrictive: less,
     top_changed_titles: [...titles.values()].sort((x, y) => y.computers - x.computers || x.name.localeCompare(y.name)).slice(0, TOP),
+    focus_matches: focusMatches,
+  };
+}
+
+// Before = the base policy as is; after = the same rules with the proposed one at `position` (1 = top).
+export function simulate(doc: PolicyDoc, which: "published" | "draft", rule: ProposedRule, position: number, inputs: PreviewInput[]): Simulation {
+  const before = evaluatorRules(doc);
+  const at = Math.min(Math.max(1, position), before.length + 1) - 1;
+  const proposed: PolicyRule = { ...rule, id: "proposed", enabled: true };
+  const after = [...before.slice(0, at), proposed, ...before.slice(at)];
+  const { focus_matches, ...impact } = compareRules(before, after, doc.default_class, "proposed", inputs);
+  return {
+    base: { which, version: doc.version, default_class: doc.default_class },
+    position: at + 1,
+    ...impact,
     // The rule matches nothing that reaches it: a rule above already decides those versions, or nothing matches.
-    shadowed: matchedProposed === 0,
+    shadowed: focus_matches === 0,
   };
 }
 

@@ -45,6 +45,11 @@ describe("user JWT", () => {
     expect(userClaims("u1", 1, { ttlSeconds: 60 }).exp).toBe(61);
   });
 
+  it("names the token and its scope for the database limits and audit", () => {
+    expect(userClaims("u1", 1, { token: { id: "t1", scope: "policy_draft" } })).toMatchObject({ mcp_token: "t1", mcp_scope: "policy_draft" });
+    expect("mcp_token" in userClaims("u1", 1)).toBe(false);
+  });
+
   it("is a valid HS256 token for the secret", async () => {
     const jwt = await signJwt(userClaims("u1", 1_000), "secret-of-at-least-32-characters-long!!");
     const [head, body, signature] = jwt.split(".");

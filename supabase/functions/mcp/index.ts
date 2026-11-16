@@ -71,9 +71,17 @@ import {
   TEST_TITLE_DESCRIPTION,
   testTitleAgainstPolicy,
 } from "../_shared/mcp/policy-tools.ts";
+import {
+  DRAFT_MOVE_RULE_DESCRIPTION,
+  DRAFT_SAVE_RULE_DESCRIPTION,
+  DRAFT_SET_RULE_ENABLED_DESCRIPTION,
+  draftMoveRule,
+  draftSaveRule,
+  draftSetRuleEnabled,
+} from "../_shared/mcp/draft-tools.ts";
 import { FIELD_TYPE, OPERATORS_BY_TYPE } from "../_shared/policy.ts";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, content-type, accept, mcp-protocol-version, mcp-session-id",
@@ -95,8 +103,9 @@ async function audit(admin: Admin, row: McpAuditRow): Promise<void> {
   if (error) console.error(`mcp_audit insert failed: ${error.message}`);
 }
 
-// readJwt carries mcp_mask while usernames are hidden; fullJwt (no claim) is used only to build the evidence
-// package, whose content stays in the app (only its id and hash reach the assistant).
+// readJwt carries mcp_mask while usernames are hidden; fullJwt (no mask) is used only to build the evidence
+// package, whose content stays in the app (only its id and hash reach the assistant), and for the draft RPCs,
+// which return no usernames. Both carry the token id and scope (database limits and "via mcp" audit).
 function asUserClient(jwt: string) {
   return createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -110,6 +119,10 @@ function userData(admin: Admin, userId: string, jwt: string, fullJwt: string): M
   return {
     async rpc(name, args) {
       const { data, error } = await client.rpc(name, args ?? {});
+      return { data, error };
+    },
+    async write(name, args) {
+      const { data, error } = await fullClient.rpc(name, args);
       return { data, error };
     },
     async view(name, eq) {
@@ -387,6 +400,52 @@ function buildServer(admin: Admin, caller: McpCaller, enabled: boolean, data: Mc
     },
     (a) => suggestRuleForRisk(data, caller, a),
   );
+
+  // Draft writes (M5): listed only for policy_draft tokens. The database enforces the same limits.
+  if (caller.scope === "policy_draft") {
+    const draftWrite = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
+    const ruleId = z.string().uuid().describe("rule_id from get_policy");
+    add(
+      "draft_save_rule",
+      "Save a rule to the policy draft",
+      DRAFT_SAVE_RULE_DESCRIPTION,
+      {
+        tenant_id: oneTenantId,
+        rule,
+        rule_id: ruleId.optional().describe("Change this rule; leave empty to add a new one"),
+        position: z.number().int().min(1).optional().describe("1 = top; new rules go last by default"),
+        enabled: z.boolean().optional(),
+        alert_on_new: z.boolean().optional().describe("Alert when a new title matches this rule"),
+        exception: z
+          .object({
+            owner: z.string().max(1000).optional(),
+            business_purpose: z.string().max(1000).optional(),
+            mitigating_controls: z.string().max(1000).optional().describe("For unsanctioned rules: the remediation"),
+            review_by: z.string().max(10).optional().describe("YYYY-MM-DD, within a month"),
+          })
+          .optional()
+          .describe("Documentation for tolerated rules. Who accepts the risk is left for a person."),
+      },
+      (a) => draftSaveRule(data, caller, a),
+      draftWrite,
+    );
+    add(
+      "draft_move_rule",
+      "Move a rule in the policy draft",
+      DRAFT_MOVE_RULE_DESCRIPTION,
+      { tenant_id: oneTenantId, rule_id: ruleId, position: z.number().int().min(1).describe("1 = top") },
+      (a) => draftMoveRule(data, caller, a),
+      { ...draftWrite, idempotentHint: true },
+    );
+    add(
+      "draft_set_rule_enabled",
+      "Turn a draft rule on or off",
+      DRAFT_SET_RULE_ENABLED_DESCRIPTION,
+      { tenant_id: oneTenantId, rule_id: ruleId, enabled: z.boolean() },
+      (a) => draftSetRuleEnabled(data, caller, a),
+      { ...draftWrite, idempotentHint: true },
+    );
+  }
   return server;
 }
 
@@ -412,8 +471,9 @@ Deno.serve(async (req) => {
   // Read JWT: carries mcp_mask while usernames are hidden from assistants, so the database masks them.
   const now = Math.floor(Date.now() / 1000);
   const secret = Deno.env.get("MCP_JWT_SECRET") ?? "";
-  const readJwt = await signJwt(userClaims(caller.userId, now, { mask: !caller.showUsernames }), secret);
-  const fullJwt = await signJwt(userClaims(caller.userId, now), secret);
+  const tokenClaims = { id: resolved.token_id, scope: resolved.scope };
+  const readJwt = await signJwt(userClaims(caller.userId, now, { mask: !caller.showUsernames, token: tokenClaims }), secret);
+  const fullJwt = await signJwt(userClaims(caller.userId, now, { token: tokenClaims }), secret);
   const server = buildServer(admin, caller, resolved.enabled, userData(admin, caller.userId, readJwt, fullJwt));
   const transport = new WebStandardStreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });
   await server.connect(transport);

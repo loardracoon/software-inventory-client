@@ -2665,6 +2665,11 @@ isOneToOne: false
 "policy_discard_draft":
 { Args: { "p_tenant_id": string }; Returns: undefined
                            },
+"policy_draft_activity":
+{ Args: { "p_tenant_id": string }; Returns: {
+              "action": string,"at": string,"rule_name": string,"user_email": string,"via": string
+            }[]
+                           },
 "policy_due_tenants":
 { Args: Record<PropertyKey, never>; Returns: {
               "full_run": boolean,"policy_id": string,"tenant_id": string

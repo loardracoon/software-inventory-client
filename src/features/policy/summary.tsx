@@ -1,8 +1,8 @@
 import { Link } from "react-router";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatDate, formatNumber } from "@/lib/format";
-import type { PolicyOverview } from "./api";
+import { formatDate, formatDateTime, formatNumber } from "@/lib/format";
+import type { DraftActivity, PolicyOverview } from "./api";
 import { ClassDot, ClassHint } from "./class-badge";
 import { CLASS_INFO, CLASS_ORDER, classParam } from "./classes";
 
@@ -46,9 +46,12 @@ export function ClassSummary({ overview }: { overview: PolicyOverview | null }) 
   );
 }
 
-export function DraftBar({ version, changes, canEdit, busy, onDiscard, onPublish }: {
+const ACTIVITY_SHOWN = 10;
+
+export function DraftBar({ version, changes, activity = [], canEdit, busy, onDiscard, onPublish }: {
   version: number;
   changes: number;
+  activity?: DraftActivity[];
   canEdit: boolean;
   busy: boolean;
   onDiscard: () => void;
@@ -63,6 +66,7 @@ export function DraftBar({ version, changes, canEdit, busy, onDiscard, onPublish
         <span className="text-[13px] text-text-muted">
           The table and the title tester show the draft. Titles keep their published class until you publish.
         </span>
+        {activity.length ? <DraftActivityList activity={activity} /> : null}
       </div>
       {canEdit ? (
         <div className="flex flex-wrap gap-3">
@@ -75,6 +79,44 @@ export function DraftBar({ version, changes, canEdit, busy, onDiscard, onPublish
         </div>
       ) : null}
     </div>
+  );
+}
+
+// Who changed the draft, newest first; changes made by an AI assistant (MCP token) are marked, so the person who
+// publishes sees them before publishing (Phase 11 M5).
+function DraftActivityList({ activity }: { activity: DraftActivity[] }) {
+  const byAssistant = activity.filter((a) => a.via === "mcp").length;
+  return (
+    <details className="mt-1 text-[13px] text-text-muted">
+      <summary className="cursor-pointer text-text-body">
+        Changes by {[...new Set(activity.map((a) => a.user_email ?? "a deleted user"))].join(", ")}
+        {byAssistant ? (
+          <span className="ml-2 inline-flex items-center gap-1 font-semibold text-text-strong">
+            <Bot className="size-3.5" aria-hidden="true" />
+            {byAssistant} by an AI assistant
+          </span>
+        ) : null}
+      </summary>
+      <ul className="m-0 mt-2 flex list-none flex-col gap-1 p-0" aria-label="Draft changes">
+        {activity.slice(0, ACTIVITY_SHOWN).map((a, i) => (
+          <li key={`${a.at}-${i}`} className="flex flex-wrap gap-x-2">
+            <span className="tabular-nums">{formatDateTime(a.at)}</span>
+            <span>
+              {a.action.replace(/^policy /, "")}
+              {a.rule_name ? `: ${a.rule_name}` : ""}
+            </span>
+            <span>· {a.user_email ?? "a deleted user"}</span>
+            {a.via === "mcp" ? (
+              <span className="inline-flex items-center gap-1 font-semibold text-text-strong">
+                <Bot className="size-3.5" aria-hidden="true" />
+                via AI assistant
+              </span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      {activity.length > ACTIVITY_SHOWN ? <p className="m-0 mt-1">Older changes are in the audit log.</p> : null}
+    </details>
   );
 }
 

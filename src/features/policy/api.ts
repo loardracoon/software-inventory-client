@@ -113,6 +113,13 @@ export async function fetchPolicy(tenantId: string): Promise<PolicyState | null>
   return orThrow(await db().rpc("policy_get", { p_tenant_id: tenantId })) as unknown as PolicyState | null;
 }
 
+// Who changed the draft and how, newest first (tenant admins only). via: "console" or "mcp" (an AI assistant).
+export type DraftActivity = { at: string; action: string; rule_name: string | null; user_email: string | null; via: string };
+
+export async function fetchDraftActivity(tenantId: string): Promise<DraftActivity[]> {
+  return (orThrow(await db().rpc("policy_draft_activity", { p_tenant_id: tenantId })) ?? []) as DraftActivity[];
+}
+
 export async function fetchPreviewInputs(tenantId: string): Promise<PreviewInput[]> {
   return (orThrow(await db().rpc("policy_preview_inputs", { p_tenant_id: tenantId })) ?? []) as PreviewInput[];
 }

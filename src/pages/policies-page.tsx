@@ -14,6 +14,7 @@ import {
   draftChanges,
   effectivePolicy,
   evaluatorRules,
+  fetchDraftActivity,
   fetchPolicy,
   fetchPolicyOverview,
   fetchPreviewInputs,
@@ -36,6 +37,7 @@ export function PoliciesPage() {
   const state = useLoad(`policy:${key}`, () => (tenantId ? fetchPolicy(tenantId) : Promise.resolve(null)));
   const overview = useLoad(`policy-overview:${key}`, () => (tenantId ? fetchPolicyOverview(tenantId) : Promise.resolve(null)));
   const inputs = useLoad(`policy-inputs:${key}`, () => (tenantId ? fetchPreviewInputs(tenantId) : Promise.resolve([])));
+  const activity = useLoad(`policy-activity:${key}`, () => (tenantId ? fetchDraftActivity(tenantId) : Promise.resolve([])));
   const categories = useLoad("categories", fetchCategories);
   const categoryName = useCategoryName(categories.data);
   const [busy, setBusy] = useState(false);
@@ -152,7 +154,7 @@ export function PoliciesPage() {
       {state.error ? <ErrorLine message={state.error} /> : null}
       {inputs.error ? <ErrorLine message={inputs.error} /> : null}
       {state.data?.draft ? (
-        <DraftBar version={state.data.draft.version} changes={changes.total} canEdit={canEdit} busy={busy} onDiscard={discard} onPublish={publish} />
+        <DraftBar version={state.data.draft.version} changes={changes.total} activity={activity.data ?? []} canEdit={canEdit} busy={busy} onDiscard={discard} onPublish={publish} />
       ) : null}
       {overview.loading && !overview.data ? <Skeleton className="h-24 w-full" /> : <ClassSummary overview={overview.data} />}
       <OverdueBanner overview={overview.data} />
