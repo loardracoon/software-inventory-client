@@ -17,6 +17,7 @@ The files here are references, not code to copy. Rebuild each screen with React,
 | File | App | Route | What it answers |
 | --- | --- | --- | --- |
 | `Main.dc.html` | Client | `/` | How are the fleet and this week's collection? |
+| `MainWidgets.dc.html` | Client | `/` | Overview layout in use: hover widgets (big number, segmented bar, popover per segment) |
 | `Computers.dc.html` | Client | `/computers` | Who is collected, on retry or in error? |
 | `Computer.dc.html` | Client | `/computers/:id` | What is on this computer now, and what was there before? |
 | `Software.dc.html` | Client | `/software` | Where is a title or a category? Includes the reclassification request dialog |

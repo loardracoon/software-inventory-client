@@ -2,20 +2,17 @@ import { Link } from "react-router";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorLine } from "@/components/shared/error-line";
-import { Eyebrow } from "@/components/shared/eyebrow";
+import { CardHeading, StatTile } from "@/components/shared/overview-widget";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { useLoad } from "@/lib/use-load";
-import { cn } from "@/lib/utils";
-import { fetchOverdueSummary, fetchVulnOverview } from "./api";
+import { fetchOverdueSummary, fetchVulnOverview, type VulnOverview } from "./api";
 
-function Stat({ to, value, label, detail, alert }: { to: string; value: number; label: string; detail?: string; alert?: boolean }) {
-  return (
-    <Link to={to} className="flex flex-col gap-0.5 rounded-md border border-border-subtle p-3 no-underline hover:bg-surface-subtle">
-      <span className={cn("text-2xl font-semibold", alert && value > 0 ? "text-text-critical" : "text-text-strong")}>{formatNumber(value)}</span>
-      <span className="text-sm text-text-strong">{label}</span>
-      {detail ? <span className="text-xs text-text-muted">{detail}</span> : null}
-    </Link>
-  );
+const plural = (n: number, one: string, many = `${one}s`) => `${formatNumber(n)} ${n === 1 ? one : many}`;
+
+function headline(v: VulnOverview): string {
+  if (v.kev > 0) return `${plural(v.kev, "known-exploited CVE")} reach ${plural(v.kev_computers, "computer")}`;
+  if (v.vulns > 0) return `${plural(v.vulns, "CVE")} affect ${plural(v.titles, "installed title")}, none known exploited`;
+  return "No known CVE affects an installed version";
 }
 
 // Overview: known CVEs that affect installed versions (Phase 10b).
@@ -24,11 +21,21 @@ export function VulnOverviewCard({ tenantId }: { tenantId: string | null }) {
   const overdue = useLoad(`vuln-overdue:${tenantId ?? "all"}`, () => fetchOverdueSummary(tenantId)).data;
   const v = data.data;
   return (
-    <Card className="gap-4 px-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <Eyebrow>Known vulnerabilities</Eyebrow>
-        {v?.evaluated_at ? <span className="text-xs text-text-muted">Matched {formatDateTime(v.evaluated_at)}</span> : null}
-      </div>
+    <Card className="gap-5 px-6">
+      <CardHeading
+        eyebrow="Vulnerabilities · installed applications"
+        headline={v && v.cached > 0 ? headline(v) : undefined}
+        aside={
+          <Link to="/software?vuln=any" className="text-sm font-semibold">
+            All vulnerable software
+          </Link>
+        }
+      />
+      {v?.evaluated_at ? (
+        <span className="-mt-2 text-xs text-text-muted">
+          Installed versions matched to CVE records and the CISA Known Exploited Vulnerabilities catalog · last match {formatDateTime(v.evaluated_at)}
+        </span>
+      ) : null}
       {data.error ? <ErrorLine message={data.error} /> : null}
       {data.loading ? <Skeleton className="h-20 w-full" /> : null}
       {v && v.cached === 0 ? (
@@ -38,29 +45,29 @@ export function VulnOverviewCard({ tenantId }: { tenantId: string | null }) {
         </p>
       ) : null}
       {v && v.cached > 0 ? (
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-          <Stat
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(170px,1fr))] gap-3">
+          <StatTile
             to="/software?vuln=kev"
             value={v.kev}
             label="Known exploited CVEs"
-            detail={`${formatNumber(v.kev_installations)} installation${v.kev_installations === 1 ? "" : "s"} on ${formatNumber(v.kev_computers)} computer${v.kev_computers === 1 ? "" : "s"}`}
+            detail={`${plural(v.kev_installations, "installation")} on ${plural(v.kev_computers, "computer")}`}
             alert
           />
-          <Stat
+          <StatTile
             to="/remediation"
             value={overdue?.overdue ?? 0}
             label="Overdue vulnerabilities"
             detail={`${formatNumber(overdue?.critical ?? 0)} critical · ${formatNumber(overdue?.high ?? 0)} high`}
             alert
           />
-          <Stat to="/software?vuln=critical" value={v.critical} label="Critical CVEs" alert />
-          <Stat to="/software?vuln=high" value={v.high} label="High CVEs" />
-          <Stat to="/software?vuln=any" value={v.titles} label="Affected titles" detail={`${formatNumber(v.vulns)} CVEs in total`} />
-          <Stat
+          <StatTile to="/software?vuln=critical" value={v.critical} label="Critical CVEs" alert />
+          <StatTile to="/software?vuln=high" value={v.high} label="High CVEs" />
+          <StatTile to="/software?vuln=any" value={v.titles} label="Affected titles" detail={`${formatNumber(v.vulns)} CVEs in total`} />
+          <StatTile
             to="/software?vuln=possible"
             value={v.possible}
             label="CVEs that may apply"
-            detail={`${formatNumber(v.possible_titles)} title${v.possible_titles === 1 ? "" : "s"} · no version to compare`}
+            detail={`${plural(v.possible_titles, "title")} · no version to compare`}
           />
         </div>
       ) : null}

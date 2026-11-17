@@ -77,3 +77,20 @@
   --class-tolerated: var(--sky-blue);
   --class-unsanctioned: var(--alert-red);
 }
+
+/* Overview widget ramps. The DS has no ramps, so these are anchored on DS colours (Dark Blue, Sophos Blue,
+   Alert Red, Cyber Green) with derived steps, darkest first, and checked for lightness separation between
+   neighbours. Each widget uses one ramp; "Other" is always last and grey. The dark theme runs the ramps
+   from light to dark so the first step stays visible on the navy surfaces. */
+:root {
+  --ramp-blue-1: #001a47; --ramp-blue-2: #2006f7; --ramp-blue-3: #3778f5; --ramp-blue-4: #82b0f3;
+  --ramp-red-1: #570209; --ramp-red-2: #990112; --ramp-red-3: #ea0022; --ramp-red-4: #f4918e;
+  --ramp-green-1: #013d2c; --ramp-green-2: #016b4f; --ramp-green-3: #049e74; --ramp-green-4: #3ddca7;
+  --ramp-other: #d9dfe3;
+}
+[data-theme="dark"] {
+  --ramp-blue-1: #edf2f9; --ramp-blue-2: #82b0f3; --ramp-blue-3: #3778f5; --ramp-blue-4: #2006f7;
+  --ramp-red-1: #fbd3d1; --ramp-red-2: #f4918e; --ramp-red-3: #ea0022; --ramp-red-4: #990112;
+  --ramp-green-1: #bff5e2; --ramp-green-2: #3ddca7; --ramp-green-3: #049e74; --ramp-green-4: #016b4f;
+  --ramp-other: #4a6080;
+}
