@@ -543,17 +543,38 @@ describe("Overview", () => {
     renderAt("/", "/", <OverviewPage />);
 
     expect(await screen.findByText("1,284")).toBeInTheDocument();
-    expect(screen.getByText("9 Windows · 2 macOS")).toBeInTheDocument();
-    expect(screen.getByText("94.4")).toBeInTheDocument();
+    expect(screen.getByText("Windows · 9")).toBeInTheDocument();
+    expect(screen.getByText("macOS · 2")).toBeInTheDocument();
+    expect(screen.getByText(/94.4% collected this cycle/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Never inventoried/ })).toHaveAttribute("href", "/computers?coverage=never");
     expect(screen.getByRole("link", { name: /Never inventoried/ })).toHaveTextContent("1");
     expect(screen.getByRole("link", { name: /Stale/ })).toHaveAttribute("href", "/computers?coverage=stale");
     expect(screen.getByRole("link", { name: /Stale/ })).toHaveTextContent("2");
     expect(screen.getByRole("link", { name: /Current/ })).toHaveAttribute("href", "/computers?coverage=current");
-    expect(screen.getByText("148 added · 61 updated · 27 removed")).toBeInTheDocument();
+    expect(screen.getByText("Added · 148")).toBeInTheDocument();
+    expect(screen.getByText("Removed · 27")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Anonymizers/ })).toHaveAttribute("href", "/software?category=proxy-and-tunnel%2Fanonymizers");
     expect(screen.getByText("Not allowed")).toBeInTheDocument();
     expect(await screen.findByRole("img", { name: /per week for the last 12 weeks/ })).toBeInTheDocument();
+  });
+
+  it("widgets open a popover per segment with a link to the filtered list", async () => {
+    const user = userEvent.setup();
+    vi.mocked(api.fetchOverviewStats).mockResolvedValue({
+      computers: 11, computers_by_platform: { windows: 9, macos: 2 }, coverage_never: 1, coverage_stale: 2, coverage_current: 8, coverage_pct: 94.4,
+      titles: 10, extension_installs: 0, distinct_extensions: 0, package_installs: 0, package_managers: [], changes_7d: 0, added_7d: 0, updated_7d: 0, removed_7d: 0,
+    });
+    renderAt("/", "/", <OverviewPage />);
+
+    const segment = await screen.findByRole("button", { name: "Stale: 2 computers, 18.2%" });
+    expect(segment).toHaveAttribute("aria-expanded", "false");
+    await user.click(segment);
+    expect(segment).toHaveAttribute("aria-expanded", "true");
+    const pop = screen.getByRole("group", { name: "Stale details" });
+    expect(within(pop).getByText("2 computers · 18.2%")).toBeInTheDocument();
+    expect(within(pop).getByRole("link", { name: "Show stale" })).toHaveAttribute("href", "/computers?coverage=stale");
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("group", { name: "Stale details" })).toBeNull();
   });
 
   it("shows the known vulnerabilities card with links to the filtered Software list", async () => {
@@ -1024,7 +1045,8 @@ describe("End of life (Stage 3)", () => {
     } as never);
     renderAt("/", "/", <OverviewPage />);
 
-    expect(await screen.findByRole("heading", { name: "Unsupported software and systems" })).toBeInTheDocument();
+    expect(await screen.findByText("Unsupported software and systems")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "4 titles past end of life, and 1 computer on an unsupported OS" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Software past end of life/ })).toHaveAttribute("href", "/software?support=eol");
     expect(screen.getByRole("link", { name: /Software past end of life/ })).toHaveTextContent("4");
     expect(screen.getByRole("link", { name: /Software ending within 90 days/ })).toHaveAttribute("href", "/software?support=ending_soon");

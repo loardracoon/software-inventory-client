@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Overview with widgets · Endpoint Inventory</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/sophosds/tokens.css">
+<link rel="stylesheet" href="ds/sophosds/components/bundle.css">
+<script src="ds/sophosds/components/bundle.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0}
+a{color:var(--text-brand)}a:hover{color:var(--action-hover)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.nav-a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;box-sizing:border-box;border-radius:8px;color:#bbcfde;text-decoration:none;font-size:14px}
+.nav-a:hover{background:rgba(255,255,255,0.06);color:#ffffff}
+.nav-a.on{background:rgba(0,237,255,0.12);color:#00edff;font-weight:600}
+.nav-a:focus-visible{outline:2px solid #00edff;outline-offset:2px}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px}
+.pol-seg{display:block;min-width:4px;transition:opacity .15s}
+.pol-seg:hover,.pol-seg:focus-visible{opacity:0.8}
+.pol-fact{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle)}
+.pol-fact:first-child{padding-top:0}
+.pol-fact div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pol-fact b{font-size:14px;font-weight:600;color:var(--text-strong)}
+.pol-fact span{font-size:13px;line-height:1.5;color:var(--text-muted)}
+.pol-fact a{font-size:14px;font-weight:600;white-space:nowrap}
+.v-tile{display:flex;flex-direction:column;gap:10px;padding:16px 18px;border-radius:16px;background:var(--surface-subtle)}
+.v-eyebrow{font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;color:var(--text-strong)}
+.v-num{font-family:var(--font-display);font-size:36px;line-height:1;color:var(--text-strong)}
+.v-sub{font-size:13px;line-height:1.5;color:var(--text-muted)}
+.sev{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-body);white-space:nowrap}
+.sev i{width:8px;height:8px;border-radius:2px;display:inline-block}
+table.vt{width:100%;border-collapse:collapse;font-size:14px}
+table.vt th{text-align:left;padding:0 12px;height:36px;border-bottom:1px solid var(--border-strong);font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-strong);white-space:nowrap}
+table.vt td{padding:10px 12px;border-bottom:1px solid var(--border-subtle);vertical-align:middle;color:var(--text-body)}
+table.vt tbody tr:hover td{background:var(--surface-subtle)}
+table.vt .num{text-align:right}
+.seg3{min-height:32px;padding:0 12px;border:0;border-radius:999px;background:transparent;color:var(--text-body);font-family:var(--font-sans);font-size:13px;font-weight:600;cursor:pointer}
+.seg3.on{background:var(--action);color:var(--on-action)}
+:root{--ramp-blue-1:#001A47;--ramp-blue-2:#2006F7;--ramp-blue-3:#3778F5;--ramp-blue-4:#82B0F3;--ramp-red-1:#570209;--ramp-red-2:#990112;--ramp-red-3:#EA0022;--ramp-red-4:#F4918E;--ramp-green-1:#013D2C;--ramp-green-2:#016B4F;--ramp-green-3:#049E74;--ramp-green-4:#3DDCA7;--ramp-other:#D9DFE3}
+.wg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px}
+.wg{position:relative;display:flex;flex-direction:column;gap:6px;padding:24px 24px 20px;border:1px solid var(--border-subtle);border-radius:16px;background:var(--surface-raised);box-shadow:var(--shadow-sm)}
+.wg.open{z-index:30;box-shadow:var(--shadow-md)}
+.wg-top{display:flex;align-items:baseline;gap:8px;min-width:0}
+.wg-num{font-family:var(--font-display);font-weight:400;font-size:52px;line-height:1;letter-spacing:-0.02em;color:var(--text-strong)}
+.wg-unit{font-family:var(--font-subtitle);font-weight:600;font-size:15px;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted)}
+.wg-cap{font-size:12px;color:var(--text-muted)}
+.wg-barwrap{position:relative;margin-top:14px}
+.wg-bar{display:flex;gap:2px;height:20px;align-items:center}
+.wg-seg{position:relative;display:flex;align-items:center;min-width:6px;height:20px;padding:0;border:0;background:transparent;cursor:pointer}
+.wg-seg:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
+.wg-fill{display:block;width:100%;transition:height .15s ease,opacity .15s ease}
+.wg-legend{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px}
+.wg-legend span{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--text-muted);white-space:nowrap}
+.wg-legend span.on{color:var(--text-strong);font-weight:600}
+.wg-legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.wg-caret{position:absolute;top:calc(100% + 6px);width:14px;height:14px;margin-left:-7px;background:var(--surface-raised);border-left:1px solid var(--border-subtle);border-top:1px solid var(--border-subtle);transform:rotate(45deg);z-index:2}
+.wg-pop{position:absolute;top:calc(100% + 13px);left:-25px;right:-25px;display:flex;flex-direction:column;padding:16px 16px 8px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--surface-raised);box-shadow:var(--shadow-lg);z-index:1}
+.wg-pop-head{display:flex;flex-direction:column;gap:4px;padding-bottom:10px}
+.wg-pop-title{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-subtitle);font-size:18px;color:var(--text-strong)}
+.wg-pop-title i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.wg-pop-meta{font-size:13px;color:var(--text-muted)}
+.wg-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--border-subtle)}
+.wg-badge{flex:0 0 auto;min-width:34px;padding:3px 6px;border-radius:6px;font-size:12px;font-weight:600;text-align:center}
+.wg-row-main{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:1px}
+.wg-row-label{font-size:14px;color:var(--text-strong);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wg-row-sub{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wg-row-val{flex:0 0 auto;font-size:14px;font-weight:600;color:var(--text-strong);white-space:nowrap}
+.wg-more{display:block;padding:10px 0 6px;border-top:1px solid var(--border-subtle);font-size:14px;font-weight:600;text-align:center;text-decoration:none}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-wrap: wrap; background: var(--surface-subtle); color: var(--text-body); font-family: var(--font-sans);">
+
+<nav aria-label="Main navigation" style="flex: 1 1 232px; box-sizing: border-box; padding: 24px 16px; background: var(--dark-blue); display: flex; flex-direction: column; gap: 28px;">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 12px;">
+<x-import component-from-global-scope="SophosDS.Logo" variant="white" height="{{logoH}}"></x-import>
+<span style="font-family: var(--font-subtitle); font-size: 15px; line-height: 1.2; color: #ffffff;">Endpoint Inventory</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<a class="nav-a on" href="Main.dc.html" aria-current="page"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>Overview</a>
+<a class="nav-a" href="Computers.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"></rect><line x1="8" x2="16" y1="21" y2="21"></line><line x1="12" x2="12" y1="17" y2="21"></line></svg>Computers</a>
+<a class="nav-a" href="Software.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7.5 4.27 9 5.15"></path><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg>Software</a>
+<a class="nav-a" href="Policies.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>Policies</a>
+<a class="nav-a" href="Changes.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M12 7v5l4 2"></path></svg>Changes</a>
+<a class="nav-a" href="Scans.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>Scans</a>
+<a class="nav-a" href="Org.dc.html"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>Owners &amp; departments</a>
+<a class="nav-a" href="#settings"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="21" x2="14" y1="4" y2="4"></line><line x1="10" x2="3" y1="4" y2="4"></line><line x1="21" x2="12" y1="12" y2="12"></line><line x1="8" x2="3" y1="12" y2="12"></line><line x1="21" x2="16" y1="20" y2="20"></line><line x1="12" x2="3" y1="20" y2="20"></line><line x1="14" x2="14" y1="2" y2="6"></line><line x1="8" x2="8" y1="10" y2="14"></line><line x1="16" x2="16" y1="18" y2="22"></line></svg>Settings</a>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<span style="padding: 0 12px 6px; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: #bbcfde;">Saved searches</span>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Remote access &amp; tunnels</a>
+<a class="nav-a" href="Software.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"></path></svg>Legacy Chrome apps</a>
+</div>
+</nav>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column;">
+<header style="background: var(--surface-page); border-bottom: 1px solid var(--border-subtle);">
+<div style="max-width: 1200px; margin: 0 auto; padding: 14px 24px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+<div style="flex: 1 1 320px; min-width: 0;"><x-import component-from-global-scope="SophosDS.Input" type="search" aria-label="Search the inventory" placeholder="Search computers, software or extension IDs"></x-import></div>
+<x-import component-from-global-scope="SophosDS.Tag">Tenant: Demo tenant</x-import>
+<x-import component-from-global-scope="SophosDS.Badge" color="medium">Mock · sample data</x-import>
+<span role="img" aria-label="Signed in as admin" style="width: 36px; height: 36px; border-radius: 999px; background: var(--sophos-blue); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600;">AD</span>
+</div>
+</header>
+
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px;">
+<div style="display: flex; flex-direction: column; gap: 12px; min-width: 0; flex: 1 1 520px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="brand" tick="{{yes}}">INVENTORY · WEEK 43</x-import>
+<h1 style="margin: 0; font-family: var(--font-display); font-size: 36px; font-weight: 400; line-height: 1.2; letter-spacing: -0.01em; color: var(--text-strong);">Overview</h1>
+<p style="margin: 0; font-size: 14px; line-height: 1.5; color: var(--text-muted);">Cycle opened Mon, Oct 19, 2026 at 10:00 · 389 of 412 computers collected · next retry window Sun, Oct 25 at 11:00</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Button" variant="secondary" size="sm">Export report</x-import>
+<a class="sds-btn sds-btn--primary sds-btn--sm" href="Scans.dc.html" style="color: var(--on-action);">View scan status</a>
+</div>
+</div>
+
+<div class="wg-grid">
+<sc-for list="{{widgets}}" as="w" hint-placeholder-count="8">
+<section class="{{w.cls}}" aria-label="{{w.aria}}" onMouseLeave="{{w.leave}}" onBlur="{{w.blur}}" onKeyDown="{{w.key}}">
+<div class="wg-top"><span class="wg-num">{{w.value}}</span><span class="wg-unit">{{w.unit}}</span></div>
+<span class="wg-cap">{{w.caption}}</span>
+<div class="wg-barwrap">
+<div class="wg-bar" role="group" aria-label="{{w.barAria}}">
+<sc-for list="{{w.segs}}" as="g" hint-placeholder-count="4">
+<button type="button" class="wg-seg" style="flex: {{g.n}} 1 0px;" aria-label="{{g.aria}}" aria-expanded="{{g.expanded}}" onMouseEnter="{{g.open}}" onFocus="{{g.open}}" onClick="{{g.open}}"><span class="wg-fill" style="background: {{g.color}}; border-radius: {{g.radius}}; height: {{g.h}}px; opacity: {{g.opacity}};"></span></button>
+</sc-for>
+</div>
+<sc-if value="{{w.hasPop}}" hint-placeholder-val="{{ false }}">
+<span class="wg-caret" aria-hidden="true" style="left: {{w.caretLeft}};"></span>
+<div class="wg-pop" role="group" aria-label="{{w.pop.aria}}">
+<div class="wg-pop-head">
+<sc-if value="{{w.pop.isDot}}" hint-placeholder-val="{{ true }}"><span class="wg-pop-title"><i aria-hidden="true" style="background: {{w.pop.color}};"></i>{{w.pop.title}}</span></sc-if>
+<span class="wg-pop-meta">{{w.pop.meta}}</span>
+</div>
+<sc-for list="{{w.pop.rows}}" as="r" hint-placeholder-count="3">
+<div class="wg-row">
+<sc-if value="{{r.hasBadge}}" hint-placeholder-val="{{ false }}"><span class="wg-badge" style="background: {{r.badgeBg}}; color: {{r.badgeFg}};">{{r.badge}}</span></sc-if>
+<div class="wg-row-main"><span class="wg-row-label">{{r.label}}</span><sc-if value="{{r.hasSub}}" hint-placeholder-val="{{ false }}"><span class="wg-row-sub" style="color: {{r.subColor}};">{{r.sub}}</span></sc-if></div>
+<span class="wg-row-val">{{r.value}}</span>
+</div>
+</sc-for>
+<a class="wg-more" href="{{w.href}}">{{w.more}}</a>
+</div>
+</sc-if>
+</div>
+<div class="wg-legend" aria-hidden="true">
+<sc-for list="{{w.legend}}" as="l" hint-placeholder-count="4"><span class="{{l.cls}}"><i style="background: {{l.color}};"></i>{{l.label}}</span></sc-for>
+</div>
+</section>
+</sc-for>
+</div>
+
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1 1 560px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">VULNERABILITIES · INSTALLED APPLICATIONS</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">6 known-exploited CVEs reach 263 computers, and updating Chrome and 7-Zip clears most of them</h2>
+<span style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">Installed versions matched to NVD CVE records and the CISA Known Exploited Vulnerabilities catalog · last match today 06:00 · operating system patches are not included</span>
+</div>
+<a href="Software.dc.html" style="font-size: 14px; font-weight: 600;">All vulnerable software</a>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+<div style="flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-height: 40px;">
+<h3 style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-strong);">Top vulnerable computers</h3>
+<a href="Computers.dc.html" style="font-size: 13px; font-weight: 600;">All computers</a>
+</div>
+<div style="overflow-x: auto;">
+<table class="vt" style="min-width: 500px;">
+<thead><tr><th scope="col">Computer</th><th scope="col">Critical · High</th><th scope="col" class="num">CVEs</th><th scope="col" class="num">KEV</th></tr></thead>
+<tbody>
+<sc-for list="{{vHosts}}" as="h" hint-placeholder-count="8">
+<tr>
+<td><div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><a href="Computer.dc.html" style="font-weight: 600; text-decoration: none;">{{h.host}}</a><span style="font-size: 12px; color: var(--text-muted);">{{h.os}} · most from {{h.top}}</span></div></td>
+<td><span aria-label="{{h.sevAria}}" style="display: inline-flex; gap: 10px;"><span class="sev" aria-hidden="true"><i style="background: #570209;"></i>{{h.c}}</span><span class="sev" aria-hidden="true"><i style="background: #990112;"></i>{{h.h}}</span></span></td>
+<td class="num" style="font-weight: 600; color: var(--text-strong);">{{h.total}}</td>
+<td class="num"><sc-if value="{{h.hasKev}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="SophosDS.Badge" color="critical" soft="{{yes}}">{{h.kev}}</x-import></sc-if><sc-if value="{{h.noKev}}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-muted);">—</span></sc-if></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+<div style="flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; min-height: 40px;">
+<h3 style="margin: 0; font-size: 15px; font-weight: 600; color: var(--text-strong);">Top vulnerable applications</h3>
+<div role="group" aria-label="Sort applications" style="display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface-subtle);">
+<button type="button" class="{{vSortCvesCls}}" aria-pressed="{{vSortCves}}" onClick="{{sortCves}}">By CVEs</button>
+<button type="button" class="{{vSortInstCls}}" aria-pressed="{{vSortInst}}" onClick="{{sortInst}}">By instances</button>
+</div>
+</div>
+<div style="overflow-x: auto;">
+<table class="vt" style="min-width: 500px;">
+<thead><tr><th scope="col">Application</th><th scope="col" class="num">CVEs</th><th scope="col" class="num">KEV</th><th scope="col" class="num">Instances</th></tr></thead>
+<tbody>
+<sc-for list="{{vApps}}" as="a" hint-placeholder-count="8">
+<tr>
+<td><div style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><a href="Software.dc.html" style="font-weight: 600; text-decoration: none;">{{a.name}}</a><span style="font-size: 12px; color: var(--text-muted);">{{a.versions}} · {{a.fix}}</span></div></td>
+<td class="num"><div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;"><span style="font-weight: 600; color: var(--text-strong);">{{a.total}}</span><span aria-label="{{a.sevAria}}" style="display: inline-flex; gap: 8px;"><span class="sev" aria-hidden="true"><i style="background: #570209;"></i>{{a.c}}</span><span class="sev" aria-hidden="true"><i style="background: #990112;"></i>{{a.h}}</span></span></div></td>
+<td class="num"><sc-if value="{{a.hasKev}}" hint-placeholder-val="{{ true }}"><x-import component-from-global-scope="SophosDS.Badge" color="critical" soft="{{yes}}">{{a.kev}}</x-import></sc-if><sc-if value="{{a.noKev}}" hint-placeholder-val="{{ false }}"><span style="color: var(--text-muted);">—</span></sc-if></td>
+<td class="num"><div style="display: flex; flex-direction: column; align-items: flex-end; gap: 2px;"><span style="font-weight: 600; color: var(--text-strong);">{{a.inst}}</span><span style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">{{a.pcs}}</span></div></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<span style="font-size: 12px; line-height: 1.5; color: var(--text-muted);">Instances count installations: one computer can hold several copies of a package in different paths. Data for computers on retry comes from their last successful scan.</span>
+</div>
+</x-import>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px;">
+<div style="flex: 3 1 520px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 20px;">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">WEEK 43 CYCLE</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">Daily retries brought coverage from 83% to 94%</h2>
+</div>
+<x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Open · closes Mon, Oct 26 10:00</x-import>
+</div>
+<div role="img" aria-label="389 collected, 19 retry scheduled, 4 errors out of 412 computers" style="display: flex; gap: 2px; height: 14px; border-radius: 999px; overflow: hidden; background: var(--surface-subtle);">
+<div style="width: 94.4%; background: var(--action);"></div>
+<div style="width: 4.6%; background: var(--alert-orange);"></div>
+<div style="width: 1%; background: var(--alert-red);"></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; color: var(--text-muted);">
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--action);"></span>Collected · 389</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--alert-orange);"></span>Retry scheduled · 19</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--alert-red);"></span>Query error · 4</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 8px;">
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Mon 19 · open</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+341</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Tue 20 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+27</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Wed 21 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+9</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Thu 22 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+7</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Fri 23 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+3</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; background: var(--surface-subtle);"><span style="font-size: 12px; color: var(--text-muted);">Sat 24 · retry</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">+2</span></div>
+<div style="flex: 1 1 96px; display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 12px; border: 1px dashed var(--border-control); box-sizing: border-box;"><span style="font-size: 12px; color: var(--text-muted);">Sun 25 · 11:00</span><span style="font-family: var(--font-display); font-size: 22px; color: var(--text-strong);">19 due</span></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--text-muted);">
+<span>4 Linux computers failed on inv.ide_extensions.v1: the table is not available.</span>
+<a href="Scans.dc.html" style="font-weight: 600;">Open retry queue</a>
+</div>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 2 1 360px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card" tone="inverse">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm" tone="inverse">NEEDS ATTENTION</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-on-inverse);">Remote desktop tools run on 37 computers, and one runs an anonymizer</h2>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Proxy and tunnel</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Anonymizers</span></div><x-import component-from-global-scope="SophosDS.Badge" color="critical">Not allowed</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">1 computer · 1 title</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Remote access</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Remote desktop and support</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">37 computers · 6 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">General business</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Screen capture and recording</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">26 computers · 4 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">General internet</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Legacy Chrome apps</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">14 computers · 3 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Proxy and tunnel</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Consumer VPN and proxy services</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">9 computers · 3 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;"><div style="flex: 1 1 190px; min-width: 0; display: flex; flex-direction: column; gap: 2px;"><span style="font-size: 12px; color: var(--text-on-inverse);">Proxy and tunnel</span><span style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Tunnels and mesh networks</span></div><x-import component-from-global-scope="SophosDS.Badge" color="high">Review</x-import><span style="font-size: 14px; white-space: nowrap; color: var(--text-on-inverse);">5 computers · 2 titles</span><a href="Software.dc.html" style="font-size: 14px; font-weight: 600; color: var(--text-on-inverse);">Show</a></div>
+<div style="height: 1px; background: var(--slate);"></div>
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-on-inverse);">Subcategories whose attention level is Review or Not allowed. Corporate VPN clients are Info and stay out of this list. Categories come from the Dictionary Hub, so a reclassification there updates the whole history.</p>
+</div>
+</x-import>
+</div>
+</div>
+
+<div style="display: flex; flex-wrap: wrap; gap: 24px;">
+<div style="flex: 3 1 520px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 18px;">
+<div style="display: flex; flex-direction: column; gap: 8px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">CHANGES PER WEEK</x-import>
+<h2 style="margin: 0; font-family: var(--font-subtitle); font-size: 20px; font-weight: 400; line-height: 1.2; color: var(--text-strong);">Browser updates drive the spikes in updated items</h2>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--text-muted);">
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--action);"></span>Added</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--sky-blue);"></span>Updated</span>
+<span style="display: inline-flex; align-items: center; gap: 6px;"><span aria-hidden="true" style="width: 12px; height: 12px; border-radius: 3px; background: var(--slate);"></span>Removed</span>
+</div>
+<div role="img" aria-label="{{chartLabel}}" style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 8px; align-items: end; height: 230px;">
+<sc-for list="{{weeks}}" as="w" hint-placeholder-count="12">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0;">
+<span style="font-size: 11px; text-align: center; color: var(--text-muted);">{{w.total}}</span>
+<div style="display: flex; flex-direction: column; gap: 2px;">
+<div style="height: {{w.removedH}}px; border-radius: 3px 3px 0 0; background: var(--slate);"></div>
+<div style="height: {{w.updatedH}}px; background: var(--sky-blue);"></div>
+<div style="height: {{w.addedH}}px; background: var(--action);"></div>
+</div>
+<span style="font-size: 11px; text-align: center; color: var(--text-muted);">{{w.label}}</span>
+</div>
+</sc-for>
+</div>
+<p style="margin: 0; font-size: 12px; color: var(--text-muted);">Week 43 is still open. Weeks 36 and 40 match Chrome and Edge release weeks.</p>
+</div>
+</x-import>
+</div>
+
+<div style="flex: 2 1 360px; min-width: 0;">
+<x-import component-from-global-scope="SophosDS.Card">
+<div style="display: flex; flex-direction: column; gap: 14px;">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+<x-import component-from-global-scope="SophosDS.Eyebrow" size="sm">LATEST CHANGES</x-import>
+<a href="Changes.dc.html" style="font-size: 14px; font-weight: 600;">All changes</a>
+</div>
+<div style="display: flex; flex-direction: column;">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="slate" soft="{{yes}}">Removed</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">TeamViewer 15.58.4</span></div><span style="font-size: 12px; color: var(--text-muted);">Today 11:06 · RJ-OPS-DT031 · program · Remote desktop and support</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="safe" soft="{{yes}}">Added</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">AnyDesk 9.0.5</span></div><span style="font-size: 12px; color: var(--text-muted);">Today 11:04 · SP-FIN-LT014 · program · Remote desktop and support</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="safe" soft="{{yes}}">Added</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Urban VPN Proxy</span></div><span style="font-size: 12px; color: var(--text-muted);">Thu 11:05 · BH-SAL-LT009 · Chrome extension · Consumer VPN and proxy services</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle);"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Updated</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">typescript 5.6.3 → 5.9.2</span></div><span style="font-size: 12px; color: var(--text-muted);">Tue 11:02 · CWB-ENG-MB012 · npm package</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 12px 0;"><div style="display: flex; align-items: center; gap: 8px;"><x-import component-from-global-scope="SophosDS.Badge" color="info" soft="{{yes}}">Updated</x-import><span style="font-size: 14px; font-weight: 600; color: var(--text-strong);">Adobe Acrobat 26.5.1.0 → 26.10.1.0</span></div><span style="font-size: 12px; color: var(--text-muted);">Mon 10:14 · <a href="Computer.dc.html">Client3JR</a> · Chrome extension · jose</span></div>
+</div>
+</div>
+</x-import>
+</div>
+</div>
+
+<p style="margin: 0; font-size: 12px; line-height: 1.5; color: var(--text-muted);">Mock with sample data. Client3JR extensions come from the Live Discover export of Oct 20, 2026; every other computer and number is illustrative.</p>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2300}}'>
+var OV_WEEKS = [
+  ['W32', 120, 80, 30], ['W33', 95, 140, 22], ['W34', 110, 60, 35], ['W35', 130, 75, 28],
+  ['W36', 88, 210, 19], ['W37', 102, 66, 31], ['W38', 160, 72, 40], ['W39', 91, 58, 24],
+  ['W40', 115, 190, 33], ['W41', 97, 64, 21], ['W42', 124, 70, 30], ['W43', 148, 61, 27]
+];
+
+/* Hover widgets: big number, one segmented bar (at most 4 named groups + Other), popover per segment.
+   Colour rule: every widget uses one monochrome ramp, darkest first. The first group is the largest,
+   or the one that needs the most attention. "Other" is always last and always grey.
+   The DS has no ramps, so these are defined here, anchored on DS colours (Dark Blue, Sophos Blue,
+   Alert Red) and checked for colour-blind separation between neighbours. */
+var WG_RAMPS = {
+  blue: ['#001A47', '#2006F7', '#3778F5', '#82B0F3'],   /* fleet: Dark Blue, Sophos Blue, two derived steps */
+  red: ['#570209', '#990112', '#EA0022', '#F4918E'],    /* risk: two derived steps, Alert Red, one derived step */
+  green: ['#013D2C', '#016B4F', '#049E74', '#3DDCA7']   /* software: derived from the Cyber Green hue */
+};
+var WG_OTHER = '#D9DFE3';
+function wgTextOn(hex) {
+  var c = [1, 3, 5].map(function (i) { var v = parseInt(hex.substr(i, 2), 16) / 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  var lum = 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  return lum > 0.25 ? '#001A47' : '#FFFFFF';
+}
+
+var WG_DATA = [
+  { id: 'computers', family: 'blue', value: '412', unit: 'Computers', caption: 'by operating system', href: 'Computers.dc.html', more: 'See all computers',
+    series: [
+      { label: 'Windows 11', n: 289, unit: 'computers', rows: [['Windows 11 Pro 23H2', '', '168'], ['Windows 11 Pro 24H2', '', '121']] },
+      { label: 'Windows 10', n: 52, unit: 'computers', rows: [['Windows 10 22H2', 'Out of support since Oct 14, 2025', '52', 'crit']] },
+      { label: 'macOS', n: 41, unit: 'computers', rows: [['macOS 15', '', '26'], ['macOS 14', '', '15']] },
+      { label: 'Other', n: 30, unit: 'computers', rows: [['Windows Server 2022', '', '15'], ['Ubuntu 24.04 LTS', '', '11'], ['RHEL 9', '', '4']] }
+    ] },
+  { id: 'collected', family: 'blue', value: '93%', unit: 'Collected', caption: 'week 43 cycle · 412 computers', href: 'Scans.dc.html', more: 'Open scan status',
+    series: [
+      { label: 'Query errors', n: 4, unit: 'computers', rows: [['SP-DEV-LX002', 'ide_extensions: table not available', 'Linux', 'crit'], ['BH-DEV-LX003', 'ide_extensions: table not available', 'Linux', 'crit'], ['SP-QA-MB002', 'packages: run timed out', 'macOS', 'crit']] },
+      { label: 'Rescheduled', n: 19, unit: 'computers', rows: [['SP-HR-LT003', 'Attempt 6 · last scan week 42', 'Tomorrow 11:00'], ['POA-LOG-LT017', 'Attempt 6 · last scan week 42', 'Tomorrow 11:00'], ['REC-SUP-DT044', 'Attempt 6 · last scan week 42', 'Tomorrow 11:00']] },
+      { label: 'Never scanned', n: 4, unit: 'computers', rows: [['SP-NEW-LT052', 'Added Thu · first scan pending', 'Tomorrow 11:00'], ['SP-NEW-LT053', 'Added Thu · first scan pending', 'Tomorrow 11:00'], ['BH-NEW-DT011', 'Added Fri · first scan pending', 'Tomorrow 11:00']] },
+      { label: 'Collected', n: 384, unit: 'computers', rows: [['RJ-OPS-DT031', 'On attempt 6', 'Today 11:06'], ['SP-FIN-LT014', 'On attempt 6', 'Today 11:04'], ['SP-EXE-LT001', 'On attempt 3', 'Wed 11:08']] },
+      { label: 'Other', n: 1, unit: 'computers', meta: 'disabled', rows: [['SP-OLD-SRV03', 'Not seen for 15 days; retries stopped', 'Disabled']] }
+    ] },
+  { id: 'vulns', family: 'red', value: '486', unit: 'CVEs', caption: 'open in installed applications', href: 'Software.dc.html', more: 'See all vulnerable software', badges: true,
+    series: [
+      { label: 'Critical', n: 41, unit: 'CVEs', meta: '3 known exploited', rows: [['21', 'Adobe Acrobat Reader DC', '×23'], ['4', 'Google Chrome', '×214'], ['3', 'Microsoft Edge', '×176']] },
+      { label: 'High', n: 212, unit: 'CVEs', meta: '3 known exploited', rows: [['58', 'Adobe Acrobat Reader DC', '×23'], ['31', 'Google Chrome', '×214'], ['21', 'Microsoft Edge', '×176']] },
+      { label: 'Medium', n: 198, unit: 'CVEs', meta: 'none known exploited', rows: [['29', 'Adobe Acrobat Reader DC', '×23'], ['25', 'Google Chrome', '×214'], ['15', 'Microsoft Edge', '×176']] },
+      { label: 'Low', n: 35, unit: 'CVEs', meta: 'none known exploited', rows: [['4', 'Google Chrome', '×214'], ['4', 'Adobe Acrobat Reader DC', '×23'], ['2', 'Java 8 Update 381', '×44']] }
+    ] },
+  { id: 'changes', family: 'blue', value: '236', unit: 'Changes', caption: 'last 7 days', href: 'Changes.dc.html', more: 'See all changes',
+    series: [
+      { label: 'Added', n: 148, unit: 'changes', rows: [['AnyDesk 9.0.5', 'SP-FIN-LT014', 'Today'], ['Urban VPN Proxy', 'BH-SAL-LT009', 'Thu'], ['Loom 0.258.1', 'CWB-ENG-MB012', 'Tue']] },
+      { label: 'Updated', n: 61, unit: 'changes', rows: [['Google Chrome → 130.0.6723.92', 'SP-FIN-LT014', 'Today'], ['Microsoft Teams → 24277.3507', 'SP-EXE-LT001', 'Wed'], ['typescript → 5.9.2', 'CWB-ENG-MB012', 'Tue']] },
+      { label: 'Removed', n: 27, unit: 'changes', rows: [['TeamViewer 15.58.4', 'RJ-OPS-DT031', 'Today'], ['requests 2.31.0', 'SP-SRV-FS01', 'Mon'], ['Urban VPN Proxy 5.11.1', 'SP-FIN-LT020', 'Mon']] }
+    ] },
+  { id: 'titles', family: 'blue', value: '1,284', unit: 'Titles', caption: 'by policy class', href: 'Policies.dc.html', more: 'Open policies',
+    series: [
+      { label: 'Unsanctioned', n: 238, unit: 'titles', meta: '757 installs · 179 match no rule', rows: [['Spotify', 'No rule matched', '×74'], ['Adobe Acrobat Reader DC', 'Rule 3 · unsupported', '×23'], ['PuTTY', 'No rule matched', '×17']] },
+      { label: 'Tolerated', n: 63, unit: 'titles', meta: '611 installs · 1 review overdue', rows: [['AnyDesk', 'Rule 5 · review Nov 15', '×21'], ['Gmail (legacy app)', 'Rule 8 · review overdue', '×14', 'crit'], ['TeamViewer', 'Rule 5 · review Nov 15', '×9']] },
+      { label: 'Sanctioned', n: 571, unit: 'titles', meta: '7,402 installs', rows: [['Google Chrome', 'Rule 4', '×377'], ['Microsoft 365 Apps for business', 'Rule 4', '×366'], ['Zoom Workplace', 'Rule 4', '×214']] },
+      { label: 'Core system', n: 412, unit: 'titles', meta: '9,861 installs', rows: [['Sophos Endpoint Agent', 'Rule 2', '×412'], ['Microsoft Visual C++ Redistributable', 'Rule 1', '×401'], ['Microsoft Edge WebView2 Runtime', 'Rule 1', '×398']] }
+    ] },
+  { id: 'categories', family: 'green', value: '28', unit: 'Categories', caption: 'titles by level-1 category', href: 'Software.dc.html', more: 'See all categories',
+    series: [
+      { label: 'System applications', n: 401, unit: 'titles', rows: [['OS components and runtimes', '', '214'], ['Drivers and hardware utilities', '', '98'], ['Browser components', '', '52']] },
+      { label: 'Developer tools', n: 256, unit: 'titles', rows: [['Libraries and packages', '', '152'], ['IDE extensions', '', '41'], ['Language runtimes and SDKs', '', '33']] },
+      { label: 'General business', n: 165, unit: 'titles', rows: [['Office and documents', '', '52'], ['Business applications', '', '41'], ['Screen capture and recording', '', '28']] },
+      { label: 'General internet', n: 110, unit: 'titles', rows: [['Browser utilities', '', '74'], ['Web browsers', '', '21'], ['Learning', '', '9']] },
+      { label: 'Other', n: 352, unit: 'titles', meta: '24 more categories', rows: [['Security and identity', '', '34'], ['Conferencing', '', '31'], ['Unclassified', 'Waiting for the Dictionary Hub', '30']] }
+    ] },
+  { id: 'extensions', family: 'green', value: '370', unit: 'Extensions', caption: 'browser and IDE', href: 'Software.dc.html', more: 'See all extensions',
+    series: [
+      { label: 'Chrome', n: 198, unit: 'extensions', rows: [['Google Docs Offline', '', '×151'], ['Adobe Acrobat: PDF edit, convert, sign tools', '', '×52'], ['Bitwarden Password Manager', '', '×26']] },
+      { label: 'Edge', n: 89, unit: 'extensions', rows: [['Edge relevant text changes', '', '×61'], ['Google Docs Offline', '', '×40'], ['Bitwarden Password Manager', '', '×22']] },
+      { label: 'VS Code', n: 58, unit: 'extensions', rows: [['Python', 'ms-python.python', '×41'], ['GitHub Copilot', 'github.copilot', '×22'], ['ESLint', 'dbaeumer.vscode-eslint', '×19']] },
+      { label: 'Firefox', n: 17, unit: 'extensions', rows: [['uBlock Origin', '', '×9'], ['Bitwarden Password Manager', '', '×6'], ['Dark Reader', '', '×3']] },
+      { label: 'Other', n: 8, unit: 'extensions', meta: 'Brave and Opera', rows: [['Brave', '5 extensions', '×7'], ['Opera', '3 extensions', '×3']] }
+    ] },
+  { id: 'packages', family: 'green', value: '274', unit: 'Packages', caption: 'by package manager', href: 'Software.dc.html', more: 'See all packages',
+    series: [
+      { label: 'npm', n: 132, unit: 'packages', meta: 'global packages only', rows: [['typescript', '', '×38'], ['npm', '', '×36'], ['yarn', '', '×21']] },
+      { label: 'pip', n: 78, unit: 'packages', rows: [['requests', '', '×31'], ['pip', '', '×29'], ['urllib3', '', '×27']] },
+      { label: 'Chocolatey', n: 41, unit: 'packages', rows: [['chocolatey', '', '×52'], ['googlechrome', '', '×18'], ['anydesk', '', '×2']] },
+      { label: 'Homebrew', n: 23, unit: 'packages', rows: [['git', '', '×8'], ['node', '', '×6'], ['wireguard-tools', '', '×3']] }
+    ] }
+];
+
+/* Vulnerabilities: application CVEs matched from installed versions (sample values) */
+var OV_SEV = [
+  { label: 'Critical', n: 41, color: '#EA0022' }, { label: 'High', n: 212, color: '#F29400' },
+  { label: 'Medium', n: 198, color: '#F8E300' }, { label: 'Low', n: 35, color: '#AAFF00' }
+];
+/* host, OS, critical, high, medium, low, KEV CVEs, application with the most CVEs */
+var OV_VHOSTS = [
+  ['REC-SUP-DT044', 'Windows 10 22H2', 18, 92, 81, 23, 4, 'Adobe Acrobat Reader DC'],
+  ['RJ-OPS-DT031', 'Windows 10 22H2', 15, 79, 71, 22, 3, 'Adobe Acrobat Reader DC'],
+  ['SP-HR-LT003', 'Windows 11 Pro 23H2', 9, 58, 51, 14, 2, 'Java 8 Update 381'],
+  ['POA-LOG-LT017', 'Windows 11 Pro 23H2', 8, 52, 47, 14, 3, 'Google Chrome 129'],
+  ['BH-SAL-LT009', 'Windows 11 Pro 23H2', 6, 41, 39, 12, 2, 'Google Chrome 129'],
+  ['SP-FIN-LT014', 'Windows 11 Pro 24H2', 3, 22, 30, 9, 1, 'Microsoft Edge 129'],
+  ['Client3JR', 'Windows 11 Pro 23H2', 2, 17, 25, 7, 1, '7-Zip 24.08'],
+  ['SP-SRV-FS01', 'Windows Server 2022', 2, 14, 24, 7, 1, 'WinRAR 6.22']
+];
+/* application, vulnerable versions, remediation, critical, high, medium, low, KEV CVEs, installations, computers */
+var OV_VAPPS = [
+  ['Adobe Acrobat Reader DC', '21.011.20039', 'out of support, replace', 21, 58, 29, 4, 1, 23, 23],
+  ['Google Chrome', 'below 130.0.6723.116', 'update available', 4, 31, 25, 4, 2, 214, 214],
+  ['Microsoft Edge', 'below 130.0.2849.80', 'update available', 3, 21, 15, 2, 1, 176, 176],
+  ['Java 8 Update 381', '8u381', 'update available', 2, 9, 14, 2, 0, 44, 44],
+  ['Zoom Workplace', 'below 6.2.10', 'update available', 0, 4, 5, 0, 0, 58, 58],
+  ['WinRAR', 'below 6.23', 'update available', 1, 3, 1, 0, 1, 12, 12],
+  ['lodash (npm)', '4.17.15', 'update to 4.17.21', 0, 2, 2, 0, 0, 31, 9],
+  ['Notepad++', '8.7', 'update available', 0, 2, 1, 0, 0, 37, 37],
+  ['VLC media player', 'below 3.0.21', 'update available', 0, 1, 2, 0, 0, 26, 26],
+  ['7-Zip', '24.08 and older', 'update to 24.09', 0, 1, 0, 0, 1, 138, 138]
+];
+
+var OV_POLICY = [
+  { key: 'core', label: 'Core system', color: '#6A889B', titles: 412, installs: 9861 },
+  { key: 'sanctioned', label: 'Sanctioned', color: '#2006F7', titles: 571, installs: 7402 },
+  { key: 'tolerated', label: 'Tolerated', color: '#009CFB', titles: 63, installs: 611 },
+  { key: 'unsanctioned', label: 'Unsanctioned', color: '#EA0022', titles: 238, installs: 757 }
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { polHover: null, vSort: 'cves', wOpen: null };
+  }
+  renderVals() {
+    var max = 0;
+    OV_WEEKS.forEach(function (w) { max = Math.max(max, w[1] + w[2] + w[3]); });
+    var scale = 180 / max;
+    var weeks = OV_WEEKS.map(function (w) {
+      return {
+        label: w[0],
+        total: w[1] + w[2] + w[3],
+        addedH: Math.round(w[1] * scale),
+        updatedH: Math.round(w[2] * scale),
+        removedH: Math.max(2, Math.round(w[3] * scale))
+      };
+    });
+    var chartLabel = 'Changes per week, weeks 32 to 43: ' + OV_WEEKS.map(function (w) {
+      return w[0] + ' ' + w[1] + ' added, ' + w[2] + ' updated, ' + w[3] + ' removed';
+    }).join('; ');
+    var self = this, hov = this.state.polHover;
+    function bar(measure, label, unit) {
+      var total = OV_POLICY.reduce(function (n, c) { return n + c[measure]; }, 0);
+      var segs = OV_POLICY.map(function (c, i) {
+        var pct = (c[measure] * 100 / total).toFixed(1);
+        return {
+          flex: c[measure], color: c.color,
+          radius: i === 0 ? '4px 0 0 4px' : (i === OV_POLICY.length - 1 ? '0 4px 4px 0' : '0'),
+          aria: c.label + ': ' + c[measure].toLocaleString('en-US') + ' ' + unit + ', ' + pct + '%',
+          hover: function () { self.setState({ polHover: { measure: measure, key: c.key } }); }
+        };
+      });
+      var tip = 'Hover or focus a segment for its numbers.';
+      if (hov && hov.measure === measure) {
+        var c = OV_POLICY.find(function (x) { return x.key === hov.key; });
+        tip = c.label + ' · ' + c[measure].toLocaleString('en-US') + ' ' + unit + ' · ' + (c[measure] * 100 / total).toFixed(1) + '% of ' + unit;
+      }
+      return { label: label, total: total.toLocaleString('en-US') + ' ' + unit, segs: segs, tip: tip,
+        aria: label + ' by policy class: ' + segs.map(function (g) { return g.aria; }).join('; ') };
+    }
+    var tTitles = OV_POLICY.reduce(function (n, c) { return n + c.titles; }, 0);
+    var tInstalls = OV_POLICY.reduce(function (n, c) { return n + c.installs; }, 0);
+    return {
+      yes: true, logoH: 22, weeks: weeks, chartLabel: chartLabel,
+      polBars: [bar('titles', 'Software titles', 'titles'), bar('installs', 'Installations', 'installs')],
+      polLegend: OV_POLICY.map(function (c) {
+        return { label: c.label, color: c.color,
+          titles: c.titles.toLocaleString('en-US') + ' titles · ' + (c.titles * 100 / tTitles).toFixed(1) + '%',
+          installs: c.installs.toLocaleString('en-US') + ' installs · ' + (c.installs * 100 / tInstalls).toFixed(1) + '%' };
+      }),
+      clearPol: function () { self.setState({ polHover: null }); },
+      widgets: WG_DATA.map(function (w) {
+        var total = w.series.reduce(function (n, s) { return n + s.n; }, 0);
+        var open = self.state.wOpen && self.state.wOpen.w === w.id ? self.state.wOpen.s : -1;
+        var close = function () { if (self.state.wOpen && self.state.wOpen.w === w.id) self.setState({ wOpen: null }); };
+        var ramp = WG_RAMPS[w.family], k = 0;
+        var colors = w.series.map(function (s) { return s.label === 'Other' ? WG_OTHER : ramp[k++]; });
+        var colorOf = function (s) { return colors[w.series.indexOf(s)]; };
+        var acc = 0, caretLeft = '50%';
+        var segs = w.series.map(function (s, i) {
+          var pct = s.n * 100 / total, on = open === i;
+          if (on) caretLeft = (acc + pct / 2).toFixed(1) + '%';
+          acc += pct;
+          var last = i === w.series.length - 1;
+          return { n: s.n, color: colorOf(s), h: on ? 12 : 8,
+            radius: (i === 0 ? '999px ' : '2px ') + (last ? '999px 999px ' : '2px 2px ') + (i === 0 ? '999px' : '2px'),
+            opacity: open === -1 || on ? 1 : 0.35, expanded: on ? 'true' : 'false',
+            aria: s.label + ': ' + s.n.toLocaleString('en-US') + ' ' + s.unit + ', ' + pct.toFixed(1) + '%',
+            open: function () { self.setState({ wOpen: { w: w.id, s: i } }); } };
+        });
+        var pop = { isSev: false, isDot: true, title: '', meta: '', color: '', level: 'info', rows: [], aria: '' };
+        if (open !== -1) {
+          var s = w.series[open], pct = (s.n * 100 / total).toFixed(1) + '%';
+          pop = { isSev: false, isDot: true, title: s.label, color: colorOf(s), level: 'info',
+            meta: s.n.toLocaleString('en-US') + ' ' + s.unit + ' · ' + pct + (s.meta ? ' · ' + s.meta : ''),
+            aria: s.label + ' details',
+            rows: s.rows.map(function (r) {
+              if (w.badges) return { hasBadge: true, badge: r[0], badgeBg: colorOf(s), badgeFg: wgTextOn(colorOf(s)), label: r[1], hasSub: false, sub: '', subColor: '', value: r[2] };
+              return { hasBadge: false, badge: '', badgeBg: '', badgeFg: '', label: r[0], hasSub: !!r[1], sub: r[1], subColor: r[3] === 'crit' ? 'var(--text-critical)' : 'var(--text-muted)', value: r[2] };
+            }) };
+        }
+        return {
+          id: w.id, value: w.value, unit: w.unit, caption: w.caption, href: w.href, more: w.more,
+          cls: 'wg' + (open !== -1 ? ' open' : ''),
+          aria: w.value + ' ' + w.unit + ', ' + w.caption,
+          barAria: w.unit + ' ' + w.caption + ': ' + segs.map(function (g) { return g.aria; }).join('; '),
+          segs: segs, hasPop: open !== -1, pop: pop, caretLeft: caretLeft,
+          legend: w.series.map(function (s, i) { return { label: s.label, color: colorOf(s), cls: open === i ? 'on' : '' }; }),
+          leave: close,
+          blur: function (e) { if (!e.currentTarget.contains(e.relatedTarget)) close(); },
+          key: function (e) { if (e.key === 'Escape') close(); }
+        };
+      }),
+      vCves: OV_SEV.reduce(function (n, s) { return n + s.n; }, 0).toLocaleString('en-US'),
+      vSev: OV_SEV.map(function (s, i) { return { label: s.label, n: s.n, color: s.color, radius: i === 0 ? '4px 0 0 4px' : (i === OV_SEV.length - 1 ? '0 4px 4px 0' : '0') }; }),
+      vSevAria: 'Open CVEs by severity: ' + OV_SEV.map(function (s) { return s.n + ' ' + s.label.toLowerCase(); }).join(', '),
+      vHosts: OV_VHOSTS.map(function (h) {
+        return { host: h[0], os: h[1], c: h[2], h: h[3], total: h[2] + h[3] + h[4] + h[5], kev: h[6], hasKev: h[6] > 0, noKev: h[6] === 0, top: h[7],
+          sevAria: h[2] + ' critical, ' + h[3] + ' high' };
+      }),
+      vApps: OV_VAPPS.slice().sort(function (a, b) {
+        var ta = a[3] + a[4] + a[5] + a[6], tb = b[3] + b[4] + b[5] + b[6];
+        return self.state.vSort === 'cves' ? (tb - ta) || (b[8] - a[8]) : (b[8] - a[8]) || (tb - ta);
+      }).slice(0, 8).map(function (a) {
+        return { name: a[0], versions: a[1], fix: a[2], c: a[3], h: a[4], total: a[3] + a[4] + a[5] + a[6], kev: a[7], hasKev: a[7] > 0, noKev: a[7] === 0,
+          inst: a[8].toLocaleString('en-US'), pcs: 'on ' + a[9] + (a[9] === 1 ? ' computer' : ' computers'), sevAria: a[3] + ' critical, ' + a[4] + ' high' };
+      }),
+      vSortCves: this.state.vSort === 'cves' ? 'true' : 'false', vSortInst: this.state.vSort === 'inst' ? 'true' : 'false',
+      vSortCvesCls: 'seg3' + (this.state.vSort === 'cves' ? ' on' : ''), vSortInstCls: 'seg3' + (this.state.vSort === 'inst' ? ' on' : ''),
+      sortCves: function () { self.setState({ vSort: 'cves' }); }, sortInst: function () { self.setState({ vSort: 'inst' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
