@@ -41,6 +41,8 @@ type ServerDataTableProps<TData extends RowData, TFilters> = {
   empty?: ReactNode;
   // Makes rows clickable (mouse, Enter or Space), e.g. to open a details drawer.
   onRowClick?: (row: TData) => void;
+  // Double click on a row (mouse only), e.g. to open its full page. Single click still fires onRowClick.
+  onRowDoubleClick?: (row: TData) => void;
 };
 
 type Result<TData> = { key: string; rows: TData[]; rowCount: number; error: string | null };
@@ -59,6 +61,7 @@ export function ServerDataTable<TData extends RowData, TFilters>({
   pageSizeOptions = DEFAULT_PAGE_SIZES,
   empty,
   onRowClick,
+  onRowDoubleClick,
 }: ServerDataTableProps<TData, TFilters>) {
   const filtersKey = JSON.stringify(filters);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: pageSizeOptions[0] });
@@ -155,6 +158,7 @@ export function ServerDataTable<TData extends RowData, TFilters>({
                       tabIndex: 0,
                       className: "cursor-pointer focus-visible:outline-2 focus-visible:outline-ring",
                       onClick: () => onRowClick(row.original),
+                      onDoubleClick: onRowDoubleClick ? () => onRowDoubleClick(row.original) : undefined,
                       onKeyDown: (e: KeyboardEvent) => {
                         if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();

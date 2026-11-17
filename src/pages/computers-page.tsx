@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { CircleDashed, Monitor, Wifi, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { ServerDataTable, type ServerColumnDef, type ServerPageRequest } from "@
 import { asScanStatus, StatusBadge } from "@/components/shared/status-badge";
 import { CRITICALITY_OPTIONS, ImportContextButton, useCanEditContext } from "@/features/inventory/computer-context";
 import { fetchComputers, fetchNeedsAttention, type ComputerFilters, type ComputerRow } from "@/features/inventory/api";
+import { ComputerDrawer } from "@/features/inventory/computer-drawer";
 import { useTenant } from "@/features/tenants/tenant-context";
 import { SUPPORT_FILTERS, SupportBadge } from "@/components/shared/support-status";
 import { formatDateTime, formatNumber } from "@/lib/format";
@@ -70,7 +71,14 @@ const COLUMNS: ServerColumnDef<ComputerRow>[] = [
     header: "Computer",
     cell: ({ row }) => (
       <div className="flex flex-col gap-0.5">
-        <Link to={`/computers/${row.original.id}`} className="font-semibold">
+        {/* Real link for keyboard, middle click and new tab. A plain click only opens the drawer (see onRowClick). */}
+        <Link
+          to={`/computers/${row.original.id}`}
+          className="font-semibold"
+          onClick={(e) => {
+            if (!e.metaKey && !e.ctrlKey && !e.shiftKey) e.preventDefault();
+          }}
+        >
           {row.original.hostname}
         </Link>
         <span className="text-xs text-text-muted">
@@ -191,6 +199,23 @@ export function ComputersPage() {
     return v === "current" || v === "stale" || v === "unknown" ? v : "";
   });
   const attention = useLoad(`attention:${selectedTenantId ?? "all"}`, () => fetchNeedsAttention(selectedTenantId, 50));
+  const navigate = useNavigate();
+  const [preview, setPreview] = useState<ComputerRow | null>(null);
+  // A single click opens the drawer after a short wait, so a double click can cancel it and open the full page.
+  const clickTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(clickTimer.current), []);
+  const onRowClick = useCallback((row: ComputerRow) => {
+    window.clearTimeout(clickTimer.current);
+    clickTimer.current = window.setTimeout(() => setPreview(row), 220);
+  }, []);
+  const onRowDoubleClick = useCallback(
+    (row: ComputerRow) => {
+      window.clearTimeout(clickTimer.current);
+      setPreview(null);
+      if (row.id) navigate(`/computers/${row.id}`);
+    },
+    [navigate],
+  );
 
   const level1 = useMemo(() => {
     const seen = new Map<string, string>();
@@ -297,7 +322,10 @@ export function ComputersPage() {
         getRowId={(row) => row.id ?? ""}
         initialSorting={[{ id: "hostname", desc: false }]}
         empty={<EmptyState icon={Monitor} title="No computers match" description="Computers appear after the first sync with Sophos Central." />}
+        onRowClick={onRowClick}
+        onRowDoubleClick={onRowDoubleClick}
       />
+      <ComputerDrawer row={preview} onOpenChange={(open) => !open && setPreview(null)} />
     </>
   );
 }
