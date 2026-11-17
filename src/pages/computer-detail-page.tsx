@@ -252,25 +252,31 @@ export function ComputerDetailPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={c ? label(PLATFORM_LABEL, c.platform) : "Computer"}
-        title={c?.hostname ?? "…"}
-        description={
-          c ? (
-            <>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-3">
+          <Eyebrow tone="brand" tick>{c ? label(PLATFORM_LABEL, c.platform) : "Computer"}</Eyebrow>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="m-0 text-[28px] break-all sm:text-4xl">{c?.hostname ?? "…"}</h1>
+            {c ? <StatusBadge status={asScanStatus(c.cycle_status)} label={c.cycle_status === "error" ? "Query error" : undefined} /> : null}
+          </div>
+          {c ? (
+            <p className="m-0 text-sm text-text-muted">
               {[c.os_name, c.os_version].filter(Boolean).join(" ")} · User {c.user_masked ? "hidden" : (c.associated_user ?? "—")} · Last seen{" "}
               {c.last_seen_at ? formatDateTime(c.last_seen_at) : "—"} · Last collected {c.last_collected_at ? formatDateTime(c.last_collected_at) : "never"}
               {c.data_lake_snapshot_at ? ` · Data Lake snapshot ${formatDateTime(c.data_lake_snapshot_at)}` : null}
               {c.os_eol_status === "eol" || c.os_eol_status === "ending_soon"
                 ? ` · OS support: ${c.os_eol_status === "eol" ? `End of life${c.os_eol_from ? ` since ${c.os_eol_from}` : ""}` : `Ends ${c.os_eol_from ?? "soon"}`}`
                 : null}
-              <br />
+            </p>
+          ) : null}
+          {c ? (
+            <p className="m-0 text-sm text-text-muted">
               Owner {c.owner ?? "—"} · Department {c.department ?? "—"} · Criticality {c.criticality ?? "—"} · Scope {c.scope_tags?.length ? c.scope_tags.join(", ") : "—"}
-            </>
-          ) : null
-        }
-        actions={
-          (profile?.role === "admin" || profile?.role === "operator") && c ? (
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {(profile?.role === "admin" || profile?.role === "operator") && c ? (
             <>
               {canEditContext ? (
                 <EditContextButton
@@ -284,9 +290,9 @@ export function ComputerDetailPage() {
                 Scan now
               </Button>
             </>
-          ) : null
-        }
-      />
+          ) : null}
+        </div>
+      </div>
 
       <div className="flex flex-wrap items-end gap-4">
         <Field label="Inventory as of" htmlFor="as-of" className="w-48">
@@ -300,105 +306,108 @@ export function ComputerDetailPage() {
         {asOfDate ? <p className="m-0 pb-2 text-sm text-text-muted">Showing what was installed at the end of {formatDate(asOf!)}.</p> : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Card className="gap-4 px-6">
-          <Eyebrow>Hardware</Eyebrow>
-          {hardware.loading ? <Skeleton className="h-24 w-full" /> : null}
-          {!hardware.loading && !system ? <p className="m-0 text-sm text-text-muted">No hardware collected for this date.</p> : null}
-          {system ? (
-            <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
-              <dt className="text-text-muted">Model</dt>
-              <dd className="m-0">{[system.hardware_vendor, system.hardware_model].filter(Boolean).join(" ") || "—"}</dd>
-              <dt className="text-text-muted">Serial</dt>
-              <dd className="m-0 font-mono">{system.hardware_serial ?? "—"}</dd>
-              <dt className="text-text-muted">CPU</dt>
-              <dd className="m-0">
-                {system.cpu_brand ?? "—"}
-                {system.cpu_logical_cores ? ` · ${system.cpu_physical_cores ?? "?"} cores / ${system.cpu_logical_cores} threads` : ""}
-              </dd>
-              <dt className="text-text-muted">Memory</dt>
-              <dd className="m-0">{bytes(system.physical_memory, true)}</dd>
-              <dt className="text-text-muted">OS</dt>
-              <dd className="m-0">{[system.os_name, system.os_version, system.arch].filter(Boolean).join(" · ") || "—"}</dd>
-              <dt className="text-text-muted">BIOS</dt>
-              <dd className="m-0">{[system.bios_vendor, system.bios_version, system.bios_date].filter(Boolean).join(" · ") || "—"}</dd>
-              {disks.map((d) => {
-                const a = d.attrs as Record<string, string | null>;
-                return (
-                  <div key={d.item_key} className="contents">
-                    <dt className="text-text-muted">Disk {d.item_key}</dt>
-                    <dd className="m-0">
-                      {[a.type, a.file_system].filter(Boolean).join(" · ")} · {bytes(a.size)} · {bytes(a.free_space)} free
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-          ) : null}
-        </Card>
-        <Card className="gap-4 px-6">
-          <Eyebrow>Collected this cycle</Eyebrow>
-          {tasks.loading ? <Skeleton className="h-24 w-full" /> : null}
-          {tasks.data && tasks.data.length === 0 ? <p className="m-0 text-sm text-text-muted">No task in the open cycle.</p> : null}
-          <ul className="m-0 flex list-none flex-col gap-2 p-0">
-            {(tasks.data ?? []).map((t) => (
-              <li key={t.query_name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
-                <span className="font-mono text-[13px]">{t.query_name}</span>
-                <span className="flex flex-col items-end gap-0.5">
-                  <StatusBadge status={asScanStatus(t.status)} label={t.status === "error" ? "Query error" : undefined} />
-                  {t.status === "retry_scheduled" && t.next_attempt_at ? (
-                    <span className="text-xs text-text-muted">Next {formatDateTime(t.next_attempt_at)}</span>
-                  ) : null}
-                  {(t.status === "error" || t.status === "skipped") && t.last_error ? (
-                    <span className="max-w-72 truncate text-xs text-text-muted" title={t.last_error}>
-                      {t.last_error}
-                    </span>
-                  ) : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-        {patches.length > 0 ? (
-          <Card className="gap-4 px-6 lg:col-span-2">
-            <h2 className="m-0">
-              <Eyebrow>Patches</Eyebrow>
-            </h2>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>KB</TableHead>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Installed</TableHead>
-                  <TableHead>Installed by</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patches.slice(0, 100).map((p, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-mono">{p.kb ?? "—"}</TableCell>
-                    <TableCell>{p.title ?? "—"}</TableCell>
-                    <TableCell>{p.installed_at ? p.installed_at.slice(0, 10) : "—"}</TableCell>
-                    <TableCell>{p.installed_by ?? "—"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {patches.length > 100 ? <p className="m-0 text-xs text-text-muted">Showing the newest 100 of {patches.length} patches.</p> : null}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(280px,1fr)_3fr]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card className="gap-4 px-6">
+            <Eyebrow>Hardware</Eyebrow>
+            {hardware.loading ? <Skeleton className="h-24 w-full" /> : null}
+            {!hardware.loading && !system ? <p className="m-0 text-sm text-text-muted">No hardware collected for this date.</p> : null}
+            {system ? (
+              <dl className="m-0 grid grid-cols-1 gap-x-6 gap-y-2 text-sm sm:grid-cols-[max-content_1fr]">
+                <dt className="text-text-muted">Model</dt>
+                <dd className="m-0">{[system.hardware_vendor, system.hardware_model].filter(Boolean).join(" ") || "—"}</dd>
+                <dt className="text-text-muted">Serial</dt>
+                <dd className="m-0 font-mono">{system.hardware_serial ?? "—"}</dd>
+                <dt className="text-text-muted">CPU</dt>
+                <dd className="m-0">
+                  {system.cpu_brand ?? "—"}
+                  {system.cpu_logical_cores ? ` · ${system.cpu_physical_cores ?? "?"} cores / ${system.cpu_logical_cores} threads` : ""}
+                </dd>
+                <dt className="text-text-muted">Memory</dt>
+                <dd className="m-0">{bytes(system.physical_memory, true)}</dd>
+                <dt className="text-text-muted">OS</dt>
+                <dd className="m-0">{[system.os_name, system.os_version, system.arch].filter(Boolean).join(" · ") || "—"}</dd>
+                <dt className="text-text-muted">BIOS</dt>
+                <dd className="m-0">{[system.bios_vendor, system.bios_version, system.bios_date].filter(Boolean).join(" · ") || "—"}</dd>
+                {disks.map((d) => {
+                  const a = d.attrs as Record<string, string | null>;
+                  return (
+                    <div key={d.item_key} className="contents">
+                      <dt className="text-text-muted">Disk {d.item_key}</dt>
+                      <dd className="m-0">
+                        {[a.type, a.file_system].filter(Boolean).join(" · ")} · {bytes(a.size)} · {bytes(a.free_space)} free
+                      </dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            ) : null}
           </Card>
-        ) : null}
-      </div>
-
-      <Tabs defaultValue="extensions">
-        <TabsList aria-label="Inventory">
-          <TabsTrigger value="extensions">Extensions</TabsTrigger>
-          <TabsTrigger value="programs">Programs</TabsTrigger>
-          <TabsTrigger value="packages">Packages</TabsTrigger>
-          <TabsTrigger value="history">
-            <History className="size-4" aria-hidden="true" />
-            History
-          </TabsTrigger>
-        </TabsList>
+          <Card className="gap-4 px-6">
+            <Eyebrow>Collected this cycle</Eyebrow>
+            {tasks.loading ? <Skeleton className="h-24 w-full" /> : null}
+            {tasks.data && tasks.data.length === 0 ? <p className="m-0 text-sm text-text-muted">No task in the open cycle.</p> : null}
+            <ul className="m-0 flex list-none flex-col gap-2 p-0">
+              {(tasks.data ?? []).map((t) => (
+                <li key={t.query_name} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="font-mono text-[13px]">{t.query_name}</span>
+                  <span className="flex flex-col items-end gap-0.5">
+                    <StatusBadge status={asScanStatus(t.status)} label={t.status === "error" ? "Query error" : undefined} />
+                    {t.status === "retry_scheduled" && t.next_attempt_at ? (
+                      <span className="text-xs text-text-muted">Next {formatDateTime(t.next_attempt_at)}</span>
+                    ) : null}
+                    {(t.status === "error" || t.status === "skipped") && t.last_error ? (
+                      <span className="max-w-72 truncate text-xs text-text-muted" title={t.last_error}>
+                        {t.last_error}
+                      </span>
+                    ) : null}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+          {patches.length > 0 ? (
+            <Card className="gap-4 px-6">
+              <h2 className="m-0">
+                <Eyebrow>Patches</Eyebrow>
+              </h2>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>KB</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Installed</TableHead>
+                    <TableHead>Installed by</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {patches.slice(0, 100).map((p, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-mono">{p.kb ?? "—"}</TableCell>
+                      <TableCell>{p.title ?? "—"}</TableCell>
+                      <TableCell>{p.installed_at ? p.installed_at.slice(0, 10) : "—"}</TableCell>
+                      <TableCell>{p.installed_by ?? "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {patches.length > 100 ? <p className="m-0 text-xs text-text-muted">Showing the newest 100 of {patches.length} patches.</p> : null}
+            </Card>
+          ) : null}
+        </div>
+        <Card className="min-w-0 gap-0 p-0">
+          <Tabs defaultValue="extensions" className="gap-0">
+            <div className="px-6 pt-5">
+          <TabsList aria-label="Inventory">
+            <TabsTrigger value="extensions">Extensions</TabsTrigger>
+            <TabsTrigger value="programs">Programs</TabsTrigger>
+            <TabsTrigger value="packages">Packages</TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="size-4" aria-hidden="true" />
+              History
+            </TabsTrigger>
+          </TabsList>
+            </div>
         <TabsContent value="extensions">
           <ServerDataTable label="Extensions" columns={extensionColumns} fetchPage={installationFetch} filters={extensionFilters} getRowId={(r) => r.id ?? ""} />
           <ReclassifyDialog target={reclassifying} onOpenChange={(open) => !open && setReclassifying(null)} onRequested={() => setReclassifying(null)} />
@@ -420,7 +429,9 @@ export function ComputerDetailPage() {
             empty={<EmptyState icon={History} title="No changes yet" description="Changes are recorded from the second collection of each query on." />}
           />
         </TabsContent>
-      </Tabs>
+          </Tabs>
+        </Card>
+      </div>
     </>
   );
 }

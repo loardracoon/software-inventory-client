@@ -1182,3 +1182,32 @@ describe("Patch state (Stage 3)", () => {
     expect(stat).toHaveTextContent("of 4 with patch data");
   });
 });
+
+describe("Computers: row preview and double click", () => {
+  const rows = () =>
+    vi.mocked(api.fetchComputers).mockResolvedValue({
+      rows: [{ ...computer, id: "c1", hostname: "LAB-WIN-01", programs: 64, extensions: 48, packages: 0 }],
+      rowCount: 1,
+    } as never);
+
+  it("a single click opens the drawer with a link to the full page", async () => {
+    const user = userEvent.setup();
+    rows();
+    renderAt("/computers", "/computers", <ComputersPage />);
+
+    await user.click((await screen.findByRole("link", { name: "LAB-WIN-01" })).closest("tr")!);
+    const drawer = await screen.findByRole("dialog");
+    expect(within(drawer).getByRole("heading", { name: "LAB-WIN-01" })).toBeInTheDocument();
+    expect(within(drawer).getByRole("link", { name: "Open computer" })).toHaveAttribute("href", "/computers/c1");
+  });
+
+  it("a double click does not open the drawer (it goes to the full page)", async () => {
+    const user = userEvent.setup();
+    rows();
+    renderAt("/computers", "/computers", <ComputersPage />);
+
+    await user.dblClick((await screen.findByRole("link", { name: "LAB-WIN-01" })).closest("tr")!);
+    await new Promise((r) => setTimeout(r, 300));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
